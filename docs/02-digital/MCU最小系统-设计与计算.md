@@ -6,8 +6,8 @@
 
 ## 0. ⚠️ 关于引脚编号
 
-**本文不给 LQFP64 的引脚编号。** ST 官网、Mouser、Farnell 的 datasheet PDF 在当前环境被网络策略拦截，
-无法核实；给错引脚号比不给更糟。
+**本文不给 LQFP64 的引脚编号。** `STM32G474RET6` 数据手册已入库：
+`reference/STM32G474RET6-DataSheet.pdf`。但为避免符号版本差异，原理图引脚号仍以立创EDA 官方库符号为准。
 
 **两件事必须自己落实：**
 

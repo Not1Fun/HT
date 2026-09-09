@@ -36,6 +36,7 @@ schematic/
 reference/
   需求-电缆接头查找音频源硬件部分设计.docx
   需求-硬件拓扑.vsdx
+  STM32G474RET6-DataSheet.pdf
 ```
 
 ---
