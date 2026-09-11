@@ -29,6 +29,7 @@ docs/
   02-digital/
     MCU最小系统-设计与计算.md         ★ LDO 审核、去耦、复位、晶振 gm 裕度、BOOT0/SWD、相干采样时钟规划
     TCA9539-引脚分配与接法.md         ★ 24 脚逐脚接法；3 脚在 9535/9539 上不是一个东西
+    CH340X与FM24V10-接法核定.md       ★ 两颗芯片逐脚核定 + 用 DTR# 做自动 bootloader
     串口打印与串口下载-USART1.md      ★ PA9/PA10 (AF7)、UCPD 副作用、BOOT0 改法、看门狗跳线
   03-analog/
     采样链-AMC3301-AMC3330-设计与计算.md  ★ 共模匹配、shunt 定值、分压比、A3V3 负载、抗混叠
@@ -57,6 +58,8 @@ reference/
   STM32G474RET6-DataSheet.pdf
   AMC3301-Q1-DataSheet.pdf
   AMC3330-DataSheet.pdf
+  FM24V10-DataSheet.pdf
+  CH340-DS1-手册一-v3D.pdf
   netlists/                         历次送审的网表存档
 ```
 
