@@ -36,8 +36,11 @@
 - STM32G474RET6 LQFP64 引脚表已按官方 datasheet 核实并记录在
   `docs/02-digital/MCU最小系统-设计与计算.md` §0（**原始需求文档那组引脚号是正确的**）。
   `reference/STM32G474RET6-DataSheet.pdf` 在库里，遇到 MCU 参数问题先查它，不要凭记忆。
-- **VREF+ (pin 28) 外接 A3V3 = 外部基准模式，软件必须保证 VREFBUF 始终关闭**
-  （`VREFBUF_CSR.ENVR = 0`）。误开会让 VREF+ 变成 2.9V 输出而被外部 3.3V 倒灌损坏。
+- **基准方案已改定为内部 VREFBUF 2.9V**（2026-09-11）：3.3V 外部基准下 AMC3301/AMC3330 的
+  输出共模 1.44V 不满足 STM32 差分 ADC 的 `V_CMIN = VREF+/2 ± 0.18V` 规格。
+  硬件：`A3V3 → VREF+` 的 0Ω **不装**，VREF+ 只留 1µF(ESR≤2Ω) + 100nF；
+  软件：`VREFBUF_CSR.VRS = 10, ENVR = 1`。
+  ⚠️ **0Ω 与 VREFBUF 二者只能存在其一** —— 同时存在会让 VREF+ 输出被外部 3.3V 倒灌损坏。
 - 不凭记忆写 LCSC 编号；不确定的参数标「待核实」，不要猜。
 
 ## 工作方式
