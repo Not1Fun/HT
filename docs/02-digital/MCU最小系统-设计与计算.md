@@ -463,6 +463,181 @@ PA14 = SWCLK  (pin 50)
 
 ---
 
+## 5.3 串口下载电路
+
+### 结论：6 脚排针即可，不加 USB 转串口芯片
+
+**SWD 是主力**（开发 / 调试 / 生产烧录），串口下载是备份。为备份手段加
+CH340 + Type-C + ESD 保护，还要在机箱上开 USB 口（250 V 输出设备，多一个对外开口
+就多一份 EMC 与安全代价），不划算。
+
+```
+P_UART  2.54 mm 6P 排针（放板内）
+  1  D3V3
+  2  DGND
+  3  PA9  (pin 43) = USART1_TX  →  USB-TTL 模块 RXD
+  4  PA10 (pin 44) = USART1_RX  ←  USB-TTL 模块 TXD
+  5  BOOT0   → PB8 (pin 61)
+  6  NRST    → pin 7
+```
+
+该排针**同时是调试串口**（printf 输出），开发期天天用。
+
+### ⚠️ 两个必须注意的点
+
+**① bootloader 的 UART 引脚需查 AN2606 —— 待核实。**
+datasheet p21 只写「bootloader 支持 USART / I2C / SPI / USB DFU」，**未列具体引脚**。
+PA9/PA10 (USART1) 是最常见的选择，但 **STM32G474 的确切清单必须查 AN2606 确认**。
+即便 bootloader 不支持，PA9/PA10 作调试串口也不浪费。
+
+**② PA9 / PA10 的 UCPD 副作用。**
+Table 12 脚注 5：**PA9 = UCPD1_DBCC1，PA10 = UCPD1_DBCC2**。
+UART 空闲态为高电平 → **激活 PB6 / PB4 上的 5.1 kΩ 内部下拉**。
+
+当前 PB4 / PB6 未用，暂时无害；软件须置 `PWR_CR3.UCPD1_DBDIS = 1` 关闭。
+**若将来 IO 不够需要用 PB4 / PB6，此条为必须项。**
+
+---
+
+## 5.4 复位电路如何配合串口下载
+
+### 1 kΩ 串阻同时解决了外部复位的问题
+
+串口下载需要**外部能拉低 NRST**，而 TPS3823A 是推挽输出，外部拉低会与其高电平对冲。
+§3.2 为防「TPS3823 vs MCU 内部复位」加的 1 kΩ 正好也覆盖了这一场景：
+
+```
+外部拉低 NRST 时：
+  对冲电流 = (3.3 − 0.2) / 1 kΩ = 3.1 mA          ✅ TPS3823 可承受
+  NRST 实际电平 ≈ 0.2 V，V_IL(NRST) max = 0.99 V   ✅ 复位有效
+```
+
+### ⚠️ 1.6 秒看门狗会打断下载，也会打断 SWD 调试
+
+- 串口下载时 MCU 在 bootloader 中运行，**不喂狗**
+- SWD 单步 / 断点时 MCU 被 halt，**也不喂狗**
+
+TPS3823A 的看门狗超时 **1.6 s** → 强制复位 → **下载中断 / 调试断连**。
+
+**解法**：WDI 走跳线，断开时 WDI **悬空**。TPS3823 手册明确：
+
+> *if left floating, the device generates pulses internally to prevent watchdog reset event*
+
+拉高或拉低都会超时，**只有悬空不会**。
+
+### 完整电路
+
+```
+                  D3V3
+                    │
+         ┌──────────┴──────────┐
+         │   TPS3823A-33DBVR   │
+         │  VDD                │
+         │            RESET ───┼──[ R_RST 1kΩ ]──┬────── pin 7 (NRST)
+         │              WDI ───┼──[ R_WDI 跳线 ]─┼─→ MCU GPIO
+         │               MR ───┼──┐              │
+         │  GND                │  │           C_RST 100nF
+         └──────────┬──────────┘  │              │
+                  DGND         SW_RST          DGND
+                                  │
+                                DGND              ├─→ P_UART.6 (NRST)
+                                                  └─→ SWD.5 (NRST)
+
+BOOT0 (pin 61 = PB8)
+   ├──[ R_BOOT 10kΩ ]── DGND          默认从 Flash 启动
+   └───────────────────→ P_UART.5 (BOOT0)
+```
+
+**`R_WDI` 用跳线帽或 0 Ω，丝印标 `WDT_EN`：**
+
+| 阶段 | R_WDI | 说明 |
+|---|---|---|
+| 开发 / 调试 / 固件下载 | **断开** | WDI 悬空，芯片内部自激，不复位 |
+| 产品出厂 | **装上** | 看门狗生效 |
+
+> ⚠️ 此条须写进生产作业指导书，否则容易出厂忘装。
+
+复位按键接 **TPS3823 的 MR 脚**，不要直接接 NRST —— MR 内部有上拉，
+去抖与 200 ms 复位延时都由芯片处理。
+
+### 串口下载操作流程
+
+1. 断开 `R_WDI`
+2. `P_UART` 插 USB-TTL 模块（BOOT0 接模块 DTR，或手动短到 3V3）
+3. NRST 拉低再释放（模块 RTS，或按 SW_RST）
+4. STM32CubeProgrammer 选 UART 模式连接、下载
+5. BOOT0 恢复低电平，复位 → 从 Flash 启动
+
+---
+
+## 5.5 LSE 32.768 kHz 晶振
+
+```
+Y2 = 32.768 kHz 晶振
+  pin 3 (PC14-OSC32_IN)  ──┬── Y2.1
+                           └── C26 ── DGND
+  pin 4 (PC15-OSC32_OUT) ──┬── Y2.2
+                           └── C27 ── DGND
+```
+
+### ⚠️ 明确禁令（Table 42 下方原文）
+
+> *An external resistor is not required between OSC32_IN and OSC32_OUT and
+> it is **forbidden to add one**.*
+
+**OSC32_IN 与 OSC32_OUT 之间禁止加反馈电阻。**
+（STM32F1 时代习惯加 1 MΩ，G4 上明确禁止。）
+
+### 晶振选型（Table 42 实测规格）
+
+LSE 驱动能力软件可配：
+
+| LSEDRV | I_DD(LSE) | **Gm_critmax** |
+|---|---|---|
+| 00 Low | 250 nA | 0.5 µA/V |
+| 01 Medium low | 315 nA | 0.75 µA/V |
+| 10 Medium high | 500 nA | 1.7 µA/V |
+| **11 High** | 630 nA | **2.7 µA/V** |
+
+`gm_crit = 4 × ESR × (2πF)² × (C0 + CL)²`，取 C0 = 1.35 pF、CL = 12.5 pF：
+
+| 晶振 ESR | gm_crit | vs LSEDRV=11 (2.7) | vs LSEDRV=10 (1.7) |
+|---|---|---|---|
+| 70 kΩ（常见 SMD 3215） | **2.28 µA/V** | ✅ 余量仅 1.18× | ❌ |
+| **50 kΩ** | **1.63 µA/V** | ✅ 余量 1.66× | ⚠️ 压线 |
+| 35 kΩ（圆柱 2×6 mm） | **1.14 µA/V** | ✅ **余量 2.4×** | ✅ |
+
+**建议：ESR ≤ 50 kΩ、CL = 12.5 pF 的 32.768 kHz 晶振，软件设 LSEDRV = High(11)。**
+（便宜的 SMD 3215 多为 ESR 70 kΩ max，余量仅 1.18×，起振看运气。）
+
+### 负载电容
+
+```
+CL1 = CL2 = 2 × (CL − CS)，CS ≈ 3 pF（LSE 走线短，杂散小于 HSE）
+2 × (12.5 − 3) = 19 pF  →  取标准值 18 pF，C0G / NP0
+```
+
+18 pF 造成的频率偏差约 **−3.9 ppm**（每月约 10 秒），对 RTC 完全可接受。
+
+### ⚠️ 启动时间 typ 2 秒
+
+Table 42：`t_SU(LSE) = 2 s (typ)`。软件不能死等 LSE 就绪，超时要设足够长。
+
+### VBAT：当前接 3V3，掉电后 RTC 不走时
+
+`3V3 ; ... U1.1 ...` —— RTC 仅在上电期间走时。
+若故障记录需要**掉电保持时间**：
+
+```
+VBAT ──┬── 肖特基 ── D3V3            有电时由 3V3 供，并给超容充电
+       └── 0.1 F 超级电容 / CR2032 座 ── DGND
+```
+
+**建议第一版留焊盘不装**：配合 FRAM 里的累计运行时长，
+故障记录用「开机后相对时间」通常够用。（待用户定）
+
+---
+
 ## 6. 时钟规划 —— 相干采样（对测量精度是决定性的）
 
 ```
