@@ -28,6 +28,8 @@ docs/
     MCU最小系统-设计与计算.md         ★ LDO 审核、去耦、复位、晶振 gm 裕度、BOOT0/SWD、相干采样时钟规划
   03-analog/
     采样链-AMC3301-AMC3330-设计与计算.md  ★ 共模匹配、shunt 定值、分压比、A3V3 负载、抗混叠
+  04-review/
+    审图-01-控制板网表-20260911.md    ★ 逐网络审查结果：3 必改 / 3 网络错 / 6 待确认
 
 schematic/
   schlib.py                         SVG 原理图符号库（IEC 风格）
@@ -41,6 +43,7 @@ reference/
   STM32G474RET6-DataSheet.pdf
   AMC3301-Q1-DataSheet.pdf
   AMC3330-DataSheet.pdf
+  netlists/                         历次送审的网表存档
 ```
 
 ---
