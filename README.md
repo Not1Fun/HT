@@ -18,6 +18,7 @@ docs/
     需求原文-docx全文提取.txt         从 Word 需求文档提取的全文
     需求原文-Visio拓扑文字提取.md     从 Visio 拓扑图提取的 193 个文字图元（含坐标）
     设计评审-电源与安全.md            首轮全机评审，P0/P1/P2 分级
+    绘图计划-MAIN-01剩余部分.md       ★ 下一步画什么：第 0~7 步 + 还缺哪些手册
     决策记录.md                      ADR：已拍板的事 + 待决事项
   01-power/
     器件选型与计算核对表.md           ★ 主交付：每个器件的计算过程与结论
@@ -47,7 +48,8 @@ docs/
     审图-08-主板网表-20260911-rev8.md    USB-C+串口桥审查、INT 改 PC12 的 EXTI 约束
     审图-09-主板网表-20260912-rev9.md    36V 段首次成形；齐纳/米勒电容两处会烧管子的错误
     审图-10-主板网表-20260912-rev10.md   ★ 最新：36V 段与 USB ESD 全部闭环；
-                                        新发现编码器 A/B 无引脚、AMC23C12 保护链未画、缺体电容
+                                        新发现编码器 A/B 无引脚、AMC23C12 保护链未画
+    手册核对-20260912-五份新入库.md      ★ IRF9540NS/G2RL/TPS382x/TBD62083A/TCA9539 核对结果、缺体电容
     36V与板级归属-说明.md               ★ ADR-008 原文 + 「36V 进控制板做什么」的三种方案
 
 schematic/
@@ -64,6 +66,11 @@ reference/
   AMC3330-DataSheet.pdf
   FM24V10-DataSheet.pdf
   CH340-DS1-手册一-v3D.pdf
+  IRF9540NS-DataSheet.pdf
+  OMRON-G2RL-DataSheet-CN.pdf
+  TPS382x-DataSheet-CN.pdf
+  TBD62083A-DataSheet.pdf
+  TCA9539-DataSheet.pdf
   netlists/                         历次送审的网表存档
 ```
 
