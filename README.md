@@ -58,6 +58,9 @@ docs/
     手册核对-20260912-五份新入库.md      ★ IRF9540NS/G2RL/TPS382x/TBD62083A/TCA9539 核对结果、缺体电容
     36V与板级归属-说明.md               ★ ADR-008 原文 + 「36V 进控制板做什么」的三种方案
 
+  05-pcb/
+    MAIN-01-PCB设计指南-四层板.md   ★ 叠层 / 三个地怎么分割 / 线宽表 / 分区布局 / 四条关键回路 / DRC / 出板自检
+
 schematic/
   schlib.py                         SVG 原理图符号库（IEC 风格）
   sheet1.py                         SH1 生成脚本
