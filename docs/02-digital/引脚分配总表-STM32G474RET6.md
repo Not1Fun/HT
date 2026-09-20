@@ -1,5 +1,19 @@
 # STM32G474RET6 LQFP64 · 引脚分配总表
 
+> 🔧🔧 **勘误（2026-09-20）：本表有 5 处已被 rev22/rev23 推翻，权威版见
+> `docs/02-digital/软件架构与实现计划.md` §2（逐脚从 rev23 网表提取）。**
+>
+> | 本表原文 | rev23 实际 |
+> |---|---|
+> | `PD2`(55) = `SW_ENABLE` → 与门 `U29.2` | **`OC_FAULT#`**（ADR-018 已删与门）→ **EXTI2 独占向量** |
+> | `PB3`(56) = 建议留给 SWO trace | **`OV_FAULT#`** → **EXTI3 独占向量**；🔴 复位默认 AF0=JTDO，软件必须显式改普通输入 |
+> | `PA15`(51) = `HARD_OK_MON` | **空闲**（`HARD_OK_MON` 网已不存在） |
+> | `PB10`(30) 风扇 PWM / `PA11`(45) 风扇 TACH | **都空闲**（ADR-016 风扇常开满速，不接 MCU） |
+> | `PB15`(37) = thermostat 链监视 | 仍是它，但现在明确 = **`COIL_LOOP` 监视，低 = 安全链通** |
+>
+> 另：`PA2`(14)/`PA3`(17)（DRS MODBus）在 rev23 里**没有接线**，是空脚。
+
+
 > 2026-09-12 · 基于网表 rev10 + ADR-015 + 本轮新分配
 > ADC 通道映射已从 `reference/STM32G474RET6-DataSheet.pdf` **Table 12 提取并自校验 5/5**
 > （`PA4→ADC2_IN17`、`PC0→ADC12_IN6`、`PC1→IN7`、`PC2→IN8`、`PC3→IN9` 全部对上）
