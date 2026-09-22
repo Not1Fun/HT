@@ -1,5 +1,6 @@
 /** @brief Initialize HT safe pins and check the clock and internal reference. */
 #include "platform/board_io.h"
+#include "config/analog.h"
 
 #include <errno.h>
 #include <soc.h>
@@ -29,6 +30,7 @@ static const struct gpio_dt_spec wdi = GPIO_DT_SPEC_GET(BOARD_NODE, wdi_gpios);
 static bool ready;
 
 BUILD_ASSERT(ARRAY_SIZE(inputs) == BOARD_INPUT_COUNT);
+BUILD_ASSERT(HT_VREF_MV == 2900U, "VREFBUF SCALE2 requires the 2.9 V configuration");
 
 static int setup_pin(const struct gpio_dt_spec *pin, gpio_flags_t flags)
 {

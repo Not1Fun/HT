@@ -1,6 +1,7 @@
 /** @brief Run the output-disabled bring-up checks and change-only diagnostics. */
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
+#include "config/analog.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -10,6 +11,8 @@ LOG_MODULE_REGISTER(ht);
 int main(void)
 {
 	LOG_INF("HT bring-up: output disabled, console 115200 8N1");
+	LOG_INF("Analog config: shunt=%u uOhm, divider low=%u ohm, NTC=%u ohm",
+		HT_SHUNT_UOHM, HT_DIV_LOW_OHM, HT_NTC_R25_OHM);
 	int rc = board_io_init();
 	/* Attempt all-off even if the board/reference checks fail. */
 	int relay_rc = relay_io_init();

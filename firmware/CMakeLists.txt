@@ -17,6 +17,8 @@ target_sources(app PRIVATE
   src/platform/board_io.c
   src/platform/relay_io.c
   src/drivers/tca9539_safe.c
+  src/ui/panel.c
+  src/ui/dgus.c
 )
 target_include_directories(app PRIVATE src)
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)

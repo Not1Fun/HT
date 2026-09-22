@@ -13,10 +13,19 @@
   ],
   "modules": [
     ".",
+    "config",
     "drivers",
-    "platform"
+    "platform",
+    "ui"
   ],
   "files": [
+    {
+      "path": "firmware/src/config/analog.h",
+      "module": "config",
+      "brief": "采样链标称参数，单位写入名称；实机换算仍须标定。",
+      "sha256": "990a2df96c41bd3c4d71fa5868b52e3cd94606171845be8819b6fe060d935d54",
+      "includes": []
+    },
     {
       "path": "firmware/src/drivers/tca9539_safe.c",
       "module": "drivers",
@@ -37,19 +46,21 @@
       "path": "firmware/src/main.c",
       "module": ".",
       "brief": "Run the output-disabled bring-up checks and change-only diagnostics.",
-      "sha256": "f940ce67dc06e1a28088bb31a84e7ed29cf586132bed5d7bfde554f23573283c",
+      "sha256": "eba7ea0d68aa7d0f59ebf2b4275cf2bab17bbc57c0a0311d6435c2cd2c1ebafd",
       "includes": [
         "platform/board_io.h",
-        "platform/relay_io.h"
+        "platform/relay_io.h",
+        "config/analog.h"
       ]
     },
     {
       "path": "firmware/src/platform/board_io.c",
       "module": "platform",
       "brief": "Initialize HT safe pins and check the clock and internal reference.",
-      "sha256": "9157c0310deaf2df6499674de0d35d69948c396e49240223acd926386053d5e8",
+      "sha256": "8d60378b79c54f1fde158afaac1e4b948157c2beee88bdcbbb71f4c0fc77d71c",
       "includes": [
-        "platform/board_io.h"
+        "platform/board_io.h",
+        "config/analog.h"
       ]
     },
     {
@@ -74,6 +85,38 @@
       "module": "platform",
       "brief": "Single-owner relay-off checks and panel reads for safe bring-up.",
       "sha256": "cebe266fc13c96e7591291972acddb1c5b75079c35cf9a1536f8b9226013decd",
+      "includes": []
+    },
+    {
+      "path": "firmware/src/ui/dgus.c",
+      "module": "ui",
+      "brief": "DGUS II 82/83 帧与 Modbus CRC，固定内存解析并在坏帧后重同步。",
+      "sha256": "3427d7674365b1a64af55241b8c45bcea8467d8cf813203756370bb751d21dd7",
+      "includes": [
+        "dgus.h"
+      ]
+    },
+    {
+      "path": "firmware/src/ui/dgus.h",
+      "module": "ui",
+      "brief": "有界 DGUS II 帧编解码与流式接收，不含串口配置或 HT 变量映射。",
+      "sha256": "223e7762c031297fb56b9bf6e4399e94d3ba943bda0ccaf3cfe293f9a9e14ff9",
+      "includes": []
+    },
+    {
+      "path": "firmware/src/ui/panel.c",
+      "module": "ui",
+      "brief": "维护面板参数与释放后启用条件，所有操作只生成软件请求。",
+      "sha256": "07dc01a483ef05e744a30613247640ff43664cc8f0e99aafc9b1d37c9b12a956",
+      "includes": [
+        "panel.h"
+      ]
+    },
+    {
+      "path": "firmware/src/ui/panel.h",
+      "module": "ui",
+      "brief": "已消抖面板事件的设置状态与启停请求模型，不操作硬件。",
+      "sha256": "ca9827d1b1dd19f4251b066133cc431dbcec991e6cc24895b1f1c58c00c51774",
       "includes": []
     }
   ],
@@ -142,55 +185,55 @@
       "module": "drivers"
     },
     {
-      "id": "firmware/src/main.c:10:main",
+      "id": "firmware/src/main.c:11:main",
       "name": "main",
       "path": "firmware/src/main.c",
-      "line": 10,
+      "line": 11,
       "linkage": "external",
       "definition_form": "function",
       "module": "."
     },
     {
-      "id": "firmware/src/platform/board_io.c:33:setup_pin",
+      "id": "firmware/src/platform/board_io.c:35:setup_pin",
       "name": "setup_pin",
       "path": "firmware/src/platform/board_io.c",
-      "line": 33,
+      "line": 35,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:41:check_clock",
+      "id": "firmware/src/platform/board_io.c:43:check_clock",
       "name": "check_clock",
       "path": "firmware/src/platform/board_io.c",
-      "line": 41,
+      "line": 43,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:52:start_vref",
+      "id": "firmware/src/platform/board_io.c:54:start_vref",
       "name": "start_vref",
       "path": "firmware/src/platform/board_io.c",
-      "line": 52,
+      "line": 54,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:74:board_io_init",
+      "id": "firmware/src/platform/board_io.c:76:board_io_init",
       "name": "board_io_init",
       "path": "firmware/src/platform/board_io.c",
-      "line": 74,
+      "line": 76,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:107:board_io_read",
+      "id": "firmware/src/platform/board_io.c:109:board_io_read",
       "name": "board_io_read",
       "path": "firmware/src/platform/board_io.c",
-      "line": 107,
+      "line": 109,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
@@ -248,6 +291,231 @@
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "name": "crc_bytes",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 9,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:20:crc16",
+      "name": "crc16",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 20,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:33:get_word",
+      "name": "get_word",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 33,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:38:put_word",
+      "name": "put_word",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 38,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:44:valid_range",
+      "name": "valid_range",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 44,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:50:finish_frame",
+      "name": "finish_frame",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 50,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "name": "dgus_encode_write",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 66,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:93:dgus_encode_read",
+      "name": "dgus_encode_read",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 93,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:113:valid_shape",
+      "name": "valid_shape",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 113,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "name": "dgus_decode",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 126,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:191:dgus_init",
+      "name": "dgus_init",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 191,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:210:consume",
+      "name": "consume",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 210,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:216:reject",
+      "name": "reject",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 216,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "name": "parse_buffer",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 224,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:276:dgus_feed",
+      "name": "dgus_feed",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 276,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/dgus.c:294:dgus_reset",
+      "name": "dgus_reset",
+      "path": "firmware/src/ui/dgus.c",
+      "line": 294,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:6:valid_mode",
+      "name": "valid_mode",
+      "path": "firmware/src/ui/panel.c",
+      "line": 6,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:11:valid_config",
+      "name": "valid_config",
+      "path": "firmware/src/ui/panel.c",
+      "line": 11,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:25:check_ready",
+      "name": "check_ready",
+      "path": "firmware/src/ui/panel.c",
+      "line": 25,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:33:adjust",
+      "name": "adjust",
+      "path": "firmware/src/ui/panel.c",
+      "line": 33,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:47:panel_init",
+      "name": "panel_init",
+      "path": "firmware/src/ui/panel.c",
+      "line": 47,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:77:panel_rotate",
+      "name": "panel_rotate",
+      "path": "firmware/src/ui/panel.c",
+      "line": 77,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:114:panel_press",
+      "name": "panel_press",
+      "path": "firmware/src/ui/panel.c",
+      "line": 114,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:132:panel_preset",
+      "name": "panel_preset",
+      "path": "firmware/src/ui/panel.c",
+      "line": 132,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:153:panel_inputs",
+      "name": "panel_inputs",
+      "path": "firmware/src/ui/panel.c",
+      "line": 153,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
     }
   ],
   "include_edges": [
@@ -267,9 +535,19 @@
       "include": "platform/relay_io.h"
     },
     {
+      "source": "firmware/src/main.c",
+      "target": "firmware/src/config/analog.h",
+      "include": "config/analog.h"
+    },
+    {
       "source": "firmware/src/platform/board_io.c",
       "target": "firmware/src/platform/board_io.h",
       "include": "platform/board_io.h"
+    },
+    {
+      "source": "firmware/src/platform/board_io.c",
+      "target": "firmware/src/config/analog.h",
+      "include": "config/analog.h"
     },
     {
       "source": "firmware/src/platform/relay_io.c",
@@ -280,6 +558,16 @@
       "source": "firmware/src/platform/relay_io.c",
       "target": "firmware/src/drivers/tca9539_safe.h",
       "include": "drivers/tca9539_safe.h"
+    },
+    {
+      "source": "firmware/src/ui/dgus.c",
+      "target": "firmware/src/ui/dgus.h",
+      "include": "dgus.h"
+    },
+    {
+      "source": "firmware/src/ui/panel.c",
+      "target": "firmware/src/ui/panel.h",
+      "include": "panel.h"
     }
   ],
   "direct_calls": [
@@ -349,64 +637,64 @@
       "line": 100
     },
     {
-      "caller": "firmware/src/main.c:10:main",
-      "callee": "firmware/src/platform/board_io.c:74:board_io_init",
-      "line": 13
+      "caller": "firmware/src/main.c:11:main",
+      "callee": "firmware/src/platform/board_io.c:76:board_io_init",
+      "line": 16
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "callee": "firmware/src/platform/relay_io.c:31:relay_io_init",
-      "line": 15
+      "line": 18
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "callee": "firmware/src/platform/relay_io.c:40:relay_io_check",
-      "line": 33
+      "line": 36
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "callee": "firmware/src/platform/relay_io.c:45:relay_io_read_panel",
-      "line": 35
-    },
-    {
-      "caller": "firmware/src/main.c:10:main",
-      "callee": "firmware/src/platform/board_io.c:107:board_io_read",
       "line": 38
     },
     {
-      "caller": "firmware/src/main.c:10:main",
-      "callee": "firmware/src/platform/relay_io.c:50:relay_io_stop",
+      "caller": "firmware/src/main.c:11:main",
+      "callee": "firmware/src/platform/board_io.c:109:board_io_read",
       "line": 41
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
-      "line": 77
+      "caller": "firmware/src/main.c:11:main",
+      "callee": "firmware/src/platform/relay_io.c:50:relay_io_stop",
+      "line": 44
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
-      "line": 83
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 79
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
-      "line": 88
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 85
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
-      "line": 93
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 90
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:41:check_clock",
-      "line": 98
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 95
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:52:start_vref",
-      "line": 102
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:43:check_clock",
+      "line": 100
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:54:start_vref",
+      "line": 104
     },
     {
       "caller": "firmware/src/platform/relay_io.c:31:relay_io_init",
@@ -427,6 +715,221 @@
       "caller": "firmware/src/platform/relay_io.c:50:relay_io_stop",
       "callee": "firmware/src/platform/relay_io.c:31:relay_io_init",
       "line": 52
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 130
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:113:valid_shape",
+      "line": 147
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:20:crc16",
+      "line": 154
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:33:get_word",
+      "line": 165
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:44:valid_range",
+      "line": 178
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "callee": "firmware/src/ui/dgus.c:33:get_word",
+      "line": 183
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:191:dgus_init",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 198
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:216:reject",
+      "callee": "firmware/src/ui/dgus.c:210:consume",
+      "line": 221
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 226
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:210:consume",
+      "line": 234
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:210:consume",
+      "line": 241
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:216:reject",
+      "line": 249
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:113:valid_shape",
+      "line": 253
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:216:reject",
+      "line": 254
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:33:get_word",
+      "line": 259
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:44:valid_range",
+      "line": 259
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:216:reject",
+      "line": 261
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:126:dgus_decode",
+      "line": 267
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:216:reject",
+      "line": 268
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "callee": "firmware/src/ui/dgus.c:210:consume",
+      "line": 271
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:276:dgus_feed",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 281
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:276:dgus_feed",
+      "callee": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "line": 289
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:50:finish_frame",
+      "callee": "firmware/src/ui/dgus.c:20:crc16",
+      "line": 58
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 69
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "callee": "firmware/src/ui/dgus.c:44:valid_range",
+      "line": 78
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "callee": "firmware/src/ui/dgus.c:38:put_word",
+      "line": 86
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "callee": "firmware/src/ui/dgus.c:38:put_word",
+      "line": 88
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "callee": "firmware/src/ui/dgus.c:50:finish_frame",
+      "line": 90
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:93:dgus_encode_read",
+      "callee": "firmware/src/ui/dgus.c:9:crc_bytes",
+      "line": 96
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:93:dgus_encode_read",
+      "callee": "firmware/src/ui/dgus.c:44:valid_range",
+      "line": 104
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:93:dgus_encode_read",
+      "callee": "firmware/src/ui/dgus.c:38:put_word",
+      "line": 108
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:93:dgus_encode_read",
+      "callee": "firmware/src/ui/dgus.c:50:finish_frame",
+      "line": 110
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:114:panel_press",
+      "callee": "firmware/src/ui/panel.c:25:check_ready",
+      "line": 116
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:132:panel_preset",
+      "callee": "firmware/src/ui/panel.c:25:check_ready",
+      "line": 136
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:153:panel_inputs",
+      "callee": "firmware/src/ui/panel.c:25:check_ready",
+      "line": 160
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:153:panel_inputs",
+      "callee": "firmware/src/ui/panel.c:6:valid_mode",
+      "line": 165
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:47:panel_init",
+      "callee": "firmware/src/ui/panel.c:11:valid_config",
+      "line": 61
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:47:panel_init",
+      "callee": "firmware/src/ui/panel.c:6:valid_mode",
+      "line": 61
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:25:check_ready",
+      "line": 79
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:33:adjust",
+      "line": 86
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:33:adjust",
+      "line": 93
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:33:adjust",
+      "line": 97
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:33:adjust",
+      "line": 104
     }
   ],
   "unresolved_calls": [
@@ -449,165 +952,171 @@
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_INF",
-      "line": 12,
+      "line": 13,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
+      "name": "LOG_INF",
+      "line": 14,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_ERR",
-      "line": 18,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/main.c:10:main",
-      "name": "LOG_INF",
       "line": 21,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_INF",
-      "line": 22,
+      "line": 24,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_INF",
-      "line": 23,
+      "line": 25,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
+      "name": "LOG_INF",
+      "line": 26,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_ERR",
-      "line": 43,
+      "line": 46,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "name": "LOG_INF",
-      "line": 47,
+      "line": 50,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/main.c:10:main",
+      "caller": "firmware/src/main.c:11:main",
       "name": "k_msleep",
-      "line": 52,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
-      "name": "ARRAY_SIZE",
-      "line": 117,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
-      "name": "gpio_pin_get_dt",
-      "line": 118,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
-      "name": "BIT",
-      "line": 125,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:33:setup_pin",
-      "name": "gpio_is_ready_dt",
-      "line": 35,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:33:setup_pin",
-      "name": "gpio_pin_configure_dt",
-      "line": 38,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:41:check_clock",
-      "name": "LL_RCC_GetSysClkSource",
-      "line": 44,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:41:check_clock",
-      "name": "LL_PWR_IsEnabledRange1BoostMode",
-      "line": 45,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_APB2_GRP1_EnableClock",
-      "line": 54,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_Disable",
       "line": 55,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_SetVoltageScaling",
+      "caller": "firmware/src/platform/board_io.c:109:board_io_read",
+      "name": "ARRAY_SIZE",
+      "line": 119,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:109:board_io_read",
+      "name": "gpio_pin_get_dt",
+      "line": 120,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:109:board_io_read",
+      "name": "BIT",
+      "line": 127,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:35:setup_pin",
+      "name": "gpio_is_ready_dt",
+      "line": 37,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:35:setup_pin",
+      "name": "gpio_pin_configure_dt",
+      "line": 40,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_RCC_GetSysClkSource",
+      "line": 46,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_PWR_IsEnabledRange1BoostMode",
+      "line": 47,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_APB2_GRP1_EnableClock",
       "line": 56,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_DisableHIZ",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_Disable",
       "line": 57,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_Enable",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_SetVoltageScaling",
       "line": 58,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "k_uptime_get",
-      "line": 61,
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_DisableHIZ",
+      "line": 59,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_IsVREFReady",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_Enable",
+      "line": 60,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "k_uptime_get",
       "line": 63,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "k_uptime_get",
-      "line": 64,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_Disable",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_IsVREFReady",
       "line": 65,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "LL_VREFBUF_EnableHIZ",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "k_uptime_get",
       "line": 66,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:52:start_vref",
-      "name": "k_msleep",
-      "line": 69,
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_Disable",
+      "line": 67,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "LL_VREFBUF_EnableHIZ",
+      "line": 68,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:54:start_vref",
+      "name": "k_msleep",
+      "line": 71,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:76:board_io_init",
       "name": "ARRAY_SIZE",
-      "line": 92,
+      "line": 94,
       "kind": "external_or_unknown"
     },
     {
@@ -627,14 +1136,46 @@
       "name": "i2c_is_ready_dt",
       "line": 34,
       "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:191:dgus_init",
+      "name": "memset",
+      "line": 197,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:210:consume",
+      "name": "memmove",
+      "line": 213,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/ui/dgus.c:224:parse_buffer",
+      "name": "receive",
+      "line": 272,
+      "kind": "indirect"
     }
   ],
   "module_edges": [
     {
       "source": ".",
+      "target": "config",
+      "kinds": [
+        "include"
+      ]
+    },
+    {
+      "source": ".",
       "target": "platform",
       "kinds": [
         "call",
+        "include"
+      ]
+    },
+    {
+      "source": "platform",
+      "target": "config",
+      "kinds": [
         "include"
       ]
     },
