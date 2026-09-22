@@ -1,0 +1,15 @@
+manifest:
+  version: "1.2"
+  projects:
+    - name: zephyr
+      url: https://github.com/zephyrproject-rtos/zephyr
+      revision: dccb09599635bdff17633fa7e9dab014b91dce90 # v4.4.2
+      path: zephyr
+      import:
+        path-prefix: .tools
+        name-allowlist:
+          - cmsis
+          - cmsis_6
+          - hal_stm32
+  self:
+    path: firmware

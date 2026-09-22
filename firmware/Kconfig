@@ -1,0 +1,3 @@
+mainmenu "HT firmware"
+
+source "Kconfig.zephyr"

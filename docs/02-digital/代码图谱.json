@@ -1,0 +1,651 @@
+{
+  "schema_version": 1,
+  "generator": "firmware/tools/code_graph.py",
+  "source_root": "firmware/src",
+  "limitations": [
+    "仅扫描 firmware/src 下的 .c/.h；模块按一级目录划分，根目录文件归入口模块。",
+    "源码按 UTF-8 解码（允许 BOM），CRLF/CR 统一为 LF 后再解析和计算 SHA256；换行格式不影响图谱。",
+    "有界词法解析支持普通函数定义及 ISR_DIRECT_DECLARE；不是 C 编译器，不展开宏或计算条件编译。",
+    "直接调用边只连接可唯一定位的源码函数定义；注释、字符串和预处理指令不参与调用识别。",
+    "函数指针、成员调用、外部库和未知宏调用不能据此确定目标；同名冲突会列入诊断。",
+    "没有完整类型与作用域分析，复杂声明、宏生成代码或间接调用需人工核对，不能声称完整调用图。",
+    "设备树、线程调度、回调注册、DMA/中断触发及人工硬件依赖不属于自动调用证明。"
+  ],
+  "modules": [
+    ".",
+    "drivers",
+    "platform"
+  ],
+  "files": [
+    {
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "module": "drivers",
+      "brief": "只允许清零继电器输出，失败即撤销就绪状态。",
+      "sha256": "93714c0d51ef0442759537779b6dfae8d7e448f4d02661b7461a1391c6ee53cd",
+      "includes": [
+        "tca9539_safe.h"
+      ]
+    },
+    {
+      "path": "firmware/src/drivers/tca9539_safe.h",
+      "module": "drivers",
+      "brief": "TCA9539 安全初始化、全断寄存器检查与面板输入接口。",
+      "sha256": "6e7a95192c7e4003ab60400c002c65c221c3157c2ad8b4761adf61c40d9952c3",
+      "includes": []
+    },
+    {
+      "path": "firmware/src/main.c",
+      "module": ".",
+      "brief": "Run the output-disabled bring-up checks and change-only diagnostics.",
+      "sha256": "f940ce67dc06e1a28088bb31a84e7ed29cf586132bed5d7bfde554f23573283c",
+      "includes": [
+        "platform/board_io.h",
+        "platform/relay_io.h"
+      ]
+    },
+    {
+      "path": "firmware/src/platform/board_io.c",
+      "module": "platform",
+      "brief": "Initialize HT safe pins and check the clock and internal reference.",
+      "sha256": "9157c0310deaf2df6499674de0d35d69948c396e49240223acd926386053d5e8",
+      "includes": [
+        "platform/board_io.h"
+      ]
+    },
+    {
+      "path": "firmware/src/platform/board_io.h",
+      "module": "platform",
+      "brief": "HT board safe GPIO setup and diagnostic input snapshot.",
+      "sha256": "49891f423519a78a0c61a86359dfbcb2ff87c888d9a0e5ead7f296ce591c3fbc",
+      "includes": []
+    },
+    {
+      "path": "firmware/src/platform/relay_io.c",
+      "module": "platform",
+      "brief": "Adapt the portable TCA9539 driver to Zephyr I2C on HT MAIN-01.",
+      "sha256": "22bf6205519dea838d87b61034a6e24aba3ef4180a4ec8780793801a2f5c424f",
+      "includes": [
+        "platform/relay_io.h",
+        "drivers/tca9539_safe.h"
+      ]
+    },
+    {
+      "path": "firmware/src/platform/relay_io.h",
+      "module": "platform",
+      "brief": "Single-owner relay-off checks and panel reads for safe bring-up.",
+      "sha256": "cebe266fc13c96e7591291972acddb1c5b75079c35cf9a1536f8b9226013decd",
+      "includes": []
+    }
+  ],
+  "functions": [
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:14:valid_bus",
+      "name": "valid_bus",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 14,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "name": "fail",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 20,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "name": "read_expected",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 26,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:39:check_ready",
+      "name": "check_ready",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 39,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "name": "tca9539_init",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 53,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:89:tca9539_verify_off",
+      "name": "tca9539_verify_off",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 89,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "name": "tca9539_read_panel",
+      "path": "firmware/src/drivers/tca9539_safe.c",
+      "line": 103,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "drivers"
+    },
+    {
+      "id": "firmware/src/main.c:10:main",
+      "name": "main",
+      "path": "firmware/src/main.c",
+      "line": 10,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "."
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:33:setup_pin",
+      "name": "setup_pin",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 33,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:41:check_clock",
+      "name": "check_clock",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 41,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "start_vref",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 52,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:74:board_io_init",
+      "name": "board_io_init",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 74,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:107:board_io_read",
+      "name": "board_io_read",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 107,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:10:read_reg",
+      "name": "read_reg",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 10,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:17:write_reg",
+      "name": "write_reg",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 17,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:31:relay_io_init",
+      "name": "relay_io_init",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 31,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:40:relay_io_check",
+      "name": "relay_io_check",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 40,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:45:relay_io_read_panel",
+      "name": "relay_io_read_panel",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 45,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/relay_io.c:50:relay_io_stop",
+      "name": "relay_io_stop",
+      "path": "firmware/src/platform/relay_io.c",
+      "line": 50,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    }
+  ],
+  "include_edges": [
+    {
+      "source": "firmware/src/drivers/tca9539_safe.c",
+      "target": "firmware/src/drivers/tca9539_safe.h",
+      "include": "tca9539_safe.h"
+    },
+    {
+      "source": "firmware/src/main.c",
+      "target": "firmware/src/platform/board_io.h",
+      "include": "platform/board_io.h"
+    },
+    {
+      "source": "firmware/src/main.c",
+      "target": "firmware/src/platform/relay_io.h",
+      "include": "platform/relay_io.h"
+    },
+    {
+      "source": "firmware/src/platform/board_io.c",
+      "target": "firmware/src/platform/board_io.h",
+      "include": "platform/board_io.h"
+    },
+    {
+      "source": "firmware/src/platform/relay_io.c",
+      "target": "firmware/src/platform/relay_io.h",
+      "include": "platform/relay_io.h"
+    },
+    {
+      "source": "firmware/src/platform/relay_io.c",
+      "target": "firmware/src/drivers/tca9539_safe.h",
+      "include": "drivers/tca9539_safe.h"
+    }
+  ],
+  "direct_calls": [
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 112
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "callee": "firmware/src/drivers/tca9539_safe.c:39:check_ready",
+      "line": 114
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 119
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 31
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 34
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:39:check_ready",
+      "callee": "firmware/src/drivers/tca9539_safe.c:14:valid_bus",
+      "line": 44
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:39:check_ready",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 45
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "callee": "firmware/src/drivers/tca9539_safe.c:14:valid_bus",
+      "line": 69
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "callee": "firmware/src/drivers/tca9539_safe.c:20:fail",
+      "line": 78
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "callee": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "line": 80
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:89:tca9539_verify_off",
+      "callee": "firmware/src/drivers/tca9539_safe.c:39:check_ready",
+      "line": 91
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:89:tca9539_verify_off",
+      "callee": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "line": 96
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:89:tca9539_verify_off",
+      "callee": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "line": 100
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/board_io.c:74:board_io_init",
+      "line": 13
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/relay_io.c:31:relay_io_init",
+      "line": 15
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/relay_io.c:40:relay_io_check",
+      "line": 33
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/relay_io.c:45:relay_io_read_panel",
+      "line": 35
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/board_io.c:107:board_io_read",
+      "line": 38
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "callee": "firmware/src/platform/relay_io.c:50:relay_io_stop",
+      "line": 41
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
+      "line": 77
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
+      "line": 83
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
+      "line": 88
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:33:setup_pin",
+      "line": 93
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:41:check_clock",
+      "line": 98
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:52:start_vref",
+      "line": 102
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:31:relay_io_init",
+      "callee": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "line": 37
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:40:relay_io_check",
+      "callee": "firmware/src/drivers/tca9539_safe.c:89:tca9539_verify_off",
+      "line": 42
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:45:relay_io_read_panel",
+      "callee": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "line": 47
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:50:relay_io_stop",
+      "callee": "firmware/src/platform/relay_io.c:31:relay_io_init",
+      "line": 52
+    }
+  ],
+  "unresolved_calls": [
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:103:tca9539_read_panel",
+      "name": "read_reg",
+      "line": 118,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:26:read_expected",
+      "name": "read_reg",
+      "line": 30,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/drivers/tca9539_safe.c:53:tca9539_init",
+      "name": "write_reg",
+      "line": 76,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_INF",
+      "line": 12,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_ERR",
+      "line": 18,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_INF",
+      "line": 21,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_INF",
+      "line": 22,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_INF",
+      "line": 23,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_ERR",
+      "line": 43,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "LOG_INF",
+      "line": 47,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/main.c:10:main",
+      "name": "k_msleep",
+      "line": 52,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
+      "name": "ARRAY_SIZE",
+      "line": 117,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
+      "name": "gpio_pin_get_dt",
+      "line": 118,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:107:board_io_read",
+      "name": "BIT",
+      "line": 125,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:33:setup_pin",
+      "name": "gpio_is_ready_dt",
+      "line": 35,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:33:setup_pin",
+      "name": "gpio_pin_configure_dt",
+      "line": 38,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:41:check_clock",
+      "name": "LL_RCC_GetSysClkSource",
+      "line": 44,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:41:check_clock",
+      "name": "LL_PWR_IsEnabledRange1BoostMode",
+      "line": 45,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_APB2_GRP1_EnableClock",
+      "line": 54,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_Disable",
+      "line": 55,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_SetVoltageScaling",
+      "line": 56,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_DisableHIZ",
+      "line": 57,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_Enable",
+      "line": 58,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "k_uptime_get",
+      "line": 61,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_IsVREFReady",
+      "line": 63,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "k_uptime_get",
+      "line": 64,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_Disable",
+      "line": 65,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "LL_VREFBUF_EnableHIZ",
+      "line": 66,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:52:start_vref",
+      "name": "k_msleep",
+      "line": 69,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:74:board_io_init",
+      "name": "ARRAY_SIZE",
+      "line": 92,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:10:read_reg",
+      "name": "i2c_reg_read_byte",
+      "line": 14,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:17:write_reg",
+      "name": "i2c_reg_write_byte",
+      "line": 21,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/relay_io.c:31:relay_io_init",
+      "name": "i2c_is_ready_dt",
+      "line": 34,
+      "kind": "external_or_unknown"
+    }
+  ],
+  "module_edges": [
+    {
+      "source": ".",
+      "target": "platform",
+      "kinds": [
+        "call",
+        "include"
+      ]
+    },
+    {
+      "source": "platform",
+      "target": "drivers",
+      "kinds": [
+        "call",
+        "include"
+      ]
+    }
+  ],
+  "diagnostics": []
+}

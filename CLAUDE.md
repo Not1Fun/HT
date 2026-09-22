@@ -16,7 +16,7 @@
 3. `docs/00-context/设计评审-电源与安全.md` —— 首轮全机评审，P0/P1/P2
 4. `docs/01-power/器件选型与计算核对表.md` —— 每个器件的计算过程
 5. 🆕 `docs/02-digital/软件架构与实现计划.md` —— **固件怎么写（自包含，可直接交给 ChatGPT）**，
-   含 §13 红线 12 条 / §14 待核实 6 条
+   含 §13 红线 12 条 / §14 待核实 11 条 / §15 固件实现与构建入口
 
 原始需求在 `reference/`（docx + vsdx），已提取到 `docs/00-context/需求原文-*`。
 
@@ -371,10 +371,17 @@ L1 / L4 掩膜**交集 69.6 于 69.7 mm²**（形状几乎完全一样），28 �
 
 ---
 
-## 软件规划（2026-09-20 更新）→ `docs/02-digital/软件架构与实现计划.md`
+## 软件规划与首批实现（2026-09-22 更新）→ `docs/02-digital/软件架构与实现计划.md`
 
 **用户已选择 Zephyr，并确认保留 DWIN 串口屏（ADR-019）。**
-Codex 负责软件，Claude 与用户协作完成硬件。软件计划已在原文件修订，尚未创建固件工程或完成上板验证。
+Codex 负责软件，Claude 与用户协作完成硬件。`firmware/` 已建立首批无输出固件，完成交叉编译和主机测试，尚未上板验证。
+
+- 已实现：MAIN-01 自定义板、USART1 延迟日志、安全 GPIO、2.9 V VREFBUF 就绪检查、
+  可移植 TCA9539 全断/面板读取驱动；不提供继电器吸合、激励或看门狗喂养功能。
+- 构建：`./firmware/tools/build.ps1 -Setup -SdkPath <Zephyr SDK 路径>`；本机 SDK 为 `D:\zephyr-sdk`。
+- 代码图谱：`docs/02-digital/代码图谱.md` 与 JSON，由 `firmware/tools/code_graph.py` 自动生成。
+  构建脚本同步生成，CMake 检查源码与图谱一致；命名简洁，硬件适配与可复用驱动分离。
+- 首批仅诊断启动，OC/OV 快速 ISR、采集、DWIN 协议、FRAM 与健康监督仍待后续实现。
 
 - 工程采用 Zephyr / west / CMake / Kconfig / Devicetree，自定义 MAIN-01 板定义；
   以 v4.4.2 为初始验证基线。CubeMX 仅辅助核对，不再接管启动、SysTick 或向量表。

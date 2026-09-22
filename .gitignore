@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Local firmware dependencies and build products
+.tools/
+.west/
+firmware/build*/

@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.28.0)
+
+list(APPEND BOARD_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+list(APPEND DTS_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(ht_firmware LANGUAGES C)
+
+add_custom_target(code_graph_check ALL
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/code_graph.py --check
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
+  COMMENT "Checking source graph synchronization"
+)
+add_dependencies(app code_graph_check)
+
+target_sources(app PRIVATE
+  src/main.c
+  src/platform/board_io.c
+  src/platform/relay_io.c
+  src/drivers/tca9539_safe.c
+)
+target_include_directories(app PRIVATE src)
+target_compile_options(app PRIVATE -Wall -Wextra -Werror)
