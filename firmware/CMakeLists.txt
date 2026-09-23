@@ -19,6 +19,7 @@ target_sources(app PRIVATE
   src/drivers/tca9539_safe.c
   src/ui/panel.c
   src/ui/dgus.c
+  src/ui/view.c
 )
 target_include_directories(app PRIVATE src)
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)

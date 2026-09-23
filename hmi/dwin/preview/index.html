@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HT · 仪表页面与动画预览</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <div><p class="eyebrow">HT / INSTRUMENT INTERFACE</p><h1>读数清晰，操作有回应。</h1></div>
+      <p class="intro-note">800 × 480 · DWIN 串口屏<br><strong>界面演示 · 非设备实测</strong></p>
+    </header>
+    <div class="workspace">
+      <section class="instrument" aria-label="屏幕预览">
+        <div class="screen-stage"><div id="screen" role="img" aria-label="HT 仪表屏幕"></div></div>
+        <div class="screen-caption"><span id="scene-label">待机 · 等待使能</span><span>屏幕无触摸，操作由实体面板完成</span></div>
+      </section>
+      <aside class="controls" aria-label="实体面板模拟">
+        <p class="eyebrow">面板操作</p>
+        <div class="switch-row"><span>控制模式</span><div class="segmented"><button id="cc" aria-pressed="true">CC</button><button id="va" aria-pressed="false">VA</button></div></div>
+        <div class="switch-row"><label for="enable">使能开关</label><input id="enable" type="checkbox" role="switch"></div>
+        <div class="knob-wrap"><div id="knob" class="knob" aria-hidden="true"><span></span><b>HT</b></div></div>
+        <div class="knob-actions"><button id="decrease" aria-label="逆时针一格">−</button><button id="press">按下选择</button><button id="increase" aria-label="顺时针一格">+</button></div>
+        <button id="long-press" class="secondary">长按 · 自动 / 手动量程</button>
+        <p class="control-help">旋转调整当前选中值<br>短按：频率 → 目标 → 量程</p>
+        <div class="presets" aria-label="预设频率"><button data-frequency="2000">2k</button><button data-frequency="5000">5k</button><button data-frequency="8000">8k</button><button data-frequency="10000">10k</button></div>
+        <p id="feedback" role="status">目标值设为非零后，释放再合上使能。</p>
+      </aside>
+    </div>
+    <section class="scenes" aria-label="演示场景">
+      <div><p class="eyebrow">状态预览</p><p>查看真实屏资源在不同状态下的表现。</p></div>
+      <div class="scene-buttons"><button data-scene="boot">启动检查</button><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="switching">切档</button><button data-scene="fault">过流保护</button><button data-scene="stale">数据过期</button></div>
+    </section>
+    <footer><span>动画：12 帧 / 80 ms · 数字不做滚动补间 · 故障立即切页</span><label><input type="checkbox" id="pause"> 暂停动画</label></footer>
+  </main>
+  <script src="preview.js?v=20260923-2"></script>
+</body>
+</html>

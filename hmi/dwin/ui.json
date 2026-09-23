@@ -1,0 +1,535 @@
+{
+  "version": 1,
+  "name": "HT",
+  "width": 800,
+  "height": 480,
+  "touch": false,
+  "colors": {
+    "bg": "#F4F3EF",
+    "surface": "#FFFFFF",
+    "ink": "#243331",
+    "muted": "#727D78",
+    "line": "#DEDfD8",
+    "accent": "#276A58",
+    "pale": "#E8F0EB",
+    "dark": "#253632",
+    "red": "#AF4339",
+    "red_pale": "#F8EAE5",
+    "amber": "#8B6628"
+  },
+  "page_register": 132,
+  "background_library": 32,
+  "icon_library": 42,
+  "pages": [
+    {
+      "id": 0,
+      "name": "boot",
+      "image": "assets/pages/000.png"
+    },
+    {
+      "id": 1,
+      "name": "measure",
+      "image": "assets/pages/001.png"
+    },
+    {
+      "id": 2,
+      "name": "fault",
+      "image": "assets/pages/002.png"
+    }
+  ],
+  "fields": [
+    {
+      "name": "z",
+      "label": "阻抗",
+      "vp": 4352,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 44,
+      "y": 142,
+      "width": 288,
+      "height": 72,
+      "font_width": 32,
+      "font_height": 64,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "r",
+      "label": "电阻",
+      "vp": 4368,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 64,
+      "y": 240,
+      "width": 126,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "x",
+      "label": "电抗",
+      "vp": 4384,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 258,
+      "y": 240,
+      "width": 144,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "phase",
+      "label": "相位",
+      "vp": 4400,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 92,
+      "y": 281,
+      "width": 144,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "voltage",
+      "label": "电压",
+      "vp": 4416,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 484,
+      "y": 139,
+      "width": 132,
+      "height": 34,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "current",
+      "label": "电流",
+      "vp": 4432,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 640,
+      "y": 139,
+      "width": 132,
+      "height": 34,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "apparent",
+      "label": "视在功率",
+      "vp": 4448,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 484,
+      "y": 251,
+      "width": 132,
+      "height": 34,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "power",
+      "label": "有功功率",
+      "vp": 4464,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 640,
+      "y": 251,
+      "width": 132,
+      "height": 34,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "frequency",
+      "label": "实际频率",
+      "vp": 4480,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 154,
+      "y": 347,
+      "width": 54,
+      "height": 16,
+      "font_width": 6,
+      "font_height": 12,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "target",
+      "label": "目标值",
+      "vp": 4496,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 298,
+      "y": 375,
+      "width": 156,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "range",
+      "label": "当前量程",
+      "vp": 4512,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 554,
+      "y": 375,
+      "width": 156,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "ntc1",
+      "label": "T1",
+      "vp": 4528,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 52,
+      "y": 444,
+      "width": 63,
+      "height": 22,
+      "font_width": 9,
+      "font_height": 18,
+      "max_chars": 7,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "ntc2",
+      "label": "T2",
+      "vp": 4544,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 179,
+      "y": 444,
+      "width": 63,
+      "height": 22,
+      "font_width": 9,
+      "font_height": 18,
+      "max_chars": 7,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "ntc3",
+      "label": "T3",
+      "vp": 4560,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 306,
+      "y": 444,
+      "width": 63,
+      "height": 22,
+      "font_width": 9,
+      "font_height": 18,
+      "max_chars": 7,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "bus",
+      "label": "母线",
+      "vp": 4576,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1000,
+      "decimals": 3,
+      "x": 446,
+      "y": 444,
+      "width": 72,
+      "height": 22,
+      "font_width": 9,
+      "font_height": 18,
+      "max_chars": 8,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "request_frequency",
+      "label": "请求频率",
+      "vp": 4592,
+      "words": 16,
+      "encoding": "ascii",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 42,
+      "y": 375,
+      "width": 156,
+      "height": 30,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#243331",
+      "pages": [
+        1
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "name": "selected",
+      "vp": 4100,
+      "x": 24,
+      "y": 335,
+      "width": 752,
+      "height": 76,
+      "first": 0,
+      "last": 2,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "mode",
+      "vp": 4101,
+      "x": 330,
+      "y": 18,
+      "width": 120,
+      "height": 28,
+      "first": 3,
+      "last": 4,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "auto_range",
+      "vp": 4102,
+      "x": 656,
+      "y": 345,
+      "width": 60,
+      "height": 20,
+      "first": 5,
+      "last": 6,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "state",
+      "vp": 4103,
+      "x": 598,
+      "y": 18,
+      "width": 126,
+      "height": 28,
+      "first": 7,
+      "last": 11,
+      "pages": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "fault",
+      "vp": 4104,
+      "x": 56,
+      "y": 215,
+      "width": 688,
+      "height": 66,
+      "first": 12,
+      "last": 18,
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "battery",
+      "vp": 4105,
+      "x": 551,
+      "y": 442,
+      "width": 106,
+      "height": 24,
+      "first": 19,
+      "last": 21,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "charger",
+      "vp": 4106,
+      "x": 669,
+      "y": 442,
+      "width": 108,
+      "height": 24,
+      "first": 22,
+      "last": 24,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "target_unit",
+      "vp": 4101,
+      "x": 464,
+      "y": 373,
+      "width": 38,
+      "height": 26,
+      "first": 25,
+      "last": 26,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "calibration",
+      "vp": 4107,
+      "x": 302,
+      "y": 104,
+      "width": 126,
+      "height": 24,
+      "first": 53,
+      "last": 55,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "boot_step",
+      "vp": 4108,
+      "x": 68,
+      "y": 354,
+      "width": 576,
+      "height": 44,
+      "first": 56,
+      "last": 61,
+      "pages": [
+        0
+      ]
+    }
+  ],
+  "animations": [
+    {
+      "name": "run",
+      "vp": 4096,
+      "reserved_vp": 4097,
+      "x": 736,
+      "y": 16,
+      "width": 32,
+      "height": 32,
+      "stop": 27,
+      "first": 28,
+      "last": 39,
+      "frame_ms": 80,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "boot",
+      "vp": 4098,
+      "reserved_vp": 4099,
+      "x": 659,
+      "y": 344,
+      "width": 64,
+      "height": 64,
+      "stop": 40,
+      "first": 41,
+      "last": 52,
+      "frame_ms": 80,
+      "pages": [
+        0
+      ]
+    }
+  ],
+  "limits": {
+    "text_bytes": 32,
+    "text_max_chars": 9,
+    "render_rate_hz": 5
+  },
+  "animation_warning": "原生动画不具备通信超时自停，不代表主控存活或实际功率输出。"
+}

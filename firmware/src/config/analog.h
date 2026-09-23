@@ -7,9 +7,11 @@
 #define HT_DIV_LOW_OHM      806U
 #define HT_NTC_R25_OHM      10000U
 
+/* 2026-09-23 用户阻温表：B25/50=3950 K；宽温区换算以表中Rnorm为准。 */
+#define HT_NTC_BETA_K       3950U
+
 /* 沿用电路设计，不能替代实物核验。 */
 #define HT_DIV_HIGH_OHM     (7U * 51000U)
-#define HT_NTC_BETA_K       3950U
 #define HT_NTC_PULLUP_OHM   22000U
 #define HT_VREF_MV          2900U
 

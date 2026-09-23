@@ -23,7 +23,7 @@
       "path": "firmware/src/config/analog.h",
       "module": "config",
       "brief": "采样链标称参数，单位写入名称；实机换算仍须标定。",
-      "sha256": "990a2df96c41bd3c4d71fa5868b52e3cd94606171845be8819b6fe060d935d54",
+      "sha256": "b5b6be894486a60e69b76a3d5679e5871a0b3e65d4f7c536dea1cb7afe27b803",
       "includes": []
     },
     {
@@ -118,6 +118,25 @@
       "brief": "已消抖面板事件的设置状态与启停请求模型，不操作硬件。",
       "sha256": "ca9827d1b1dd19f4251b066133cc431dbcec991e6cc24895b1f1c58c00c51774",
       "includes": []
+    },
+    {
+      "path": "firmware/src/ui/view.c",
+      "module": "ui",
+      "brief": "格式化定点数并缓存页/动画同步状态，连续刷新保留屏端动画进度。",
+      "sha256": "87f72bca02bff6f9ab5e041c5f9000f9b27a0fb28030efb4efc39adbebe112e1",
+      "includes": [
+        "view.h"
+      ]
+    },
+    {
+      "path": "firmware/src/ui/view.h",
+      "module": "ui",
+      "brief": "同步定点界面快照与 DGUS 页/动画状态，不连接串口或执行控制。",
+      "sha256": "f114ff33a20b2974486bb983e32ce052f801fa2ce5c8e8922b1694c162e696e9",
+      "includes": [
+        "dgus.h",
+        "panel.h"
+      ]
     }
   ],
   "functions": [
@@ -516,6 +535,69 @@
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:6:valid_snapshot",
+      "name": "valid_snapshot",
+      "path": "firmware/src/ui/view.c",
+      "line": 6,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:19:display_state",
+      "name": "display_state",
+      "path": "firmware/src/ui/view.c",
+      "line": 19,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:32:send_words",
+      "name": "send_words",
+      "path": "firmware/src/ui/view.c",
+      "line": 32,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:44:format_value",
+      "name": "format_value",
+      "path": "firmware/src/ui/view.c",
+      "line": 44,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:81:send_values",
+      "name": "send_values",
+      "path": "firmware/src/ui/view.c",
+      "line": 81,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:114:view_reset",
+      "name": "view_reset",
+      "path": "firmware/src/ui/view.c",
+      "line": 114,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:121:view_refresh",
+      "name": "view_refresh",
+      "path": "firmware/src/ui/view.c",
+      "line": 121,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
     }
   ],
   "include_edges": [
@@ -566,6 +648,21 @@
     },
     {
       "source": "firmware/src/ui/panel.c",
+      "target": "firmware/src/ui/panel.h",
+      "include": "panel.h"
+    },
+    {
+      "source": "firmware/src/ui/view.c",
+      "target": "firmware/src/ui/view.h",
+      "include": "view.h"
+    },
+    {
+      "source": "firmware/src/ui/view.h",
+      "target": "firmware/src/ui/dgus.h",
+      "include": "dgus.h"
+    },
+    {
+      "source": "firmware/src/ui/view.h",
       "target": "firmware/src/ui/panel.h",
       "include": "panel.h"
     }
@@ -930,6 +1027,66 @@
       "caller": "firmware/src/ui/panel.c:77:panel_rotate",
       "callee": "firmware/src/ui/panel.c:33:adjust",
       "line": 104
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:6:valid_snapshot",
+      "line": 135
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:19:display_state",
+      "line": 141
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 150
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 154
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 168
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:81:send_values",
+      "line": 172
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 179
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 185
+    },
+    {
+      "caller": "firmware/src/ui/view.c:121:view_refresh",
+      "callee": "firmware/src/ui/view.c:114:view_reset",
+      "line": 200
+    },
+    {
+      "caller": "firmware/src/ui/view.c:32:send_words",
+      "callee": "firmware/src/ui/dgus.c:66:dgus_encode_write",
+      "line": 36
+    },
+    {
+      "caller": "firmware/src/ui/view.c:81:send_values",
+      "callee": "firmware/src/ui/view.c:44:format_value",
+      "line": 100
+    },
+    {
+      "caller": "firmware/src/ui/view.c:81:send_values",
+      "callee": "firmware/src/ui/view.c:32:send_words",
+      "line": 105
     }
   ],
   "unresolved_calls": [
@@ -1154,6 +1311,18 @@
       "name": "receive",
       "line": 272,
       "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/ui/view.c:32:send_words",
+      "name": "send",
+      "line": 41,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/ui/view.c:44:format_value",
+      "name": "memset",
+      "line": 55,
+      "kind": "external_or_unknown"
     }
   ],
   "module_edges": [
