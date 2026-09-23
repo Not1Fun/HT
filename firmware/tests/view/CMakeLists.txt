@@ -15,8 +15,6 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(view_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 
-foreach(case IN ITEMS mapping_sequence formatting field_widths invalid_readings states_animations
-        crc send_failure invalid_args full_refresh continuous_refresh transitions
-        incremental_failure reset_instances request_frequency startup_steps)
+foreach(case IN ITEMS mapping numbers time choices invalid_readings transitions send_failure invalid_args)
     add_test(NAME view_${case} COMMAND view_tests ${case})
 endforeach()

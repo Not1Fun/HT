@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$ToolDir,
     [Parameter(Mandatory = $true)][string]$InputDir,
-    [Parameter(Mandatory = $true)][string]$OutputFile
+    [Parameter(Mandatory = $true)][string]$OutputFile,
+    [ValidateRange(0, 4092)][int]$ExpectedCount = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,7 +18,7 @@ if ([IntPtr]::Size -ne 4 -or [Threading.Thread]::CurrentThread.ApartmentState -n
         throw 'This build requires 32-bit Windows PowerShell in STA mode.'
     }
     & $windowsPowerShell -NoProfile -STA -ExecutionPolicy Bypass -File $PSCommandPath `
-        -ToolDir $ToolDir -InputDir $InputDir -OutputFile $OutputFile
+        -ToolDir $ToolDir -InputDir $InputDir -OutputFile $OutputFile -ExpectedCount $ExpectedCount
     if ($LASTEXITCODE -ne 0) { throw "ICL build failed (exit $LASTEXITCODE)." }
     return
 }
@@ -30,9 +31,9 @@ if ((Get-FileHash -LiteralPath $dllPath -Algorithm SHA256).Hash -ne $expectedHas
 }
 $libraryName = [IO.Path]::GetFileName($OutputFile)
 if ($libraryName -notmatch '^(32|42)\.icl$') { throw 'Expected output 32.icl or 42.icl.' }
-$expectedCount = if ($libraryName -eq '32.icl') { 3 } else { 62 }
 $files = @(Get-ChildItem -LiteralPath $InputDir -File -Filter '*.png' | Sort-Object Name)
-if ($files.Count -ne $expectedCount) { throw "Expected $expectedCount PNG files in $InputDir." }
+if ($files.Count -eq 0 -or $files.Count -gt 4092) { throw 'Expected 1 to 4092 PNG resources.' }
+if ($ExpectedCount -gt 0 -and $files.Count -ne $ExpectedCount) { throw "Expected $ExpectedCount PNG files in $InputDir." }
 for ($index = 0; $index -lt $files.Count; $index++) {
     if ($files[$index].Name -cne ('{0:D3}.png' -f $index)) {
         throw 'PNG names must be contiguous: 000.png, 001.png, ...'

@@ -18,8 +18,8 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(panel_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 
-foreach(case IN ITEMS defaults selection rotation presets range
-        startup_enabled zero_target fault_rearm stop_priority
-        mode_change_stop running_zero_stop invalid_config invalid_inputs extremes)
+foreach(case IN ITEMS defaults tables key_mapping status_navigation draft_confirmation
+        cancel field_selection rotation_limits targets startup_enabled zero_target
+        fault_rearm mode_change_stop stop_priority invalid_config invalid_inputs)
     add_test(NAME panel_${case} COMMAND panel_tests ${case})
 endforeach()

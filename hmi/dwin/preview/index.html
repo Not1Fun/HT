@@ -2,39 +2,38 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HT · 仪表页面与动画预览</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HT · 状态与挡位设置</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css?v=blue2">
 </head>
 <body>
-  <main>
-    <header class="intro">
-      <div><p class="eyebrow">HT / INSTRUMENT INTERFACE</p><h1>读数清晰，操作有回应。</h1></div>
-      <p class="intro-note">800 × 480 · DWIN 串口屏<br><strong>界面演示 · 非设备实测</strong></p>
-    </header>
-    <div class="workspace">
-      <section class="instrument" aria-label="屏幕预览">
-        <div class="screen-stage"><div id="screen" role="img" aria-label="HT 仪表屏幕"></div></div>
-        <div class="screen-caption"><span id="scene-label">待机 · 等待使能</span><span>屏幕无触摸，操作由实体面板完成</span></div>
-      </section>
-      <aside class="controls" aria-label="实体面板模拟">
-        <p class="eyebrow">面板操作</p>
-        <div class="switch-row"><span>控制模式</span><div class="segmented"><button id="cc" aria-pressed="true">CC</button><button id="va" aria-pressed="false">VA</button></div></div>
-        <div class="switch-row"><label for="enable">使能开关</label><input id="enable" type="checkbox" role="switch"></div>
-        <div class="knob-wrap"><div id="knob" class="knob" aria-hidden="true"><span></span><b>HT</b></div></div>
-        <div class="knob-actions"><button id="decrease" aria-label="逆时针一格">−</button><button id="press">按下选择</button><button id="increase" aria-label="顺时针一格">+</button></div>
-        <button id="long-press" class="secondary">长按 · 自动 / 手动量程</button>
-        <p class="control-help">旋转调整当前选中值<br>短按：频率 → 目标 → 量程</p>
-        <div class="presets" aria-label="预设频率"><button data-frequency="2000">2k</button><button data-frequency="5000">5k</button><button data-frequency="8000">8k</button><button data-frequency="10000">10k</button></div>
-        <p id="feedback" role="status">目标值设为非零后，释放再合上使能。</p>
-      </aside>
-    </div>
-    <section class="scenes" aria-label="演示场景">
-      <div><p class="eyebrow">状态预览</p><p>查看真实屏资源在不同状态下的表现。</p></div>
-      <div class="scene-buttons"><button data-scene="boot">启动检查</button><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="switching">切档</button><button data-scene="fault">过流保护</button><button data-scene="stale">数据过期</button></div>
+<main>
+  <header class="intro"><div><h1>HT 面板预览</h1><p>状态与挡位设置 · 800 × 480 DWIN</p></div><span class="demo-tag">演示数据 · 未连接设备</span></header>
+  <div class="workspace">
+    <section class="instrument" aria-label="屏幕预览">
+      <div class="screen-stage"><div id="screen" role="img" aria-label="正在载入"></div></div>
+      <div class="screen-caption"><span id="page-label">状态页</span><span>通过实体按键与编码器操作</span></div>
     </section>
-    <footer><span>动画：12 帧 / 80 ms · 数字不做滚动补间 · 故障立即切页</span><label><input type="checkbox" id="pause"> 暂停动画</label></footer>
-  </main>
-  <script src="preview.js?v=20260923-2"></script>
+    <aside class="controls" aria-label="实体面板模拟">
+      <h2>方向按键</h2>
+      <div class="dpad">
+        <button id="up" aria-label="上键">↑</button>
+        <button id="left" aria-label="左键">←</button>
+        <button id="ok" aria-label="OK键">OK</button>
+        <button id="right" aria-label="右键">→</button>
+        <button id="down" aria-label="下键">↓</button>
+      </div>
+      <p class="help">左右切页，上下选项</p>
+      <h2>旋转编码器</h2>
+      <div class="encoder"><button id="ccw" aria-label="左旋：上一个挡位">↶</button><button id="press" aria-label="编码器下压确认"><span class="mark"></span><span>确认</span></button><button id="cw" aria-label="右旋：下一个挡位">↷</button></div>
+      <p class="help">右旋下一挡，左旋上一挡<br>下压或 OK 确认选择</p>
+      <p id="feedback" role="status">按右键进入挡位设置。</p>
+    </aside>
+  </div>
+  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="fault">保护</button><button data-scene="offline">离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label></section>
+  <footer>阻抗挡位：1 / 3 / 10 / 30 / 100 / 300 / 1000 Ω　·　频率挡位：2 / 5 / 8 / 10 kHz</footer>
+</main>
+<script src="preview.js?v=blue2"></script>
 </body>
 </html>

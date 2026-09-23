@@ -1,25 +1,14 @@
-/* @brief 维护面板参数与释放后启用条件，所有操作只生成软件请求。 */
+/* @brief 选档先编辑草稿再提交，导航与输出许可相互独立。 */
 #include "panel.h"
 
 #include <stddef.h>
 
+static const uint32_t ranges[PANEL_RANGE_COUNT] = {1, 3, 10, 30, 100, 300, 1000};
+static const uint32_t frequencies[PANEL_FREQUENCY_COUNT] = {2000, 5000, 8000, 10000};
+
 static bool valid_mode(enum panel_mode mode)
 {
     return mode == PANEL_CC || mode == PANEL_VA;
-}
-
-static bool valid_config(const struct panel_config *config)
-{
-    return config->frequency_min_hz > 0 &&
-           config->frequency_min_hz <= 2000 &&
-           config->frequency_max_hz >= 2000 &&
-           config->frequency_step_hz > 0 &&
-           config->frequency_step_hz <= config->frequency_max_hz &&
-           config->current_max_ma > 0 && config->current_step_ma > 0 &&
-           config->current_step_ma <= config->current_max_ma &&
-           config->apparent_max_mva > 0 && config->apparent_step_mva > 0 &&
-           config->apparent_step_mva <= config->apparent_max_mva &&
-           config->range_count > 0 && config->range_count <= 7;
 }
 
 static int check_ready(const struct panel *panel)
@@ -30,18 +19,32 @@ static int check_ready(const struct panel *panel)
     return panel->ready ? PANEL_OK : PANEL_ERR_NOT_READY;
 }
 
-static uint32_t adjust(uint32_t value, int32_t detents, uint32_t step,
-                       uint32_t minimum, uint32_t maximum)
+static uint8_t selected_index(const struct panel *panel)
 {
-    int64_t next = (int64_t)value + (int64_t)detents * step;
+    if (panel->field == PANEL_RANGE) {
+        return panel->range_index;
+    }
+    for (uint8_t index = 0; index < PANEL_FREQUENCY_COUNT; ++index) {
+        if (frequencies[index] == panel->frequency_hz) {
+            return index;
+        }
+    }
+    return 0;
+}
 
-    if (next < minimum) {
-        return minimum;
-    }
-    if (next > maximum) {
-        return maximum;
-    }
-    return (uint32_t)next;
+uint32_t panel_range_ohm(uint8_t index)
+{
+    return index < PANEL_RANGE_COUNT ? ranges[index] : 0;
+}
+
+uint32_t panel_frequency_hz(uint8_t index)
+{
+    return index < PANEL_FREQUENCY_COUNT ? frequencies[index] : 0;
+}
+
+uint8_t panel_pressed_keys(uint8_t raw_port1)
+{
+    return (uint8_t)(~raw_port1 & 0x3fu);
 }
 
 int panel_init(struct panel *panel, const struct panel_config *config,
@@ -58,15 +61,14 @@ int panel_init(struct panel *panel, const struct panel_config *config,
     }
     copy = *config;
     *panel = (struct panel){0};
-    if (!valid_mode(mode) || !valid_config(&copy)) {
+    if (!valid_mode(mode) || copy.current_max_ma == 0 || copy.apparent_max_mva == 0) {
         return PANEL_ERR_ARG;
     }
-
     panel->config = copy;
     panel->mode = mode;
-    panel->field = PANEL_FREQUENCY;
-    panel->frequency_hz = 2000;
-    panel->auto_range = true;
+    panel->page = PANEL_PAGE_STATUS;
+    panel->field = PANEL_RANGE;
+    panel->frequency_hz = frequencies[0];
     panel->enabled = enabled;
     panel->fault = fault;
     panel->armed = !enabled && !fault;
@@ -74,79 +76,100 @@ int panel_init(struct panel *panel, const struct panel_config *config,
     return PANEL_OK;
 }
 
-int panel_rotate(struct panel *panel, int32_t detents)
+int panel_key(struct panel *panel, enum panel_key key)
 {
     int result = check_ready(panel);
+    enum panel_field field;
 
     if (result != PANEL_OK) {
         return result;
     }
-    switch (panel->field) {
-    case PANEL_FREQUENCY:
-        panel->frequency_hz = adjust(panel->frequency_hz, detents,
-                                     panel->config.frequency_step_hz,
-                                     panel->config.frequency_min_hz,
-                                     panel->config.frequency_max_hz);
+    if ((unsigned int)key > PANEL_KEY_ENCODER) {
+        return PANEL_ERR_ARG;
+    }
+    if (panel->page == PANEL_PAGE_STATUS) {
+        if (key == PANEL_KEY_RIGHT || key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
+            panel->draft_index = selected_index(panel);
+            panel->page = PANEL_PAGE_SETTINGS;
+        }
+        return PANEL_ACTION_NONE;
+    }
+    switch (key) {
+    case PANEL_KEY_LEFT:
+        panel->draft_index = selected_index(panel);
+        panel->page = PANEL_PAGE_STATUS;
         break;
-    case PANEL_TARGET:
-        if (panel->mode == PANEL_CC) {
-            panel->current_ma = adjust(panel->current_ma, detents,
-                                       panel->config.current_step_ma, 0,
-                                       panel->config.current_max_ma);
-        } else {
-            panel->apparent_mva = adjust(panel->apparent_mva, detents,
-                                         panel->config.apparent_step_mva, 0,
-                                         panel->config.apparent_max_mva);
+    case PANEL_KEY_UP:
+    case PANEL_KEY_DOWN:
+        field = key == PANEL_KEY_UP ? PANEL_RANGE : PANEL_FREQUENCY;
+        if (field != panel->field) {
+            panel->field = field;
+            panel->draft_index = selected_index(panel);
         }
         break;
-    case PANEL_RANGE:
-        if (!panel->auto_range) {
-            panel->range_index = (uint8_t)adjust(panel->range_index, detents,
-                                                 1, 0, panel->config.range_count - 1);
+    case PANEL_KEY_OK:
+    case PANEL_KEY_ENCODER:
+        if (panel->field == PANEL_RANGE) {
+            panel->range_index = panel->draft_index;
+            panel->auto_range = false;
+            return PANEL_ACTION_RANGE;
         }
+        panel->frequency_hz = frequencies[panel->draft_index];
+        return PANEL_ACTION_FREQUENCY;
+    case PANEL_KEY_RIGHT:
         break;
     default:
         return PANEL_ERR_ARG;
     }
+    return PANEL_ACTION_NONE;
+}
+
+int panel_rotate(struct panel *panel, int32_t detents)
+{
+    int result = check_ready(panel);
+    int64_t next;
+    uint8_t maximum;
+
+    if (result != PANEL_OK) {
+        return result;
+    }
+    if (panel->page == PANEL_PAGE_STATUS) {
+        return PANEL_OK;
+    }
+    maximum = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT - 1 : PANEL_FREQUENCY_COUNT - 1;
+    next = (int64_t)panel->draft_index + detents;
+    panel->draft_index = next < 0 ? 0 : next > maximum ? maximum : (uint8_t)next;
     return PANEL_OK;
 }
 
-int panel_press(struct panel *panel, enum panel_press press)
+bool panel_draft_changed(const struct panel *panel)
+{
+    return check_ready(panel) == PANEL_OK && panel->page == PANEL_PAGE_SETTINGS &&
+           (panel->draft_index != selected_index(panel) ||
+            (panel->field == PANEL_RANGE && panel->auto_range));
+}
+
+int panel_set_target(struct panel *panel, enum panel_mode mode, uint32_t value)
 {
     int result = check_ready(panel);
 
     if (result != PANEL_OK) {
         return result;
     }
-    if (press == PANEL_SHORT_PRESS) {
-        panel->field = panel->field == PANEL_RANGE ? PANEL_FREQUENCY :
-                        (enum panel_field)(panel->field + 1);
-    } else if (press == PANEL_LONG_PRESS) {
-        panel->auto_range = !panel->auto_range;
-    } else {
+    if (!valid_mode(mode)) {
         return PANEL_ERR_ARG;
     }
-    return PANEL_OK;
-}
-
-int panel_preset(struct panel *panel, uint8_t preset_index)
-{
-    static const uint32_t frequencies[] = {2000, 5000, 8000, 10000};
-    uint32_t frequency;
-    int result = check_ready(panel);
-
-    if (result != PANEL_OK) {
-        return result;
-    }
-    if (preset_index >= sizeof(frequencies) / sizeof(frequencies[0])) {
-        return PANEL_ERR_ARG;
-    }
-    frequency = frequencies[preset_index];
-    if (frequency < panel->config.frequency_min_hz ||
-        frequency > panel->config.frequency_max_hz) {
+    if (value > (mode == PANEL_CC ? panel->config.current_max_ma : panel->config.apparent_max_mva)) {
         return PANEL_ERR_RANGE;
     }
-    panel->frequency_hz = frequency;
+    if (mode == PANEL_CC) {
+        panel->current_ma = value;
+    } else {
+        panel->apparent_mva = value;
+    }
+    if (mode == panel->mode && value == 0 && panel->enabled) {
+        panel->armed = false;
+    }
     return PANEL_OK;
 }
 

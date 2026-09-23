@@ -25,7 +25,10 @@ if ([IntPtr]::Size -ne 4 -or $PSVersionTable.PSEdition -eq 'Core' -or
 $ui = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
 $sourceDir = Split-Path -Parent $Manifest
 if ($ui.width -ne 800 -or $ui.height -ne 480 -or $ui.touch) { throw 'Expected an 800 x 480 non-touch project.' }
-if (@($ui.pages).Count -ne 3) { throw 'Expected three HT pages.' }
+if ($ui.version -ne 2 -or @($ui.pages).Count -ne 2 -or
+    $ui.pages[0].id -ne 0 -or $ui.pages[1].id -ne 1) { throw 'Expected HT v2 status/settings pages.' }
+if (@($ui.fields).Count -ne 7 -or @($ui.icons).Count -ne 4 -or
+    @($ui.animations).Count -ne 0) { throw 'Expected seven fields, four icon controls and no animation.' }
 if (-not (Test-Path -LiteralPath $FontFile -PathType Leaf) -or
     (Get-Item -LiteralPath $FontFile).Length -eq 0) { throw "ASCII font missing or empty: $FontFile" }
 foreach ($dll in @('DwinTerminal.dll', 'CoreDll.dll', 'DWINUI.dll')) {
@@ -103,7 +106,10 @@ function Add-Control($Document, $Spec, [string]$Kind) {
             Set-Word $data 18 $Spec.last
             $data[20] = [byte]$ui.icon_library
             $data[21] = 1
-            $initial = if ($Spec.name -in @('battery', 'charger', 'calibration')) { '2' } else { '0' }
+            if ($Spec.initial -lt 0 -or $Spec.initial -gt $Spec.last - $Spec.first) {
+                throw "Icon initial value out of range: $($Spec.name)"
+            }
+            $initial = [string]$Spec.initial
         }
         'animation' {
             if ($Spec.reserved_vp -ne $Spec.vp + 1 -or $Spec.frame_ms % 20 -or
@@ -241,6 +247,21 @@ try {
             }
         }
     }
+    $initialData = [IO.File]::ReadAllBytes("$OutputDir/DWIN_SET/22_Config.bin")
+    if ($initialData.Length -ne 131076) { throw 'Unexpected official initialization format.' }
+    foreach ($icon in $ui.icons) {
+        $offset = 2 * $icon.vp
+        $value = ([int]$initialData[$offset] -shl 8) -bor [int]$initialData[$offset + 1]
+        if ($value -ne $icon.initial) { throw "Icon initial value mismatch: $($icon.name)" }
+    }
+    foreach ($field in $ui.fields) {
+        for ($index = 0; $index -lt 32; $index++) {
+            $expected = if ($index -lt 2) { 45 } else { 0 }
+            if ($initialData[2 * $field.vp + $index] -ne $expected) {
+                throw "Text initial value mismatch: $($field.name)"
+            }
+        }
+    }
     $fontTarget = [IO.Path]::GetFullPath("$OutputDir/DWIN_SET/0_DWIN_ASC.HZK")
     if (-not [string]::Equals($FontFile, $fontTarget, [StringComparison]::OrdinalIgnoreCase)) {
         Copy-Item -LiteralPath $FontFile -Destination $fontTarget -Force
@@ -257,6 +278,7 @@ try {
 if (-not $SkipIcl) {
     $iclScript = Join-Path $PSScriptRoot 'build-icl.ps1'
     if (-not (Test-Path -LiteralPath $iclScript)) { throw 'ICL exporter is required; use -SkipIcl for controls only.' }
-    & $iclScript -ToolDir $ToolDir -InputDir (Join-Path $sourceDir 'assets/pages') -OutputFile "$OutputDir/DWIN_SET/$($ui.background_library).icl"
-    & $iclScript -ToolDir $ToolDir -InputDir (Join-Path $sourceDir 'assets/icons') -OutputFile "$OutputDir/DWIN_SET/$($ui.icon_library).icl"
+    & $iclScript -ToolDir $ToolDir -InputDir (Join-Path $sourceDir 'assets/pages') -OutputFile "$OutputDir/DWIN_SET/$($ui.background_library).icl" -ExpectedCount @($ui.pages).Count
+    $iconCount = [int](($ui.icons | Measure-Object -Property last -Maximum).Maximum) + 1
+    & $iclScript -ToolDir $ToolDir -InputDir (Join-Path $sourceDir 'assets/icons') -OutputFile "$OutputDir/DWIN_SET/$($ui.icon_library).icl" -ExpectedCount $iconCount
 }

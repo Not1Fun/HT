@@ -104,10 +104,26 @@
       "includes": []
     },
     {
+      "path": "firmware/src/ui/encoder.c",
+      "module": "ui",
+      "brief": "累计合法 Gray 转换并抵消回摆，非法跳变丢弃未完成格数。",
+      "sha256": "f972de64debc00644895c5ad32bd4050f1fa3fcd2ed996dcb7c1a5b8189945f5",
+      "includes": [
+        "encoder.h"
+      ]
+    },
+    {
+      "path": "firmware/src/ui/encoder.h",
+      "module": "ui",
+      "brief": "可配置整格转换数的 A/B 正交解码，只生成旋转格数。",
+      "sha256": "46ff4ff7e6e4c734671820e3f15611a8adc79ea54e2320c0143c98dd4f7ed6b7",
+      "includes": []
+    },
+    {
       "path": "firmware/src/ui/panel.c",
       "module": "ui",
-      "brief": "维护面板参数与释放后启用条件，所有操作只生成软件请求。",
-      "sha256": "07dc01a483ef05e744a30613247640ff43664cc8f0e99aafc9b1d37c9b12a956",
+      "brief": "选档先编辑草稿再提交，导航与输出许可相互独立。",
+      "sha256": "5950e88f07b822774ce6298d10bb565782af5f80f346ff3a0514aa817587bf8e",
       "includes": [
         "panel.h"
       ]
@@ -115,15 +131,15 @@
     {
       "path": "firmware/src/ui/panel.h",
       "module": "ui",
-      "brief": "已消抖面板事件的设置状态与启停请求模型，不操作硬件。",
-      "sha256": "ca9827d1b1dd19f4251b066133cc431dbcec991e6cc24895b1f1c58c00c51774",
+      "brief": "已消抖面板导航、选档草稿与启停请求模型，不操作硬件。",
+      "sha256": "157f22c13c1586c3777597894efdb6c1a36e965bd7e90cbc635fe77b7fcbdfb1",
       "includes": []
     },
     {
       "path": "firmware/src/ui/view.c",
       "module": "ui",
-      "brief": "格式化定点数并缓存页/动画同步状态，连续刷新保留屏端动画进度。",
-      "sha256": "87f72bca02bff6f9ab5e041c5f9000f9b27a0fb28030efb4efc39adbebe112e1",
+      "brief": "格式化已生效状态与独立候选值，同步两页屏幕契约。",
+      "sha256": "8f15d62840613fe31244132a821436047ee9a02dc27817c3bbf4ea5f8c26f988",
       "includes": [
         "view.h"
       ]
@@ -131,8 +147,8 @@
     {
       "path": "firmware/src/ui/view.h",
       "module": "ui",
-      "brief": "同步定点界面快照与 DGUS 页/动画状态，不连接串口或执行控制。",
-      "sha256": "f114ff33a20b2974486bb983e32ce052f801fa2ce5c8e8922b1694c162e696e9",
+      "brief": "两页仪表快照与 DGUS VP 同步，不执行测量或挡位切换。",
+      "sha256": "e86c0348628cc58a33700affa81da7238f355e1fa860867827a7cd0120c27237",
       "includes": [
         "dgus.h",
         "panel.h"
@@ -456,145 +472,190 @@
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:6:valid_mode",
+      "id": "firmware/src/ui/encoder.c:6:encoder_init",
+      "name": "encoder_init",
+      "path": "firmware/src/ui/encoder.c",
+      "line": 6,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/encoder.c:29:encoder_update",
+      "name": "encoder_update",
+      "path": "firmware/src/ui/encoder.c",
+      "line": 29,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:9:valid_mode",
       "name": "valid_mode",
       "path": "firmware/src/ui/panel.c",
-      "line": 6,
+      "line": 9,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:11:valid_config",
-      "name": "valid_config",
-      "path": "firmware/src/ui/panel.c",
-      "line": 11,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "ui"
-    },
-    {
-      "id": "firmware/src/ui/panel.c:25:check_ready",
+      "id": "firmware/src/ui/panel.c:14:check_ready",
       "name": "check_ready",
       "path": "firmware/src/ui/panel.c",
-      "line": 25,
+      "line": 14,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:33:adjust",
-      "name": "adjust",
+      "id": "firmware/src/ui/panel.c:22:selected_index",
+      "name": "selected_index",
       "path": "firmware/src/ui/panel.c",
-      "line": 33,
+      "line": 22,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:47:panel_init",
+      "id": "firmware/src/ui/panel.c:35:panel_range_ohm",
+      "name": "panel_range_ohm",
+      "path": "firmware/src/ui/panel.c",
+      "line": 35,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:40:panel_frequency_hz",
+      "name": "panel_frequency_hz",
+      "path": "firmware/src/ui/panel.c",
+      "line": 40,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:45:panel_pressed_keys",
+      "name": "panel_pressed_keys",
+      "path": "firmware/src/ui/panel.c",
+      "line": 45,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:50:panel_init",
       "name": "panel_init",
       "path": "firmware/src/ui/panel.c",
-      "line": 47,
+      "line": 50,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:77:panel_rotate",
+      "id": "firmware/src/ui/panel.c:79:panel_key",
+      "name": "panel_key",
+      "path": "firmware/src/ui/panel.c",
+      "line": 79,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/panel.c:127:panel_rotate",
       "name": "panel_rotate",
       "path": "firmware/src/ui/panel.c",
-      "line": 77,
+      "line": 127,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:114:panel_press",
-      "name": "panel_press",
+      "id": "firmware/src/ui/panel.c:145:panel_draft_changed",
+      "name": "panel_draft_changed",
       "path": "firmware/src/ui/panel.c",
-      "line": 114,
+      "line": 145,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:132:panel_preset",
-      "name": "panel_preset",
+      "id": "firmware/src/ui/panel.c:152:panel_set_target",
+      "name": "panel_set_target",
       "path": "firmware/src/ui/panel.c",
-      "line": 132,
+      "line": 152,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/panel.c:153:panel_inputs",
+      "id": "firmware/src/ui/panel.c:176:panel_inputs",
       "name": "panel_inputs",
       "path": "firmware/src/ui/panel.c",
-      "line": 153,
+      "line": 176,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/view.c:6:valid_snapshot",
-      "name": "valid_snapshot",
-      "path": "firmware/src/ui/view.c",
-      "line": 6,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "ui"
-    },
-    {
-      "id": "firmware/src/ui/view.c:19:display_state",
-      "name": "display_state",
-      "path": "firmware/src/ui/view.c",
-      "line": 19,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "ui"
-    },
-    {
-      "id": "firmware/src/ui/view.c:32:send_words",
+      "id": "firmware/src/ui/view.c:5:send_words",
       "name": "send_words",
       "path": "firmware/src/ui/view.c",
-      "line": 32,
+      "line": 5,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/view.c:44:format_value",
+      "id": "firmware/src/ui/view.c:16:format_number",
+      "name": "format_number",
+      "path": "firmware/src/ui/view.c",
+      "line": 16,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:48:format_time",
+      "name": "format_time",
+      "path": "firmware/src/ui/view.c",
+      "line": 48,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "ui"
+    },
+    {
+      "id": "firmware/src/ui/view.c:74:format_value",
       "name": "format_value",
       "path": "firmware/src/ui/view.c",
-      "line": 44,
+      "line": 74,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/view.c:81:send_values",
+      "id": "firmware/src/ui/view.c:98:send_values",
       "name": "send_values",
       "path": "firmware/src/ui/view.c",
-      "line": 81,
+      "line": 98,
       "linkage": "static",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/view.c:114:view_reset",
+      "id": "firmware/src/ui/view.c:126:view_reset",
       "name": "view_reset",
       "path": "firmware/src/ui/view.c",
-      "line": 114,
+      "line": 126,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
     },
     {
-      "id": "firmware/src/ui/view.c:121:view_refresh",
+      "id": "firmware/src/ui/view.c:133:view_refresh",
       "name": "view_refresh",
       "path": "firmware/src/ui/view.c",
-      "line": 121,
+      "line": 133,
       "linkage": "external",
       "definition_form": "function",
       "module": "ui"
@@ -645,6 +706,11 @@
       "source": "firmware/src/ui/dgus.c",
       "target": "firmware/src/ui/dgus.h",
       "include": "dgus.h"
+    },
+    {
+      "source": "firmware/src/ui/encoder.c",
+      "target": "firmware/src/ui/encoder.h",
+      "include": "encoder.h"
     },
     {
       "source": "firmware/src/ui/panel.c",
@@ -974,119 +1040,119 @@
       "line": 110
     },
     {
-      "caller": "firmware/src/ui/panel.c:114:panel_press",
-      "callee": "firmware/src/ui/panel.c:25:check_ready",
-      "line": 116
+      "caller": "firmware/src/ui/panel.c:127:panel_rotate",
+      "callee": "firmware/src/ui/panel.c:14:check_ready",
+      "line": 129
     },
     {
-      "caller": "firmware/src/ui/panel.c:132:panel_preset",
-      "callee": "firmware/src/ui/panel.c:25:check_ready",
-      "line": 136
+      "caller": "firmware/src/ui/panel.c:145:panel_draft_changed",
+      "callee": "firmware/src/ui/panel.c:14:check_ready",
+      "line": 147
     },
     {
-      "caller": "firmware/src/ui/panel.c:153:panel_inputs",
-      "callee": "firmware/src/ui/panel.c:25:check_ready",
-      "line": 160
+      "caller": "firmware/src/ui/panel.c:145:panel_draft_changed",
+      "callee": "firmware/src/ui/panel.c:22:selected_index",
+      "line": 148
     },
     {
-      "caller": "firmware/src/ui/panel.c:153:panel_inputs",
-      "callee": "firmware/src/ui/panel.c:6:valid_mode",
-      "line": 165
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:47:panel_init",
-      "callee": "firmware/src/ui/panel.c:11:valid_config",
-      "line": 61
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:47:panel_init",
-      "callee": "firmware/src/ui/panel.c:6:valid_mode",
-      "line": 61
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
-      "callee": "firmware/src/ui/panel.c:25:check_ready",
-      "line": 79
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
-      "callee": "firmware/src/ui/panel.c:33:adjust",
-      "line": 86
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
-      "callee": "firmware/src/ui/panel.c:33:adjust",
-      "line": 93
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
-      "callee": "firmware/src/ui/panel.c:33:adjust",
-      "line": 97
-    },
-    {
-      "caller": "firmware/src/ui/panel.c:77:panel_rotate",
-      "callee": "firmware/src/ui/panel.c:33:adjust",
-      "line": 104
-    },
-    {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:6:valid_snapshot",
-      "line": 135
-    },
-    {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:19:display_state",
-      "line": 141
-    },
-    {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:32:send_words",
-      "line": 150
-    },
-    {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:32:send_words",
+      "caller": "firmware/src/ui/panel.c:152:panel_set_target",
+      "callee": "firmware/src/ui/panel.c:14:check_ready",
       "line": 154
     },
     {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:32:send_words",
-      "line": 168
+      "caller": "firmware/src/ui/panel.c:152:panel_set_target",
+      "callee": "firmware/src/ui/panel.c:9:valid_mode",
+      "line": 159
     },
     {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:81:send_values",
-      "line": 172
+      "caller": "firmware/src/ui/panel.c:176:panel_inputs",
+      "callee": "firmware/src/ui/panel.c:14:check_ready",
+      "line": 183
     },
     {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:32:send_words",
-      "line": 179
+      "caller": "firmware/src/ui/panel.c:176:panel_inputs",
+      "callee": "firmware/src/ui/panel.c:9:valid_mode",
+      "line": 188
     },
     {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:32:send_words",
-      "line": 185
+      "caller": "firmware/src/ui/panel.c:50:panel_init",
+      "callee": "firmware/src/ui/panel.c:9:valid_mode",
+      "line": 64
     },
     {
-      "caller": "firmware/src/ui/view.c:121:view_refresh",
-      "callee": "firmware/src/ui/view.c:114:view_reset",
-      "line": 200
+      "caller": "firmware/src/ui/panel.c:79:panel_key",
+      "callee": "firmware/src/ui/panel.c:14:check_ready",
+      "line": 81
     },
     {
-      "caller": "firmware/src/ui/view.c:32:send_words",
+      "caller": "firmware/src/ui/panel.c:79:panel_key",
+      "callee": "firmware/src/ui/panel.c:22:selected_index",
+      "line": 92
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:79:panel_key",
+      "callee": "firmware/src/ui/panel.c:22:selected_index",
+      "line": 99
+    },
+    {
+      "caller": "firmware/src/ui/panel.c:79:panel_key",
+      "callee": "firmware/src/ui/panel.c:22:selected_index",
+      "line": 107
+    },
+    {
+      "caller": "firmware/src/ui/view.c:133:view_refresh",
+      "callee": "firmware/src/ui/view.c:5:send_words",
+      "line": 156
+    },
+    {
+      "caller": "firmware/src/ui/view.c:133:view_refresh",
+      "callee": "firmware/src/ui/view.c:98:send_values",
+      "line": 158
+    },
+    {
+      "caller": "firmware/src/ui/view.c:133:view_refresh",
+      "callee": "firmware/src/ui/view.c:5:send_words",
+      "line": 163
+    },
+    {
+      "caller": "firmware/src/ui/view.c:133:view_refresh",
+      "callee": "firmware/src/ui/view.c:126:view_reset",
+      "line": 166
+    },
+    {
+      "caller": "firmware/src/ui/view.c:5:send_words",
       "callee": "firmware/src/ui/dgus.c:66:dgus_encode_write",
-      "line": 36
+      "line": 9
     },
     {
-      "caller": "firmware/src/ui/view.c:81:send_values",
-      "callee": "firmware/src/ui/view.c:44:format_value",
-      "line": 100
+      "caller": "firmware/src/ui/view.c:74:format_value",
+      "callee": "firmware/src/ui/view.c:48:format_time",
+      "line": 83
     },
     {
-      "caller": "firmware/src/ui/view.c:81:send_values",
-      "callee": "firmware/src/ui/view.c:32:send_words",
-      "line": 105
+      "caller": "firmware/src/ui/view.c:74:format_value",
+      "callee": "firmware/src/ui/view.c:16:format_number",
+      "line": 86
+    },
+    {
+      "caller": "firmware/src/ui/view.c:74:format_value",
+      "callee": "firmware/src/ui/view.c:16:format_number",
+      "line": 91
+    },
+    {
+      "caller": "firmware/src/ui/view.c:74:format_value",
+      "callee": "firmware/src/ui/view.c:16:format_number",
+      "line": 94
+    },
+    {
+      "caller": "firmware/src/ui/view.c:98:send_values",
+      "callee": "firmware/src/ui/view.c:74:format_value",
+      "line": 112
+    },
+    {
+      "caller": "firmware/src/ui/view.c:98:send_values",
+      "callee": "firmware/src/ui/view.c:5:send_words",
+      "line": 117
     }
   ],
   "unresolved_calls": [
@@ -1313,15 +1379,15 @@
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/ui/view.c:32:send_words",
+      "caller": "firmware/src/ui/view.c:5:send_words",
       "name": "send",
-      "line": 41,
+      "line": 13,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/ui/view.c:44:format_value",
+      "caller": "firmware/src/ui/view.c:74:format_value",
       "name": "memset",
-      "line": 55,
+      "line": 76,
       "kind": "external_or_unknown"
     }
   ],

@@ -10,6 +10,7 @@ add_subdirectory(tca9539)
 add_subdirectory(panel)
 add_subdirectory(dgus)
 add_subdirectory(view)
+add_subdirectory(encoder)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(NAME code_graph_unit COMMAND ${Python3_EXECUTABLE} -m unittest discover

@@ -20,6 +20,7 @@ target_sources(app PRIVATE
   src/ui/panel.c
   src/ui/dgus.c
   src/ui/view.c
+  src/ui/encoder.c
 )
 target_include_directories(app PRIVATE src)
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)
