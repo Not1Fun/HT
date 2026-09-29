@@ -1,6 +1,7 @@
 param(
     [switch]$Setup,
     [switch]$Pristine,
+    [switch]$InternalClock,
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
 
@@ -10,6 +11,8 @@ $python = Join-Path $root '.tools\venv\Scripts\python.exe'
 $oldPath = $env:PATH
 $oldBase = $env:ZEPHYR_BASE
 $oldSdk = $env:ZEPHYR_SDK_INSTALL_DIR
+$oldOverlay = $env:DTC_OVERLAY_FILE
+$oldExtraOverlay = $env:EXTRA_DTC_OVERLAY_FILE
 
 function Invoke-Checked {
     param([string]$File, [string[]]$Arguments)
@@ -44,16 +47,23 @@ try {
     }
 
     Invoke-Checked $python @('firmware/tools/code_graph.py')
+    $buildDir = if ($InternalClock) { 'firmware/build-hsi' } else { 'firmware/build' }
+    $overlay = if ($InternalClock) { 'boards/ht_main_hsi.overlay' } else { '' }
+    $env:DTC_OVERLAY_FILE = $null
+    $env:EXTRA_DTC_OVERLAY_FILE = $null
     $buildArgs = @('-m', 'west', 'build', '-b', 'ht_main',
-        'firmware', '-d', 'firmware/build')
+        'firmware', '-d', $buildDir)
     if ($Pristine) {
         $buildArgs += @('-p', 'always')
     }
+    $buildArgs += @('--', "-DDTC_OVERLAY_FILE:STRING=$overlay", '-DEXTRA_DTC_OVERLAY_FILE:STRING=')
     Invoke-Checked $python $buildArgs
 }
 finally {
     $env:PATH = $oldPath
     $env:ZEPHYR_BASE = $oldBase
     $env:ZEPHYR_SDK_INSTALL_DIR = $oldSdk
+    $env:DTC_OVERLAY_FILE = $oldOverlay
+    $env:EXTRA_DTC_OVERLAY_FILE = $oldExtraOverlay
     Pop-Location
 }

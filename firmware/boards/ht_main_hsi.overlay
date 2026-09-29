@@ -1,0 +1,13 @@
+/* @brief Use HSI16 for diagnostics when the external crystal is absent. */
+&clk_hse {
+	status = "disabled";
+};
+
+&clk_hsi {
+	status = "okay";
+};
+
+&pll {
+	clocks = <&clk_hsi>;
+	div-m = <4>;
+};

@@ -403,6 +403,11 @@ Codex 负责软件，Claude 与用户协作完成硬件。`firmware/` 已建立�
 - 已实现：MAIN-01 自定义板、USART1 延迟日志、安全 GPIO、2.9 V VREFBUF 就绪检查、
   可移植 TCA9539 全断/面板读取驱动；不提供继电器吸合、激励或看门狗喂养功能。
 - 构建：`./firmware/tools/build.ps1 -Setup -SdkPath <Zephyr SDK 路径>`；本机 SDK 为 `D:\zephyr-sdk`。
+- 2026-09-29 无 8 MHz 晶振上板：增加 `-InternalClock`，HSI16 / 4 × 85 / 2 = 170 MHz，
+  独立产物在 `firmware/build-hsi/`；默认 HSE 构建仍在 `firmware/build/`。
+  已烧录并回读比对 44616 字节一致，RCC 与 SystemCoreClock 确认内部 PLL 170 MHz，系统 tick 递增且 CFSR/HFSR 为 0。
+  TCA 全断初始化读回通过，但 VREFBUF 2.9 V 就绪超时，板级 ready 为 false，主诊断按设计结束、内核继续运行。
+  当前仍无功率/采集/DWIN 实物运行验证；需核对实板 VDDA/VREF+ 条件，不取消参考电压检查。
 - 代码图谱：`docs/02-digital/代码图谱.md` 与 JSON，由 `firmware/tools/code_graph.py` 自动生成。
   构建脚本同步生成，CMake 检查源码与图谱一致；命名简洁，硬件适配与可复用驱动分离。
 - 普通 C `panel` 处理两页导航、选档草稿与确认；后台切模式或目标归零请求停止，重新启动须释放再合上使能。
