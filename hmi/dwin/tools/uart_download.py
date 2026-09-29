@@ -141,15 +141,21 @@ def identify(client):
     version = client.read(0x000F, 1)
     if version in (b"\x00\x00", b"\xff\xff") or not all(version):
         raise DownloadError("版本应答无有效GUI/OS版本")
-    size = struct.unpack(">HH", client.read(0x007A, 2))
+    native_size = struct.unpack(">HH", client.read(0x007A, 2))
+    config = client.read(0x0080, 2)
+    rotation = config[3] & 0x03
+    # LCD_HOR/VER describe the panel; D0[1:0] selects the displayed orientation.
+    size = native_size[::-1] if rotation % 2 else native_size
     if size != (800, 480):
-        raise DownloadError(f"屏幕分辨率{size}与HT的800×480不匹配")
+        raise DownloadError(f"屏幕原生分辨率{native_size}、旋转{rotation * 90}°与HT的800×480不匹配")
     return {
         "crc": client.crc,
         "gui_version_hex": f"{version[0]:02X}",
         "os_version_hex": f"{version[1]:02X}",
         "resolution": list(size),
-        "config_hex": client.read(0x0080, 2).hex(),
+        "native_resolution": list(native_size),
+        "rotation_degrees": rotation * 90,
+        "config_hex": config.hex(),
         "page": int.from_bytes(client.read(0x0014, 1), "big"),
     }
 

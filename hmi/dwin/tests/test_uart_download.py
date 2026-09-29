@@ -155,6 +155,24 @@ class DownloadTests(unittest.TestCase):
         with self.assertRaises(uart.DownloadError):
             uart.identify(uart.Client(port, "none"))
 
+    def test_native_portrait_panel_with_landscape_rotation(self):
+        for width, height in ((480, 800), (800, 480)):
+            for rotation in range(4):
+                with self.subTest(width=width, height=height, rotation=rotation):
+                    port = Port()
+                    port.memory[0x7A * 2:0x7C * 2] = struct.pack(">HH", width, height)
+                    port.memory[0x80 * 2:0x82 * 2] = bytes([0, 0x14, 0xF0, 0x38 | rotation])
+                    client = uart.Client(port, "none")
+                    if (width == 480) == bool(rotation % 2):
+                        result = uart.identify(client)
+                        self.assertEqual(result["resolution"], [800, 480])
+                        self.assertEqual(result["native_resolution"], [width, height])
+                        self.assertEqual(result["rotation_degrees"], rotation * 90)
+                    else:
+                        with self.assertRaises(uart.DownloadError):
+                            uart.identify(client)
+                    self.assertTrue(all(packet[3] == 0x83 for packet in port.sent))
+
     def test_plan_allowlist_boundaries_and_22_no_prefix_removal(self):
         with tempfile.TemporaryDirectory(dir=TEST_TEMP) as temp:
             directory = Path(temp)
