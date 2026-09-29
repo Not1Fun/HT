@@ -2,6 +2,8 @@ param(
     [switch]$Setup,
     [switch]$Pristine,
     [switch]$InternalClock,
+    [ValidateSet('Off', 'Bridge', 'Panel')]
+    [string]$ScreenMode = 'Off',
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
 
@@ -13,6 +15,8 @@ $oldBase = $env:ZEPHYR_BASE
 $oldSdk = $env:ZEPHYR_SDK_INSTALL_DIR
 $oldOverlay = $env:DTC_OVERLAY_FILE
 $oldExtraOverlay = $env:EXTRA_DTC_OVERLAY_FILE
+$oldConf = $env:EXTRA_CONF_FILE
+$oldBaseConf = $env:CONF_FILE
 
 function Invoke-Checked {
     param([string]$File, [string[]]$Arguments)
@@ -48,15 +52,32 @@ try {
 
     Invoke-Checked $python @('firmware/tools/code_graph.py')
     $buildDir = if ($InternalClock) { 'firmware/build-hsi' } else { 'firmware/build' }
-    $overlay = if ($InternalClock) { 'boards/ht_main_hsi.overlay' } else { '' }
+    $overlays = @()
+    if ($InternalClock) { $overlays += 'boards/ht_main_hsi.overlay' }
+    $conf = ''
+    $baseConf = 'prj.conf'
+    if ($ScreenMode -ne 'Off') {
+        $mode = $ScreenMode.ToLowerInvariant()
+        $buildDir += "-screen-$mode"
+        $overlays += 'boards/ht_main_screen.overlay'
+        $conf = "screen-$mode.conf"
+        if ($ScreenMode -eq 'Bridge') {
+            $baseConf = $conf
+            $conf = ''
+        }
+    }
+    $overlay = $overlays -join ';'
     $env:DTC_OVERLAY_FILE = $null
     $env:EXTRA_DTC_OVERLAY_FILE = $null
+    $env:EXTRA_CONF_FILE = $null
+    $env:CONF_FILE = $null
     $buildArgs = @('-m', 'west', 'build', '-b', 'ht_main',
         'firmware', '-d', $buildDir)
     if ($Pristine) {
         $buildArgs += @('-p', 'always')
     }
-    $buildArgs += @('--', "-DDTC_OVERLAY_FILE:STRING=$overlay", '-DEXTRA_DTC_OVERLAY_FILE:STRING=')
+    $buildArgs += @('--', "-DDTC_OVERLAY_FILE:STRING=$overlay", '-DEXTRA_DTC_OVERLAY_FILE:STRING=',
+        "-DCONF_FILE:STRING=$baseConf", "-DEXTRA_CONF_FILE:STRING=$conf")
     Invoke-Checked $python $buildArgs
 }
 finally {
@@ -65,5 +86,7 @@ finally {
     $env:ZEPHYR_SDK_INSTALL_DIR = $oldSdk
     $env:DTC_OVERLAY_FILE = $oldOverlay
     $env:EXTRA_DTC_OVERLAY_FILE = $oldExtraOverlay
+    $env:EXTRA_CONF_FILE = $oldConf
+    $env:CONF_FILE = $oldBaseConf
     Pop-Location
 }

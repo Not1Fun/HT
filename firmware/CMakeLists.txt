@@ -24,3 +24,7 @@ target_sources(app PRIVATE
 )
 target_include_directories(app PRIVATE src)
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)
+
+target_sources_ifdef(CONFIG_HT_SCREEN_BRINGUP app PRIVATE src/platform/screen_uart.c)
+target_sources_ifdef(CONFIG_HT_SCREEN_BRIDGE app PRIVATE src/app/screen_bridge.c)
+target_sources_ifdef(CONFIG_HT_SCREEN_PANEL app PRIVATE src/app/screen_panel.c)

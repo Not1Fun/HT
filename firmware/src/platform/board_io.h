@@ -17,6 +17,10 @@ enum board_input {
 };
 
 int board_io_init(void);
+#if defined(CONFIG_HT_SCREEN_BRINGUP)
+/* Screen bring-up only: leave the analog reference disabled and high impedance. */
+int board_io_init_digital(void);
+#endif
 /* Each set bit means the corresponding active-low signal is asserted. */
 int board_io_read(uint32_t *state);
 

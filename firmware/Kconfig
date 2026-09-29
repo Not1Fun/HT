@@ -1,3 +1,21 @@
 mainmenu "HT firmware"
 
+choice HT_SCREEN_MODE
+	prompt "Screen bring-up mode"
+	optional
+
+config HT_SCREEN_BRIDGE
+	bool "Transparent USART1 to USART3 bridge"
+	select HT_SCREEN_BRINGUP
+
+config HT_SCREEN_PANEL
+	bool "Display and front-panel bring-up"
+	select HT_SCREEN_BRINGUP
+
+endchoice
+
+config HT_SCREEN_BRINGUP
+	bool
+	select UART_INTERRUPT_DRIVEN
+
 source "Kconfig.zephyr"

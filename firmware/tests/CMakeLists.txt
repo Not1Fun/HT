@@ -17,3 +17,5 @@ add_test(NAME code_graph_unit COMMAND ${Python3_EXECUTABLE} -m unittest discover
   -s ${CMAKE_CURRENT_SOURCE_DIR}/code_graph -v)
 add_test(NAME code_graph_sync COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/../tools/code_graph.py --check)
+add_test(NAME dwin_download_unit COMMAND ${Python3_EXECUTABLE} -m unittest discover
+  -s ${CMAKE_CURRENT_SOURCE_DIR}/../../hmi/dwin/tests -v)

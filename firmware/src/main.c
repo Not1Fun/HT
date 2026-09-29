@@ -2,6 +2,11 @@
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
 #include "config/analog.h"
+#if defined(CONFIG_HT_SCREEN_BRIDGE)
+#include "app/screen_bridge.h"
+#elif defined(CONFIG_HT_SCREEN_PANEL)
+#include "app/screen_panel.h"
+#endif
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -10,6 +15,24 @@ LOG_MODULE_REGISTER(ht);
 
 int main(void)
 {
+#if defined(CONFIG_HT_SCREEN_BRINGUP)
+	int rc = board_io_init_digital();
+	int relay_rc = relay_io_init();
+
+	if (rc == 0 && relay_rc == 0) {
+		LOG_INF("Screen bring-up: VREF disabled/high impedance; relay registers off");
+#if defined(CONFIG_HT_SCREEN_BRIDGE)
+		rc = screen_bridge_run();
+#else
+		rc = screen_panel_run();
+#endif
+	}
+	int off_rc = relay_io_stop();
+
+	LOG_ERR("Screen bring-up stopped: rc=%d relay=%d all-off=%d; reset required",
+		rc, relay_rc, off_rc);
+	return 0;
+#else
 	LOG_INF("HT bring-up: output disabled, console 115200 8N1");
 	LOG_INF("Analog config: shunt=%u uOhm, divider low=%u ohm, NTC=%u ohm",
 		HT_SHUNT_UOHM, HT_DIV_LOW_OHM, HT_NTC_R25_OHM);
@@ -54,4 +77,5 @@ int main(void)
 		}
 		k_msleep(200);
 	}
+#endif
 }

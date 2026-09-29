@@ -73,9 +73,14 @@ static int start_vref(void)
 	return 0;
 }
 
-int board_io_init(void)
+static int init_board(bool enable_vref)
 {
 	ready = false;
+	if (!enable_vref) {
+		LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+		LL_VREFBUF_Disable();
+		LL_VREFBUF_EnableHIZ();
+	}
 	int rc = setup_pin(&buzzer, GPIO_OUTPUT_INACTIVE);
 
 	if (rc != 0) {
@@ -101,10 +106,22 @@ int board_io_init(void)
 	if (rc != 0) {
 		return rc;
 	}
-	rc = start_vref();
+	rc = enable_vref ? start_vref() : 0;
 	ready = rc == 0;
 	return rc;
 }
+
+int board_io_init(void)
+{
+	return init_board(true);
+}
+
+#if defined(CONFIG_HT_SCREEN_BRINGUP)
+int board_io_init_digital(void)
+{
+	return init_board(false);
+}
+#endif
 
 int board_io_read(uint32_t *state)
 {
