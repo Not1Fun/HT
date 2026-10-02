@@ -9,6 +9,8 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_link_libraries(power_tests PRIVATE m)
 endif()
 foreach(case IN ITEMS sequence timing all_ranges stop_stages interlock_stages io_failure stale
-    regulation limits open_short continuous rms_scaling rms_clipping relay_mutex)
+    regulation limits open_short continuous rms_scaling rms_clipping relay_mutex
+    auto_nominal auto_quantized auto_boundaries auto_no_signal auto_timeout auto_stop auto_rematch auto_stale
+    auto_settle_protection auto_interlock)
   add_test(NAME power_${case} COMMAND power_tests ${case})
 endforeach()

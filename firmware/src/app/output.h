@@ -3,7 +3,7 @@
 #define HT_OUTPUT_H
 #include "platform/signal_io.h"
 struct output_snapshot {
-    bool ready, available, running, switching, fault;
+    bool ready, available, active, running, switching, matching, fault;
     int error;
     uint8_t range;
     uint32_t frequency, elapsed_seconds, target_mva;
@@ -11,7 +11,7 @@ struct output_snapshot {
 };
 int output_init(void);
 void output_inputs(uint8_t raw, bool connected, bool io_ok);
-int output_start(uint8_t range, uint32_t frequency, uint32_t target_mva);
+int output_start(uint32_t frequency, uint32_t target_mva);
 void output_stop(void);
 void output_snapshot(struct output_snapshot *value);
 void output_shutdown(void);

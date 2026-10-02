@@ -21,7 +21,7 @@ static K_SEM_DEFINE(wake, 0, 1);
 static struct power control;
 static struct output_snapshot published;
 static struct { uint8_t raw; bool connected, okay; int64_t time; } inputs;
-static struct { bool pending, stop; uint8_t range; uint32_t frequency, target, epoch; } request;
+static struct { bool pending, stop; uint32_t frequency, target, epoch; } request;
 static uint32_t stop_epoch, active_epoch;
 static bool initialized, shut_down;
 static int watchdog_channel;
@@ -98,16 +98,16 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
     k_spin_unlock(&guard, key);
 }
 
-int output_start(uint8_t range, uint32_t frequency, uint32_t target)
+int output_start(uint32_t frequency, uint32_t target)
 {
-    if (range >= 7 || target == 0 || target > 50000 ||
+    if (target == 0 || target > 50000 ||
         (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
     if (!published.ready || !published.available || shut_down) rc = -EACCES;
     else if (published.running || published.switching || request.pending || request.stop) rc = -EBUSY;
     else {
-        request.pending = true; request.range = range; request.frequency = frequency;
+        request.pending = true; request.frequency = frequency;
         request.target = target; request.epoch = stop_epoch;
     }
     k_spin_unlock(&guard, key);
@@ -159,7 +159,6 @@ static void run(void *a, void *b, void *c)
         bool stop = request.stop;
         bool start = request.pending;
         if (start) active_epoch = request.epoch;
-        uint8_t range = request.range;
         uint32_t frequency = request.frequency, target = request.target;
         request.pending = false;
         request.stop = false;
@@ -176,15 +175,25 @@ static void run(void *a, void *b, void *c)
         if (signal_io_failed()) rc = -EIO;
         if (rc != 0) power_fail(&control, POWER_ERROR_SAMPLE);
         if (stop) power_stop(&control, now);
-        else if (start && permitted) (void)power_start(&control, range, frequency, target, now);
+        else if (start && permitted) (void)power_start(&control, POWER_RANGE_AUTO, frequency, target, now);
         power_poll(&control, permitted, &signal.reading, k_uptime_get());
+        uint8_t applied = POWER_RANGE_AUTO;
+        if (control.state != POWER_FAULT)
+            for (uint8_t i = 0; i < 7; ++i) if (control.output & BIT(i + 1)) applied = i;
         struct output_snapshot next = {
             .ready = true, .available = permitted && control.state != POWER_FAULT,
+            .active = control.state != POWER_IDLE && control.state != POWER_FAULT &&
+                      control.state != POWER_STOPPING && control.state != POWER_RELEASE,
+            .matching = control.matching && control.state != POWER_IDLE && control.state != POWER_FAULT &&
+                        control.state != POWER_STOPPING && control.state != POWER_RELEASE,
             .running = control.state == POWER_RUNNING,
             .switching = control.state != POWER_RUNNING && control.state != POWER_IDLE && control.state != POWER_FAULT,
             .fault = control.state == POWER_FAULT, .error = control.error,
-            .range = control.range, .frequency = control.frequency, .target_mva = control.target_mva,
-            .elapsed_seconds = control.state == POWER_RUNNING ? (uint32_t)((now-control.started)/1000) : 0,
+            .range = applied,
+            .frequency = control.state == POWER_ZERO || control.state == POWER_PROBING ||
+                         control.state == POWER_RUNNING ? control.frequency : 0,
+            .target_mva = control.target_mva,
+            .elapsed_seconds = control.state == POWER_RUNNING ? (uint32_t)((now-control.session_ms)/1000) : 0,
             .signal = signal
         };
         key = k_spin_lock(&guard);

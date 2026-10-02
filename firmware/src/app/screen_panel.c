@@ -1,4 +1,4 @@
-/* @brief 面板导航、温度和日志；可选DAC台架只显式启动，继电器保持全断。 */
+/* @brief 面板导航、温度和日志；正式输出自动匹配，频率和VA由面板提交。 */
 #include "app/screen_panel.h"
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
@@ -92,6 +92,10 @@ struct service {
 	bool digital_valid;
 	uint32_t digital;
 	uint8_t raw_panel;
+#if defined(CONFIG_HT_OUTPUT)
+	uint8_t matched_range;
+	bool match_seen;
+#endif
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE)
 	struct temperature_snapshot temperature;
 	bool temperature_active;
@@ -125,7 +129,7 @@ static void request_stop(void)
 static int request_start(struct service *service)
 {
 #if defined(CONFIG_HT_OUTPUT)
-	return output_start(service->panel.range_index, service->panel.frequency_hz, service->panel.apparent_mva);
+	return output_start(service->panel.frequency_hz, service->panel.apparent_mva);
 #elif defined(CONFIG_HT_DDS_BENCH)
 	return dds_bench_request_start(service->panel.frequency_hz, BENCH_MVPP, BENCH_SECONDS);
 #else
@@ -145,10 +149,17 @@ static void update_output(struct service *service, bool io_ok)
 		record_event(service, EVENT_DDS_FAILED, value.error);
 		service->dds_failed = true;
 	}
-	if (value.running != service->dds_running) {
-		record_event(service, value.running ? EVENT_DDS_START : EVENT_DDS_STOP,
-			value.running ? (int32_t)value.frequency : 0);
-		service->dds_running = value.running;
+	if (value.active != service->dds_running) {
+		record_event(service, value.active ? EVENT_DDS_START : EVENT_DDS_STOP,
+			value.active ? (int32_t)service->panel.frequency_hz : 0);
+		service->dds_running = value.active;
+	}
+	if (!value.active) service->match_seen = false;
+	if (value.running && value.range < PANEL_RANGE_COUNT &&
+	    (!service->match_seen || service->matched_range != value.range)) {
+		record_event(service, EVENT_RANGE, (int32_t)panel_range_ohm(value.range));
+		service->matched_range = value.range;
+		service->match_seen = true;
 	}
 	(void)panel_set_output_state(&service->panel, value.running || value.switching,
 		value.available && service->panel.apparent_mva > 0);
@@ -421,16 +432,11 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			if (action < 0) {
 				return action;
 			}
-			if (action == PANEL_ACTION_RANGE || action == PANEL_ACTION_FREQUENCY) {
+			if (action == PANEL_ACTION_FREQUENCY) {
 				request_stop();
 				stopping = true;
-				record_event(service, action == PANEL_ACTION_RANGE ? EVENT_RANGE : EVENT_FREQUENCY,
-					action == PANEL_ACTION_RANGE ?
-					(int32_t)panel_range_ohm(service->panel.range_index) :
-					(int32_t)service->panel.frequency_hz);
-				LOG_INF("Saved request: range=%u ohm frequency=%u Hz",
-					panel_range_ohm(service->panel.range_index),
-					service->panel.frequency_hz);
+				record_event(service, EVENT_FREQUENCY, (int32_t)service->panel.frequency_hz);
+				LOG_INF("Saved frequency request: %u Hz", service->panel.frequency_hz);
 			}
 			if (action == PANEL_ACTION_OUTPUT_STOP || action == PANEL_ACTION_POWER) {
 				request_stop();
@@ -628,9 +634,6 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		.output = VIEW_OUTPUT_DISABLED,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
-	out->values[VIEW_RANGE_CHOICE] = (struct view_value){
-		panel_range_ohm(panel->field == PANEL_RANGE ? panel->draft_index : panel->range_index),
-		true};
 	out->values[VIEW_FREQUENCY_CHOICE] = (struct view_value){
 		panel->field == PANEL_FREQUENCY ? panel_frequency_hz(panel->draft_index) :
 		panel->frequency_hz, true};
@@ -674,12 +677,15 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 #if defined(CONFIG_HT_OUTPUT)
 	struct output_snapshot value;
 	output_snapshot(&value);
-	out->state = value.fault ? VIEW_FAULT : value.switching ? VIEW_SWITCHING : value.running ? VIEW_RUNNING : VIEW_STANDBY;
+	out->state = value.fault ? VIEW_FAULT : value.matching ? VIEW_SWITCHING : value.running ? VIEW_RUNNING : VIEW_STANDBY;
 	out->output = value.fault ? VIEW_OUTPUT_FAULT : value.running || value.switching ? VIEW_OUTPUT_RUNNING :
 		!panel->output_available ? VIEW_OUTPUT_UNAVAILABLE :
 		panel->field == PANEL_OUTPUT && panel->draft_index ? VIEW_OUTPUT_ARMED : VIEW_OUTPUT_OFF;
+	if (value.active) {
+		out->values[VIEW_RANGE] = (struct view_value){panel_range_ohm(value.range), value.range < PANEL_RANGE_COUNT};
+		out->values[VIEW_FREQUENCY] = (struct view_value){value.frequency, value.frequency != 0};
+	}
 	if (value.running) {
-		out->values[VIEW_RANGE] = (struct view_value){panel_range_ohm(value.range), true};
 		out->values[VIEW_FREQUENCY] = (struct view_value){value.frequency, true};
 		out->values[VIEW_ELAPSED] = (struct view_value){value.elapsed_seconds, true};
 		bool valid = value.signal.reading.valid && k_uptime_get() - value.signal.reading.time_ms < 150;

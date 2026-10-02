@@ -37,12 +37,12 @@ static void test_defaults(void)
         struct panel panel;
 
         CHECK(panel_init(&panel, &config, (enum panel_mode)mode, false, false) == PANEL_OK);
-        CHECK(panel.ready && panel.armed && !panel.auto_range);
+        CHECK(panel.ready && panel.armed);
         CHECK(!panel.enabled && !panel.fault);
         CHECK(!panel.output_running && !panel.output_available);
         CHECK(panel.mode == (enum panel_mode)mode);
-        CHECK(panel.page == PANEL_PAGE_STATUS && panel.field == PANEL_RANGE);
-        CHECK(panel.range_index == 0 && panel.draft_index == 0 && panel.frequency_hz == 2000);
+        CHECK(panel.page == PANEL_PAGE_STATUS && panel.field == PANEL_FREQUENCY);
+        CHECK(panel.draft_index == 0 && panel.frequency_hz == 2000);
         CHECK(panel.current_ma == 0 && panel.apparent_mva == 0 && !panel_draft_changed(&panel));
         CHECK(panel_init(&panel, &panel.config, (enum panel_mode)mode, false, false) == PANEL_OK);
         CHECK(panel.config.current_max_ma == 7070 && panel.config.apparent_max_mva == 50000);
@@ -95,7 +95,7 @@ static void test_status_navigation(void)
               (key == PANEL_KEY_DOWN ? PANEL_ACTION_OUTPUT_STOP : PANEL_ACTION_NONE));
         CHECK(panel.page == (enters ? PANEL_PAGE_SETTINGS :
                              key == PANEL_KEY_LEFT ? PANEL_PAGE_LOG : PANEL_PAGE_STATUS));
-        CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.draft_index == 0);
+        CHECK(panel.frequency_hz == 2000 && panel.draft_index == 0);
         CHECK(panel.mode == PANEL_CC && panel.armed && !panel.enabled);
     }
 }
@@ -103,20 +103,17 @@ static void test_status_navigation(void)
 static void test_draft_confirmation(void)
 {
     struct panel panel = initialize(false, false);
-
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
+    CHECK(panel.field == PANEL_FREQUENCY);
     CHECK(panel_rotate(&panel, 2) == PANEL_OK);
-    CHECK(panel.draft_index == 2 && panel.range_index == 0 && panel_draft_changed(&panel));
-    CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_RANGE);
-    CHECK(panel.range_index == 2 && !panel.auto_range && !panel_draft_changed(&panel));
-    CHECK(panel.page == PANEL_PAGE_SETTINGS && panel.frequency_hz == 2000);
-    CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
-    CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 0);
-    CHECK(panel_rotate(&panel, 2) == PANEL_OK);
-    CHECK(panel.frequency_hz == 2000 && panel.draft_index == 2 && panel_draft_changed(&panel));
-    CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_FREQUENCY);
-    CHECK(panel.frequency_hz == 8000 && panel.range_index == 2 && !panel_draft_changed(&panel));
+    CHECK(panel.draft_index == 2 && panel.frequency_hz == 2000 && panel_draft_changed(&panel));
+    CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_FREQUENCY);
+    CHECK(panel.frequency_hz == 8000 && !panel_draft_changed(&panel));
     CHECK(panel.page == PANEL_PAGE_SETTINGS);
+    CHECK(panel_rotate(&panel, 1) == PANEL_OK);
+    CHECK(panel.frequency_hz == 8000 && panel.draft_index == 3 && panel_draft_changed(&panel));
+    CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_FREQUENCY);
+    CHECK(panel.frequency_hz == 10000 && !panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_FREQUENCY);
     CHECK(!panel.enabled && panel.armed && panel.current_ma == 0 && panel.apparent_mva == 0);
 }
@@ -124,33 +121,30 @@ static void test_draft_confirmation(void)
 static void test_cancel(void)
 {
     struct panel panel = initialize(false, false);
-
     CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_NONE);
     CHECK(panel_rotate(&panel, 3) == PANEL_OK);
     CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
-    CHECK(panel.page == PANEL_PAGE_STATUS && panel.range_index == 0 && !panel_draft_changed(&panel));
+    CHECK(panel.page == PANEL_PAGE_STATUS && panel.frequency_hz == 2000 && !panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_NONE && panel.draft_index == 0);
-    CHECK(panel_rotate(&panel, 4) == PANEL_OK);
-    CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_RANGE);
+    CHECK(panel_rotate(&panel, 2) == PANEL_OK);
+    CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_FREQUENCY);
+    CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
-    CHECK(panel_rotate(&panel, 3) == PANEL_OK);
-    CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
-    CHECK(panel.frequency_hz == 2000 && panel.range_index == 4);
+    CHECK(panel.field == PANEL_POWER && panel.frequency_hz == 8000 && !panel_draft_changed(&panel));
+    CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE && panel.draft_index == 2);
+    CHECK(panel_rotate(&panel, 1) == PANEL_OK);
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 0);
-    CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE && panel.draft_index == 4);
+    CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
+    CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 2 && !panel_draft_changed(&panel));
 }
 
 static void test_field_selection(void)
 {
     struct panel panel = initialize(false, false);
-
+    CHECK(PANEL_FREQUENCY == 0 && PANEL_POWER == 1 && PANEL_OUTPUT == 2);
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    CHECK(panel_rotate(&panel, 5) == PANEL_OK);
-    CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE && panel.draft_index == 5);
-    CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
-    CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 0 && !panel_draft_changed(&panel));
     CHECK(panel_rotate(&panel, 1) == PANEL_OK);
+    CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE && panel.draft_index == 1);
     CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel.field == PANEL_POWER && panel.draft_index == 0 && !panel_draft_changed(&panel));
     CHECK(panel_rotate(&panel, 12) == PANEL_OK);
@@ -164,14 +158,12 @@ static void test_field_selection(void)
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
     CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 0 && !panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
-    CHECK(panel.field == PANEL_RANGE && panel.draft_index == 0 && !panel_draft_changed(&panel));
-    CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.mode == PANEL_CC);
+    CHECK(panel.field == PANEL_FREQUENCY && panel.frequency_hz == 2000 && panel.mode == PANEL_CC);
 }
 
 static void select_output(struct panel *panel)
 {
     CHECK(panel_key(panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel->page == PANEL_PAGE_SETTINGS && panel->field == PANEL_OUTPUT);
@@ -189,7 +181,7 @@ static void test_output_requests(void)
     CHECK(panel_set_output_state(&panel, false, true) == PANEL_OK);
     CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_OUTPUT_START);
     CHECK(!panel.output_running && panel.output_available && panel_draft_changed(&panel));
-    CHECK(panel.current_ma == 0 && panel.apparent_mva == 0 && panel.range_index == 0);
+    CHECK(panel.current_ma == 0 && panel.apparent_mva == 0);
     CHECK(!panel.enabled && panel.armed && panel.frequency_hz == 2000);
     CHECK(panel_set_output_state(&panel, true, true) == PANEL_OK);
     CHECK(panel.output_running && panel.draft_index == 1 && !panel_draft_changed(&panel));
@@ -259,7 +251,7 @@ static void test_output_rotation(void)
     CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK && panel.draft_index == 1);
     CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == 1);
     CHECK(panel_rotate(&panel, 0) == PANEL_OK && panel.draft_index == 1);
-    CHECK(!panel.output_running && panel.range_index == 0 && panel.frequency_hz == 2000);
+    CHECK(!panel.output_running && panel.frequency_hz == 2000);
     CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK && panel.draft_index == 0);
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
@@ -274,7 +266,6 @@ static void test_output_rotation(void)
 static void select_power(struct panel *panel)
 {
     CHECK(panel_key(panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel->field == PANEL_POWER);
 }
@@ -291,7 +282,7 @@ static void test_power_confirmation(void)
     CHECK(panel_rotate(&panel, -2) == PANEL_OK && panel.apparent_mva == 17000);
     CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_POWER);
     CHECK(panel.apparent_mva == 15000 && !panel_draft_changed(&panel));
-    CHECK(panel.current_ma == 0 && panel.range_index == 0 && panel.frequency_hz == 2000);
+    CHECK(panel.current_ma == 0 && panel.frequency_hz == 2000);
     CHECK(!panel.output_running && !panel.enabled && panel.page == PANEL_PAGE_SETTINGS);
 }
 
@@ -357,7 +348,7 @@ static void test_page_navigation(void)
             CHECK(panel_rotate(&panel, 3) == PANEL_OK);
             CHECK(panel_key(&panel, direction ? PANEL_KEY_RIGHT : PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
             CHECK(panel.page == (direction ? right[page] : left[page]));
-            CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.draft_index == 0);
+            CHECK(panel.frequency_hz == 2000 && panel.draft_index == 0);
             CHECK(!panel_draft_changed(&panel));
             CHECK(panel.current_ma == 100 && panel.apparent_mva == 1000 && panel.armed);
             CHECK(!panel.enabled && !panel.fault && panel.mode == PANEL_CC);
@@ -390,33 +381,26 @@ static void test_log_controls(void)
 static void test_rotation_cycles(void)
 {
     struct panel panel = initialize(false, false);
-
+    const uint8_t count = PANEL_FREQUENCY_COUNT;
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    for (int field = PANEL_RANGE; field <= PANEL_FREQUENCY; ++field) {
-        uint8_t count = field == PANEL_RANGE ? 7 : 4;
-
-        for (uint8_t i = 1; i < count; ++i) {
-            CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == i);
-        }
-        CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == 0);
-        for (uint8_t i = count; i > 1; --i) {
-            CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == i - 1);
-        }
-        CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == 0);
-        CHECK(panel_rotate(&panel, 0) == PANEL_OK && panel.draft_index == 0);
-        CHECK(panel_rotate(&panel, 2 * count + 2) == PANEL_OK && panel.draft_index == 2);
-        CHECK(panel_rotate(&panel, -2 * count - 2) == PANEL_OK && panel.draft_index == 0);
-        CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK);
-        CHECK(panel.draft_index == (field == PANEL_RANGE ? 1 : 3));
-        CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK);
-        CHECK(panel.draft_index == (field == PANEL_RANGE ? 6 : 3));
-        CHECK(panel.range_index == 0 && panel.frequency_hz == 2000);
-        CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-        CHECK(panel.page == PANEL_PAGE_LOG && panel.draft_index == 0);
-        CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
-        CHECK(panel.page == PANEL_PAGE_SETTINGS && panel.draft_index == 0);
-        CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
+    for (uint8_t i = 1; i < count; ++i) {
+        CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == i);
     }
+    CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == 0);
+    for (uint8_t i = count; i > 1; --i) {
+        CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == i - 1);
+    }
+    CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == 0);
+    CHECK(panel_rotate(&panel, 0) == PANEL_OK && panel.draft_index == 0);
+    CHECK(panel_rotate(&panel, 2 * count + 2) == PANEL_OK && panel.draft_index == 2);
+    CHECK(panel_rotate(&panel, -2 * count - 2) == PANEL_OK && panel.draft_index == 0);
+    CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK && panel.draft_index == 3);
+    CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK && panel.draft_index == 3);
+    CHECK(panel.frequency_hz == 2000);
+    CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
+    CHECK(panel.page == PANEL_PAGE_LOG && panel.draft_index == 0);
+    CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
+    CHECK(panel.page == PANEL_PAGE_SETTINGS && panel.draft_index == 0);
 }
 
 static void test_targets(void)
@@ -449,7 +433,7 @@ static void test_startup_enabled(void)
     CHECK(panel_inputs(&panel, PANEL_CC, true, false) == PANEL_REQUEST_NONE);
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
     CHECK(panel_rotate(&panel, 2) == PANEL_OK);
-    CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_RANGE);
+    CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_FREQUENCY);
     CHECK(panel_inputs(&panel, PANEL_CC, true, false) == PANEL_REQUEST_NONE);
     CHECK(panel_inputs(&panel, PANEL_CC, false, false) == PANEL_REQUEST_STOP);
     CHECK(panel_inputs(&panel, PANEL_CC, true, false) == PANEL_REQUEST_START);

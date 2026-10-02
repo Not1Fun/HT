@@ -21,9 +21,6 @@ static int check_ready(const struct panel *panel)
 
 static uint8_t selected_index(const struct panel *panel)
 {
-    if (panel->field == PANEL_RANGE) {
-        return panel->range_index;
-    }
     if (panel->field == PANEL_OUTPUT) {
         return panel->output_running ? 1u : 0u;
     }
@@ -71,7 +68,7 @@ int panel_init(struct panel *panel, const struct panel_config *config,
     panel->config = copy;
     panel->mode = mode;
     panel->page = PANEL_PAGE_STATUS;
-    panel->field = PANEL_RANGE;
+    panel->field = PANEL_FREQUENCY;
     panel->frequency_hz = frequencies[0];
     panel->enabled = enabled;
     panel->fault = fault;
@@ -117,7 +114,7 @@ int panel_key(struct panel *panel, enum panel_key key)
     case PANEL_KEY_UP:
     case PANEL_KEY_DOWN:
         field = panel->field;
-        if (key == PANEL_KEY_UP && field > PANEL_RANGE) {
+        if (key == PANEL_KEY_UP && field > PANEL_FREQUENCY) {
             --field;
         } else if (key == PANEL_KEY_DOWN && field < PANEL_OUTPUT) {
             ++field;
@@ -138,11 +135,6 @@ int panel_key(struct panel *panel, enum panel_key key)
                 return PANEL_ACTION_OUTPUT_STOP;
             }
             return panel->output_available ? PANEL_ACTION_OUTPUT_START : PANEL_ACTION_NONE;
-        }
-        if (panel->field == PANEL_RANGE) {
-            panel->range_index = panel->draft_index;
-            panel->auto_range = false;
-            return PANEL_ACTION_RANGE;
         }
         panel->frequency_hz = frequencies[panel->draft_index];
         return PANEL_ACTION_FREQUENCY;
@@ -176,7 +168,7 @@ int panel_rotate(struct panel *panel, int32_t detents)
         panel->draft_index = next < 0 ? 0u : next > limit ? (uint8_t)limit : (uint8_t)next;
         return PANEL_OK;
     }
-    count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT : PANEL_FREQUENCY_COUNT;
+    count = PANEL_FREQUENCY_COUNT;
     next = ((int64_t)panel->draft_index + detents) % count;
     panel->draft_index = (uint8_t)(next < 0 ? next + count : next);
     return PANEL_OK;
@@ -185,8 +177,7 @@ int panel_rotate(struct panel *panel, int32_t detents)
 bool panel_draft_changed(const struct panel *panel)
 {
     return check_ready(panel) == PANEL_OK && panel->page == PANEL_PAGE_SETTINGS &&
-           (panel->draft_index != selected_index(panel) ||
-            (panel->field == PANEL_RANGE && panel->auto_range));
+           panel->draft_index != selected_index(panel);
 }
 
 int panel_set_output_state(struct panel *panel, bool running, bool available)

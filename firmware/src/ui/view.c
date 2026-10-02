@@ -87,7 +87,7 @@ static void format_value(char text[VIEW_TEXT_BYTES], enum view_field field, int6
         if (value == 2000 || value == 5000 || value == 8000 || value == 10000) {
             format_number(text, value / 1000, 0);
         }
-    } else if (field == VIEW_RANGE || field == VIEW_RANGE_CHOICE) {
+    } else if (field == VIEW_RANGE) {
         if (value == 1 || value == 3 || value == 10 || value == 30 ||
             value == 100 || value == 300 || value == 1000) {
             format_number(text, value, 0);
@@ -115,9 +115,15 @@ static int send_text(enum dgus_crc crc, view_send_fn send, void *ctx,
 static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
                         view_send_fn send, void *ctx)
 {
+    static const uint16_t addresses[VIEW_FIELD_COUNT] = {
+        [VIEW_CURRENT] = 0x1100, [VIEW_VOLTAGE] = 0x1110, [VIEW_RANGE] = 0x1120,
+        [VIEW_FREQUENCY] = 0x1130, [VIEW_ELAPSED] = 0x1140,
+        [VIEW_FREQUENCY_CHOICE] = 0x1160, [VIEW_NTC1] = 0x1170,
+        [VIEW_NTC2] = 0x1180, [VIEW_NTC3] = 0x1190, [VIEW_POWER_CHOICE] = 0x11a0
+    };
     for (size_t field = 0; field < VIEW_FIELD_COUNT; ++field) {
         char text[VIEW_TEXT_BYTES];
-        bool setting = field == VIEW_RANGE_CHOICE || field == VIEW_FREQUENCY_CHOICE || field == VIEW_POWER_CHOICE;
+        bool setting = field == VIEW_FREQUENCY_CHOICE || field == VIEW_POWER_CHOICE;
         bool valid = snapshot->values[field].valid &&
                      (setting || (snapshot->fresh && snapshot->state != VIEW_OFFLINE));
         int result;
@@ -126,7 +132,7 @@ static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
             valid = false;
         }
         format_value(text, (enum view_field)field, snapshot->values[field].value, valid);
-        result = send_text(crc, send, ctx, (uint16_t)(0x1100u + field * 0x10u), text);
+        result = send_text(crc, send, ctx, addresses[field], text);
         if (result != VIEW_OK) {
             return result;
         }

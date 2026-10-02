@@ -209,13 +209,11 @@ static void startup(void)
     }
     assert(saw_icons);
 }
-static void four_fields(void)
+static void three_fields(void)
 {
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
     press(&s, PANEL_KEY_UP);
-    assert(s.panel.field == PANEL_RANGE);
-    press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_FREQUENCY);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_POWER);
@@ -237,7 +235,7 @@ static void start_parameters(void)
 {
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
-    press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.field == PANEL_FREQUENCY);
     assert(panel_rotate(&s.panel, 3) == 0);
     press(&s, PANEL_KEY_OK);
     healthy_poll(&s);
@@ -273,17 +271,16 @@ static void stop_confirm(void)
     assert(starts == 1);
     stopped_view(&s);
 }
-static void request_confirm(bool frequency)
+static void frequency_confirm(void)
 {
     struct service s = ready();
     start(&s);
-    enum panel_field target = frequency ? PANEL_FREQUENCY : PANEL_RANGE;
-    while (s.panel.field != target) press(&s, PANEL_KEY_UP);
+    while (s.panel.field != PANEL_FREQUENCY) press(&s, PANEL_KEY_UP);
     assert(panel_rotate(&s.panel, 1) == 0);
     press(&s, PANEL_KEY_OK);
     healthy_poll(&s);
     stopped_view(&s);
-    assert(frequency ? s.panel.frequency_hz == 5000 : s.panel.range_index == 1);
+    assert(s.panel.frequency_hz == 5000);
     assert(events(&s, EVENT_DDS_STOP) == 1);
     output_page(&s);
     assert(s.panel.draft_index == 0);
@@ -321,7 +318,6 @@ static void power_cancel(void)
 {
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
-    press(&s, PANEL_KEY_DOWN);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_POWER);
     assert(panel_rotate(&s.panel, 25) == 0);
@@ -479,11 +475,10 @@ int main(int argc, char **argv)
     assert(argc == 2);
     const char *name = argv[1];
     if (!strcmp(name, "startup")) startup();
-    else if (!strcmp(name, "four_fields")) four_fields();
+    else if (!strcmp(name, "three_fields")) three_fields();
     else if (!strcmp(name, "start_parameters")) start_parameters();
     else if (!strcmp(name, "stop_confirm")) stop_confirm();
-    else if (!strcmp(name, "range_confirm")) request_confirm(false);
-    else if (!strcmp(name, "frequency_confirm")) request_confirm(true);
+    else if (!strcmp(name, "frequency_confirm")) frequency_confirm();
     else if (!strcmp(name, "power_confirm")) power_confirm();
     else if (!strcmp(name, "power_cancel")) power_cancel();
     else if (!strcmp(name, "power_bounds")) power_bounds();

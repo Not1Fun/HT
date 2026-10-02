@@ -17,7 +17,12 @@ void signal_io_fault(void) {signal_failed=true;(void)signal_io_stop();}
 bool signal_io_failed(void) {return signal_failed;}
 int signal_io_start(uint32_t hz) {assert(hz==2000);if(signal_failed)return -EIO;starts++;signal_active=true;return 0;}
 int signal_io_poll(struct signal_snapshot *s) {
-    measured.reading.time_ms=clock_time;measured.reading.sequence++;
+    static const uint32_t nominal[]={7070,12250,22360,38730,70700,122500,223600};
+    uint32_t mv=nominal[control.range]*amplitude/2047;
+    measured.reading.voltage_mv=mv;measured.reading.current_ma=mv/30;
+    measured.reading.apparent_mva=(uint32_t)((uint64_t)mv*(mv/30)/1000);
+    measured.reading.time_ms=clock_time;
+    if(clock_time%50==0 || !measured.reading.sequence)measured.reading.sequence++;
     measured.reading.valid=signal_active;
     measured.temperature_ms=clock_time;*s=measured;
     return signal_error || signal_failed ? -EIO:0;
@@ -36,10 +41,10 @@ static void setup(void) {
     assert(output_init()==0);heartbeat();between_steps=heartbeat;advance(1);
     assert(published.available && !published.running);
 }
-static void start_output(void) {assert(output_start(3,2000,10000)==0);advance(130);assert(published.running);}
+static void start_output(void) {assert(output_start(2000,1000)==0);advance(4000);assert(published.running && published.range==3);}
 static void stop_priority(void) {
-    setup();assert(output_start(3,2000,10000)==0);output_stop();
-    assert(output_start(3,2000,10000)==-EBUSY);advance(200);
+    setup();assert(output_start(2000,1000)==0);output_stop();
+    assert(output_start(2000,1000)==-EBUSY);advance(200);
     assert(starts==0 && relay_value==0 && !published.running);
     start_output();output_stop();advance(100);assert(!published.running && relay_value==0);
 }
@@ -57,16 +62,16 @@ static void interlocks(void) {
 }
 static void stale_ui(void) {
     setup();start_output();between_steps=NULL;int before=feeds;advance(250);
-    assert(published.fault && !signal_active && relay_value==0 && starts==1);
+    assert(published.fault && !signal_active && relay_value==0 && starts>=1);
     assert(feeds-before<=2);int stopped_feeds=feeds;advance(100);assert(feeds==stopped_feeds);
-    heartbeat();advance(1);assert(!published.available && output_start(3,2000,10000)==-EACCES);
+    heartbeat();advance(1);assert(!published.available && output_start(2000,1000)==-EACCES);
 }
 static void sample_fault(void) {
     setup();start_output();signal_error=1;advance(1);
-    assert(published.fault && !signal_active && amplitude==0 && relay_value==0);
+    assert(published.fault && !signal_active && amplitude==0 && relay_value==0 && published.range==POWER_RANGE_AUTO);
 }
 static void protection_race(void) {
-    setup();fault_during_select=true;assert(output_start(4,2000,10000)==0);advance(200);
+    setup();fault_during_select=true;assert(output_start(2000,1000)==0);advance(200);
     assert(published.fault && signal_failed && starts==0 && relay_value==0);
 }
 static void observe_stop(void) {
@@ -80,10 +85,10 @@ static void observe_stop(void) {
 }
 static void stop_in_flight(void) {
     setup();between_steps=observe_stop;
-    const uint8_t ports[]={1,33};
+    const uint8_t ports[]={2,16};
     for(size_t i=0;i<2;i++) {
-        stop_at=ports[i];assert(output_start(4,2000,10000)==0);advance(200);
-        assert(!published.fault && !published.running && starts==0 && relay_value==0);
+        stop_at=ports[i];assert(output_start(2000,1000)==0);advance(4000);
+        assert(!published.fault && !published.running && relay_value==0);
         assert(observed_stops==(int)i+1);
     }
     start_output();output_stop();advance(100);assert(!published.fault && relay_value==0);
@@ -94,7 +99,7 @@ static void relay_fault(void) {
 }
 static void shutdown_output(void) {
     setup();start_output();output_shutdown();advance(1);
-    assert(signal_failed && published.fault && relay_value==0 && output_start(3,2000,10000)==-EACCES);
+    assert(signal_failed && published.fault && relay_value==0 && output_start(2000,1000)==-EACCES);
 }
 int main(int argc,char **argv) {
     assert(argc==2);

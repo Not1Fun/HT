@@ -27,10 +27,9 @@ enum panel_page {
 };
 
 enum panel_field {
-    PANEL_RANGE = 0,
-    PANEL_FREQUENCY = 1,
-    PANEL_POWER = 2,
-    PANEL_OUTPUT = 3
+    PANEL_FREQUENCY = 0,
+    PANEL_POWER = 1,
+    PANEL_OUTPUT = 2
 };
 
 /* 与 TCA9539 Port1 的 bit0..5 对应；bit6/7 为独立使能和门监视。 */
@@ -45,7 +44,6 @@ enum panel_key {
 
 enum panel_action {
     PANEL_ACTION_NONE = 0,
-    PANEL_ACTION_RANGE = 1,
     PANEL_ACTION_FREQUENCY = 2,
     PANEL_ACTION_OUTPUT_START = 3,
     PANEL_ACTION_OUTPUT_STOP = 4,
@@ -64,18 +62,16 @@ struct panel_config {
     uint32_t apparent_max_mva;
 };
 
-/* 单调用者串行维护；外部只读。range_index/frequency_hz 是请求，非硬件状态。 */
+/* 单调用者串行维护；外部只读。频率和目标VA是请求，阻抗由控制器自动匹配。 */
 struct panel {
     struct panel_config config;
     enum panel_mode mode;
     enum panel_page page;
     enum panel_field field;
     uint8_t draft_index;
-    uint8_t range_index;
     uint32_t frequency_hz;
     uint32_t current_ma;
     uint32_t apparent_mva;
-    bool auto_range;
     bool enabled;
     bool fault;
     bool armed;
@@ -84,20 +80,20 @@ struct panel {
     bool output_available;
 };
 
-/* 默认状态页、手动 1 ohm/2 kHz 请求、目标为 0；参数错误撤销 ready。 */
+/* 默认状态页、2 kHz 请求、目标为 0；参数错误撤销 ready。 */
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
  * LEFT/RIGHT 按状态、设置、日志三页循环；离开设置时丢弃草稿。
- * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择四项（到头停）。
- * 设置页 OK/ENCODER 提交请求并留页，确认阻抗同时置手动量程。
+ * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择频率、VA和输出（到头停）。
+ * 设置页 OK/ENCODER 提交请求并留页。
  * 日志页其余键不修改模型，由应用层处理浏览。
  */
 int panel_key(struct panel *panel, enum panel_key key);
-/* 仅设置页有效：挡位首尾循环；输出预选钳制为关闭/开启，不执行硬件操作。 */
+/* 仅设置页有效：频率首尾循环；VA与输出预选钳制，不执行硬件操作。 */
 int panel_rotate(struct panel *panel, int32_t detents);
 bool panel_draft_changed(const struct panel *panel);
-/* 同步实际DAC状态；运行变化或许可撤销会取消输出草稿，重获许可不会自动开启。 */
+/* 同步输出忙碌状态（含匹配/停机）；状态变化或许可撤销取消输出草稿，重获许可不自动开启。 */
 int panel_set_output_state(struct panel *panel, bool running, bool available);
 /* 表项单位为 ohm/Hz，索引越界返回 0。 */
 uint32_t panel_range_ohm(uint8_t index);

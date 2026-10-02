@@ -25,13 +25,14 @@ enum view_output {
     VIEW_OUTPUT_UNAVAILABLE, VIEW_OUTPUT_FAULT, VIEW_OUTPUT_DISABLED
 };
 
-/* VP1100起，每槽0x10 word：电流mA、电压mV、阻抗挡Ω、频率挡Hz、
- * 本次运行秒数、候选阻抗Ω、候选频率Hz、NTC1..3（0.1°C，-200..1200）。
+/* VP1100..1140：电流mA、电压mV、实际阻抗挡Ω、实际频率Hz、本次运行秒数。
+ * VP1160：候选频率Hz；VP1170..1190：NTC1..3（0.1°C）；VP11A0：目标mVA。
+ * VP1150原手动阻抗候选已停用，其他地址保持不变。
  * 频率仅2000/5000/8000/10000；温度显示范围-20.0..120.0°C。
  */
 enum view_field {
     VIEW_CURRENT, VIEW_VOLTAGE, VIEW_RANGE, VIEW_FREQUENCY, VIEW_ELAPSED,
-    VIEW_RANGE_CHOICE, VIEW_FREQUENCY_CHOICE,
+    VIEW_FREQUENCY_CHOICE,
     VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_POWER_CHOICE, VIEW_FIELD_COUNT
 };
 struct view_value { int64_t value; bool valid; };
@@ -61,7 +62,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v5：四项设置、VP11A0目标VA、VP1004输出状态及事件日志。
+/* ui.json v6：自动匹配阻抗，三项设置，VP11A0目标VA、VP1004输出状态及事件日志。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,
