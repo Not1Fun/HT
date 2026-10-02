@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "name": "HT",
   "width": 800,
   "height": 480,
@@ -160,7 +160,7 @@
       "input_scale": 1,
       "decimals": 0,
       "x": 458,
-      "y": 150,
+      "y": 134,
       "width": 216,
       "height": 44,
       "font_width": 20,
@@ -182,7 +182,7 @@
       "input_scale": 1000,
       "decimals": 0,
       "x": 458,
-      "y": 262,
+      "y": 222,
       "width": 216,
       "height": 44,
       "font_width": 20,
@@ -505,15 +505,16 @@
       "name": "focus",
       "vp": 4098,
       "x": 24,
-      "y": 128,
+      "y": 118,
       "width": 752,
-      "height": 200,
-      "first": 8,
-      "last": 9,
+      "height": 252,
+      "first": 31,
+      "last": 33,
       "initial": 0,
       "values": [
         "range",
-        "frequency"
+        "frequency",
+        "output"
       ],
       "pages": [
         1
@@ -523,15 +524,37 @@
       "name": "edit",
       "vp": 4099,
       "x": 24,
-      "y": 354,
+      "y": 382,
       "width": 752,
-      "height": 44,
+      "height": 32,
       "first": 10,
       "last": 11,
       "initial": 0,
       "values": [
         "confirmed",
         "pending"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "output",
+      "vp": 4100,
+      "x": 346,
+      "y": 310,
+      "width": 400,
+      "height": 44,
+      "first": 34,
+      "last": 39,
+      "initial": 5,
+      "values": [
+        "off",
+        "pending",
+        "running",
+        "unavailable",
+        "fault",
+        "disabled"
       ],
       "pages": [
         1
@@ -545,7 +568,7 @@
       "width": 380,
       "height": 50,
       "first": 12,
-      "last": 27,
+      "last": 30,
       "initial": 0,
       "values": [
         "",
@@ -563,7 +586,10 @@
         "温度就绪",
         "温度无效",
         "温度采样未就绪",
-        "输入输出错误"
+        "输入输出错误",
+        "DAC试波启动",
+        "DAC试波停止",
+        "DAC试波故障"
       ],
       "pages": [
         2
@@ -577,7 +603,7 @@
       "width": 380,
       "height": 50,
       "first": 12,
-      "last": 27,
+      "last": 30,
       "initial": 0,
       "values": [
         "",
@@ -595,7 +621,10 @@
         "温度就绪",
         "温度无效",
         "温度采样未就绪",
-        "输入输出错误"
+        "输入输出错误",
+        "DAC试波启动",
+        "DAC试波停止",
+        "DAC试波故障"
       ],
       "pages": [
         2
@@ -609,7 +638,7 @@
       "width": 380,
       "height": 50,
       "first": 12,
-      "last": 27,
+      "last": 30,
       "initial": 0,
       "values": [
         "",
@@ -627,7 +656,10 @@
         "温度就绪",
         "温度无效",
         "温度采样未就绪",
-        "输入输出错误"
+        "输入输出错误",
+        "DAC试波启动",
+        "DAC试波停止",
+        "DAC试波故障"
       ],
       "pages": [
         2
@@ -641,7 +673,7 @@
       "width": 380,
       "height": 50,
       "first": 12,
-      "last": 27,
+      "last": 30,
       "initial": 0,
       "values": [
         "",
@@ -659,7 +691,10 @@
         "温度就绪",
         "温度无效",
         "温度采样未就绪",
-        "输入输出错误"
+        "输入输出错误",
+        "DAC试波启动",
+        "DAC试波停止",
+        "DAC试波故障"
       ],
       "pages": [
         2

@@ -5,6 +5,7 @@ param(
     [ValidateSet('Off', 'Bridge', 'Panel')]
     [string]$ScreenMode = 'Off',
     [switch]$Temperature,
+    [switch]$Dds,
     [switch]$Bootloader,
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
@@ -32,6 +33,9 @@ Push-Location $root
 try {
     if ($Temperature -and $ScreenMode -ne 'Panel') {
         throw '-Temperature requires -ScreenMode Panel and powered AVDD.'
+    }
+    if ($Dds -and (-not $Temperature -or $ScreenMode -ne 'Panel')) {
+        throw '-Dds requires -ScreenMode Panel -Temperature and an unpowered/disconnected amplifier.'
     }
     if ($Setup) {
         if (-not (Test-Path -LiteralPath $python)) {
@@ -78,6 +82,11 @@ try {
     if ($Temperature) {
         $buildDir += '-temperature'
         $conf += ';screen-temperature.conf'
+    }
+    if ($Dds) {
+        $buildDir += '-dds'
+        $conf += ';dds-bench.conf'
+        $overlays += 'boards/ht_main_dds.overlay'
     }
     if ($Bootloader) {
         if (-not (Test-Path -LiteralPath '.tools/bootloader/mcuboot/boot/zephyr/CMakeLists.txt') -or

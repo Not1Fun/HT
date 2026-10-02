@@ -10,17 +10,36 @@
   const frequencies = [2000,5000,8000,10000];
   const events = {boot:1,online:2,offline:3,range:4,frequency:5,batteryOk:6,batteryAlarm:7,
     overcurrent:8,overcurrentClear:9,overvoltage:10,overvoltageClear:11,
-    temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15};
+    temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15,
+    outputStart:16,outputStop:17,outputFault:18};
   const names = ["状态页","挡位设置页","设备日志页"];
-  const state = {page:0,field:0,draft:0,range:0,frequency:0,scene:"idle",elapsed:0,started:0,
-    batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
-  const scenes = {idle:0,run:1,fault:3,offline:4};
+  const state = {page:0,field:0,draft:0,range:0,frequency:0,scene:"idle",started:0,deadline:0,
+    output:false,benchDisabled:false,batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
+  const scenes = {idle:0,fault:3,offline:4};
   const bootTime = performance.now();
-  function selected() { return state.field===0 ? state.range : state.frequency; }
+  function selected() { return state.field===0 ? state.range : state.field===1 ? state.frequency : Number(state.output); }
   function dirty() { return state.page===1 && state.draft!==selected(); }
   function announce(text) { $("#feedback").textContent=text; }
   function elapsedSeconds() {
-    return state.elapsed + (state.scene==="run" ? Math.floor((performance.now()-state.started)/1000) : 0);
+    return state.output ? Math.floor((performance.now()-state.started)/1000) : 0;
+  }
+  function stopOutput(reason,failed=false) {
+    if(!state.output) return false;
+    state.output=false;state.deadline=0;
+    if(state.field===2) state.draft=0;
+    addEvent(failed?events.outputFault:events.outputStop,failed?-5:0);
+    announce(reason);return true;
+  }
+  function expireOutput() {
+    if(state.output && performance.now()>=state.deadline)
+      stopOutput("演示试波已满 60 秒，自动停止。切换页面不会延长这一期限。");
+  }
+  function outputState() {
+    if(state.benchDisabled) return 5;
+    if(state.scene==="offline") return 3;
+    if(state.scene==="fault") return 4;
+    if(state.output) return 2;
+    return state.page===1 && state.field===2 && state.draft===1 ? 1 : 0;
   }
   function timeText(seconds) {
     if(seconds<0 || seconds>3599999) return "--";
@@ -39,13 +58,13 @@
   }
   function eventValue(entry) {
     if(entry.kind===events.range) return entry.value+" ohm";
-    if(entry.kind===events.frequency) return entry.value/1000+" kHz";
+    if(entry.kind===events.frequency || entry.kind===events.outputStart) return entry.value/1000+" kHz";
     if(entry.kind===events.temperatureReady || entry.kind===events.temperatureInvalid) return "NTC"+entry.value;
-    if(entry.kind===events.temperatureUnavailable || entry.kind===events.ioError) return String(entry.value);
+    if(entry.kind===events.temperatureUnavailable || entry.kind===events.ioError || entry.kind===events.outputFault) return String(entry.value);
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=v3"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=dds"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -62,19 +81,19 @@
     text.textContent=value; node.append(text); screen.append(node);
   }
   function render() {
+    expireOutput();
     screen.replaceChildren(); screen.dataset.page=String(state.page);
-    screen.dataset.scene=state.scene; screen.dataset.dirty=String(dirty());
+    screen.dataset.scene=state.scene; screen.dataset.dirty=String(dirty());screen.dataset.output=String(state.output);
     screen.setAttribute("aria-label",names[state.page]+"，演示数据，未连接设备");
     image(ui.pages[state.page].image,{x:0,y:0,width:800,height:480});
     const online=state.scene!=="offline";
-    const values={state:scenes[state.scene],battery:online?(state.batteryAlarm?1:0):2,
-      focus:state.field,edit:dirty()?1:0};
+    const values={state:state.output?1:scenes[state.scene],battery:online?(state.batteryAlarm?1:0):2,
+      focus:state.field,edit:dirty()?1:0,output:outputState()};
     const choiceRange=state.field===0?state.draft:state.range;
     const choiceFrequency=state.field===1?state.draft:state.frequency;
-    const texts={current:state.scene==="run"?"2.240":state.scene==="idle"?"0.000":"--",
-      voltage:state.scene==="run"?"22.360":state.scene==="idle"?"0.000":"--",
-      range:online?"10":"--",frequency:online?"5":"--",
-      elapsed:online?timeText(elapsedSeconds()):"--",
+    const texts={current:"--",voltage:"--",range:"--",
+      frequency:state.output?String(frequencies[state.frequency]/1000):"--",
+      elapsed:state.output?timeText(elapsedSeconds()):"--",
       range_choice:String(ranges[choiceRange]),frequency_choice:String(frequencies[choiceFrequency]/1000),
       ntc1:temperatureText(250,online),ntc2:temperatureText(314,online&&!state.temperatureInvalid),
       ntc3:temperatureText(-52,online)};
@@ -92,8 +111,8 @@
     }
     for(const field of ui.fields.filter(field=>field.pages.includes(state.page))) textValue(field,texts[field.name]);
     $("#page-label").textContent=names[state.page];
-    $("#ccw").setAttribute("aria-label",state.page===2?"左旋：较新日志":"左旋：上一个挡位");
-    $("#cw").setAttribute("aria-label",state.page===2?"右旋：较旧日志":"右旋：下一个挡位");
+    $("#ccw").setAttribute("aria-label",state.page===2?"左旋：较新日志":state.field===2?"左旋：预选关闭":"左旋：上一个挡位");
+    $("#cw").setAttribute("aria-label",state.page===2?"右旋：较旧日志":state.field===2?"右旋：预选开启":"右旋：下一个挡位");
     $("#press").setAttribute("aria-label",state.page===2?"编码器下压返回最新日志":"编码器下压确认");
     document.querySelectorAll("[data-scene]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.scene===state.scene)));
   }
@@ -102,36 +121,54 @@
     announce(state.logOffset===0?"演示日志：当前为最新记录。":"演示日志：正在查看较早记录，按 OK 返回最新。");
   }
   function key(key) {
+    expireOutput();
     if(key==="left" || key==="right") {
       const abandoned=dirty();
       state.page=(state.page+(key==="right"?1:names.length-1))%names.length;
       state.draft=selected();
+      if(state.page===2) state.logOffset=0;
       announce((abandoned?"未确认修改已取消。":"")+"已切到"+names[state.page]+"。");
     } else if(state.page===0) {
       if(key==="ok" || key==="press") {
-        state.page=1; state.draft=selected(); announce("上下选择项目，旋钮循环预选，按下保存请求。");
+        state.page=1; state.draft=selected(); announce("上下选择阻抗、频率或 DAC 试波，旋钮预选后按下确认。");
       }
+      if(key==="down" && !stopOutput("已立即停止演示 DAC 试波。")) announce("DAC 试波当前已关闭。");
     } else if(state.page===2) {
       if(key==="up" || key==="down") moveLog(key==="down"?1:-1);
       else if(key==="ok" || key==="press") {state.logOffset=0;announce("演示日志已返回最新记录。");}
     } else if(key==="up" || key==="down") {
-      const field=key==="up"?0:1;
+      const field=Math.max(0,Math.min(2,state.field+(key==="up"?-1:1)));
       if(field!==state.field) {state.field=field;state.draft=selected();}
-      announce("已选中"+(state.field===0?"阻抗挡位":"频率挡位")+"，旋转调整后按下确认。");
+      announce("已选中"+["阻抗挡位","频率挡位","DAC 试波"][state.field]+"，旋转调整后按下确认。");
     } else if(key==="ok" || key==="press") {
-      if(state.field===0) {state.range=state.draft;addEvent(events.range,ranges[state.range]);}
-      else {state.frequency=state.draft;addEvent(events.frequency,frequencies[state.frequency]);}
-      announce("演示请求已保存："+(state.field===0?ranges[state.range]+" Ω":frequencies[state.frequency]/1000+" kHz")+"。仅更新请求与日志，输出仍关闭。");
+      if(state.field===2) {
+        if(state.output) stopOutput("已停止演示 DAC 试波；再次启动需重新右旋并确认。");
+        else if(outputState()>=3) {state.draft=0;announce("当前状态不能启动试波；恢复可用后重新预选并确认。");}
+        else if(state.draft===1) {
+          state.output=true;state.started=performance.now();state.deadline=state.started+60000;
+          addEvent(events.outputStart,frequencies[state.frequency]);
+          announce("演示 DAC 试波已开始：100mVpp，60 秒后自动停止。此项再次确认或状态页下键可停波。");
+        } else announce("DAC 试波保持关闭，右旋预选开启后按下确认。");
+      } else {
+        const stopped=stopOutput("确认新请求前已停止演示 DAC 试波。");
+        if(state.field===0) {state.range=state.draft;addEvent(events.range,ranges[state.range]);}
+        else {state.frequency=state.draft;addEvent(events.frequency,frequencies[state.frequency]);}
+        announce((stopped?"试波已停止。":"")+"演示请求已保存："+(state.field===0?ranges[state.range]+" Ω":frequencies[state.frequency]/1000+" kHz")+"。继电器与功放保持关闭；试波需重新开启并确认。");
+      }
     }
     render();
   }
   function turn(delta) {
+    expireOutput();
     if(state.page===0) {announce("在设置页旋转选择挡位，在日志页旋转翻看记录。");return;}
     if(state.page===2) moveLog(delta);
     else {
-      const count=state.field===0?ranges.length:frequencies.length;
-      state.draft=(state.draft+delta+count)%count;
-      announce(dirty()?"当前为待选挡位，按下编码器或 OK 保存请求。":"与已确认请求一致。");
+      if(state.field===2) state.draft=Math.max(0,Math.min(1,state.draft+delta));
+      else {
+        const count=state.field===0?ranges.length:frequencies.length;
+        state.draft=(state.draft+delta+count)%count;
+      }
+      announce(state.field===2?(state.output?"正在演示试波；按下编码器或 OK 将立即停止。":state.draft?"已预选开启，按下编码器或 OK 才会开始演示试波。":"已预选关闭。"):dirty()?"当前为待选挡位，按下编码器或 OK 保存请求。":"与已确认请求一致。");
     }
     render();
   }
@@ -141,8 +178,7 @@
   document.querySelectorAll("[data-scene]").forEach(button=>button.addEventListener("click",()=>{
     const next=button.dataset.scene;
     if(next===state.scene) return;
-    if(state.scene==="run") state.elapsed=elapsedSeconds();
-    if(next==="run") {state.elapsed=0;state.started=performance.now();}
+    if(next!=="idle") stopOutput("演示状态变化，试波已停止。",next==="fault");
     if(state.scene==="offline") addEvent(events.online);
     if(state.scene==="fault") addEvent(events.overcurrentClear);
     if(next==="offline") addEvent(events.offline);
@@ -159,6 +195,12 @@
     addEvent(state.temperatureInvalid?events.temperatureInvalid:events.temperatureReady,2);
     announce("已切换 NTC2 演示状态，并添加一条模拟日志。");render();
   });
+  $("#bench-disabled").addEventListener("change",event=>{
+    state.benchDisabled=event.target.checked;
+    if(state.benchDisabled) stopOutput("台架功能未启用，试波已停止。");
+    state.draft=selected();
+    announce(state.benchDisabled?"模拟普通固件：未启用台架功能，不能启动 DAC。":"模拟台架固件：仍默认关闭，需要重新预选并确认。");render();
+  });
   function resize() {screen.style.transform=`scale(${$(".screen-stage").clientWidth/800})`;}
   new ResizeObserver(resize).observe($(".screen-stage"));
   // These seed records demonstrate the page and do not come from connected hardware.
@@ -166,8 +208,10 @@
   for(let channel=1;channel<=3;channel++) addEvent(events.temperatureReady,channel);
   render();resize();
   setInterval(()=>{
+    const wasRunning=state.output;expireOutput();
+    if(wasRunning!==state.output) {render();return;}
     const field=screen.querySelector('[data-field="elapsed"] text');
-    if(field && state.scene==="run") {
+    if(field && state.output) {
       field.textContent=timeText(elapsedSeconds());
       field.setAttribute("textLength",field.textContent.length*ui.fields.find(item=>item.name==="elapsed").font_width);
     }

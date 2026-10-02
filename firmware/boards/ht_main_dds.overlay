@@ -1,0 +1,6 @@
+/* The DDS bench shell exclusively owns the host UART. */
+/ {
+	chosen {
+		zephyr,shell-uart = &usart1;
+	};
+};

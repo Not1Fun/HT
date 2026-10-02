@@ -1,0 +1,18 @@
+# @brief DDS整数波形和四档精确分频的主机验证。
+cmake_minimum_required(VERSION 3.20)
+if(DEFINED ENV{HOST_CC} AND NOT DEFINED CMAKE_C_COMPILER)
+  set(CMAKE_C_COMPILER "$ENV{HOST_CC}" CACHE FILEPATH "Host C compiler")
+endif()
+project(dds_tests LANGUAGES C)
+enable_testing()
+add_executable(dds_tests test_dds.c ../../src/core/dds.c)
+target_include_directories(dds_tests PRIVATE ../../src)
+set_target_properties(dds_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(dds_tests PRIVATE -Wall -Wextra -Werror -pedantic)
+  target_link_libraries(dds_tests PRIVATE m)
+endif()
+foreach(case IN ITEMS frequencies invalid_frequency amplitude_sweep sine_error
+    periodicity zero_and_bench invalid_buffer boundaries)
+  add_test(NAME dds_${case} COMMAND dds_tests ${case})
+endforeach()

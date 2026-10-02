@@ -31,3 +31,5 @@ target_sources_ifdef(CONFIG_HT_SCREEN_BRIDGE app PRIVATE src/app/screen_bridge.c
 target_sources_ifdef(CONFIG_HT_SCREEN_PANEL app PRIVATE src/app/screen_panel.c)
 target_sources_ifdef(CONFIG_HT_SCREEN_TEMPERATURE app PRIVATE
   src/core/ntc.c src/platform/temperature_io.c)
+target_sources_ifdef(CONFIG_HT_DDS_BENCH app PRIVATE
+  src/core/dds.c src/platform/dds_io.c src/app/dds_bench.c)

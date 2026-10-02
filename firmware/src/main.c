@@ -1,4 +1,4 @@
-/** @brief Run the output-disabled bring-up checks and change-only diagnostics. */
+/** @brief Initialize relay-off bring-up and dispatch the selected service. */
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
 #include "config/analog.h"

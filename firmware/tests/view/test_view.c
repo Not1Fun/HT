@@ -25,7 +25,7 @@ static int receive(void *ctx, const uint8_t *data, size_t length)
 static struct view_snapshot sample(void)
 {
     struct view_snapshot s = {.page=PANEL_PAGE_STATUS, .state=VIEW_RUNNING,
-        .battery=VIEW_POWER_NORMAL, .selected=PANEL_RANGE, .fresh=true};
+        .battery=VIEW_POWER_NORMAL, .selected=PANEL_RANGE, .output=VIEW_OUTPUT_RUNNING, .fresh=true};
     const int64_t values[] = {2240, 22360, 10, 2000, 3723, 30, 5000, 251, -125, 1200};
     for (size_t i=0; i<VIEW_FIELD_COUNT; ++i) s.values[i]=(struct view_value){values[i],true};
     return s;
@@ -55,12 +55,59 @@ static void test_mapping(void)
         s.selected=PANEL_FREQUENCY; s.editing=true;
         refresh(&v,&c,&s,(enum dgus_crc)crc);
         CHECK(c.count==BASE_FRAME_COUNT && v.synced);
-        CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==4);
+        CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==5);
         CHECK(c.frames[0].words[0]==1 && c.frames[0].words[1]==0);
         CHECK(c.frames[0].words[2]==1 && c.frames[0].words[3]==1);
+        CHECK(c.frames[0].words[4]==VIEW_OUTPUT_RUNNING);
         for(int i=0;i<VIEW_FIELD_COUNT;++i) text_is(&c,(enum view_field)i,expected[i]);
         CHECK(c.frames[BASE_FRAME_COUNT-1].vp==0x0084 && c.frames[BASE_FRAME_COUNT-1].count==2);
         CHECK(c.frames[BASE_FRAME_COUNT-1].words[0]==0x5a01 && c.frames[BASE_FRAME_COUNT-1].words[1]==0);
+    }
+}
+static void test_output_states(void)
+{
+    for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
+        struct view v={0}; struct capture c; struct view_snapshot s=sample();
+        s.page=PANEL_PAGE_SETTINGS; s.selected=PANEL_OUTPUT;
+        for(int output=VIEW_OUTPUT_OFF;output<=VIEW_OUTPUT_DISABLED;++output) {
+            s.output=(enum view_output)output;
+            s.editing=output==VIEW_OUTPUT_ARMED;
+            refresh(&v,&c,&s,(enum dgus_crc)crc);
+            CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==5);
+            CHECK(c.frames[0].words[2]==2);
+            CHECK(c.frames[0].words[3]==(output==VIEW_OUTPUT_ARMED?1u:0u));
+            CHECK(c.frames[0].words[4]==(uint16_t)output);
+            text_is(&c,VIEW_FREQUENCY,"2");
+            text_is(&c,VIEW_FREQUENCY_CHOICE,"5");
+        }
+        /* 草稿与实际输出分别传送，不能因状态RUNNING或修改候选频率而变成已开启。 */
+        s.output=VIEW_OUTPUT_ARMED; s.editing=true;
+        s.values[VIEW_FREQUENCY_CHOICE].value=10000;
+        refresh(&v,&c,&s,(enum dgus_crc)crc);
+        CHECK(c.frames[0].words[0]==VIEW_RUNNING && c.frames[0].words[4]==VIEW_OUTPUT_ARMED);
+        text_is(&c,VIEW_FREQUENCY,"2"); text_is(&c,VIEW_FREQUENCY_CHOICE,"10");
+        s.output=VIEW_OUTPUT_FAULT; s.state=VIEW_FAULT; s.editing=false;
+        refresh(&v,&c,&s,(enum dgus_crc)crc);
+        CHECK(c.frames[0].words[0]==VIEW_FAULT && c.frames[0].words[4]==VIEW_OUTPUT_FAULT);
+        CHECK(c.frames[0].words[3]==0);
+        text_is(&c,VIEW_CURRENT,"--"); text_is(&c,VIEW_NTC1,"25.1");
+    }
+}
+static void test_output_stale(void)
+{
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    for(int output=VIEW_OUTPUT_OFF;output<=VIEW_OUTPUT_DISABLED;++output) {
+        s.output=(enum view_output)output;
+        for(int state=VIEW_STANDBY;state<=VIEW_OFFLINE;++state) {
+            s.state=(enum view_state)state; s.fresh=false;
+            refresh(&v,&c,&s,DGUS_CRC_NONE);
+            CHECK(c.frames[0].words[4]==VIEW_OUTPUT_UNAVAILABLE);
+            CHECK(c.frames[0].words[1]==VIEW_POWER_UNKNOWN);
+            text_is(&c,VIEW_ELAPSED,"--");
+        }
+        s.state=VIEW_OFFLINE; s.fresh=true;
+        refresh(&v,&c,&s,DGUS_CRC_MODBUS);
+        CHECK(c.frames[0].words[4]==VIEW_OUTPUT_UNAVAILABLE);
     }
 }
 static void test_numbers(void)
@@ -197,6 +244,32 @@ static void test_logs(void)
         refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==FRAME_COUNT);
     }
 }
+static void test_dds_logs(void)
+{
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    s.page=PANEL_PAGE_LOG; s.log_count=4;
+    s.logs[0]=(struct event_entry){60,EVENT_DDS_START,10000};
+    s.logs[1]=(struct event_entry){59,EVENT_DDS_STOP,0};
+    s.logs[2]=(struct event_entry){58,EVENT_DDS_FAILED,-5};
+    s.logs[3]=(struct event_entry){57,EVENT_DDS_START,2101};
+    for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
+        view_reset(&v); refresh(&v,&c,&s,(enum dgus_crc)crc);
+        const struct dgus_frame *icons=&c.frames[VIEW_FIELD_COUNT+1];
+        CHECK(icons->vp==0x1010 && icons->count==4);
+        CHECK(icons->words[0]==16 && icons->words[1]==17 && icons->words[2]==18);
+        vp_text_is(&c,0x1200,"00:01:00"); vp_text_is(&c,0x1210,"10 kHz");
+        vp_text_is(&c,0x1230,""); vp_text_is(&c,0x1250,"-5"); vp_text_is(&c,0x1270,"--");
+    }
+    s.logs[0].value=2000; s.logs[2].value=INT32_MIN;
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    vp_text_is(&c,0x1210,"2 kHz"); vp_text_is(&c,0x1250,"--");
+    memset(s.logs,0,sizeof(s.logs)); s.log_count=0;
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    for(size_t row=0;row<VIEW_LOG_ROWS;++row) {
+        CHECK(c.frames[VIEW_FIELD_COUNT+1].words[row]==EVENT_NONE);
+        vp_text_is(&c,(uint16_t)(0x1210u+row*0x20u),"");
+    }
+}
 static void test_invalid_readings(void)
 {
     struct view v={0}; struct capture c; struct view_snapshot s=sample();
@@ -252,7 +325,10 @@ static void test_invalid_args(void)
     s.page=(enum panel_page)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.state=(enum view_state)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.battery=(enum view_power)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
-    s=sample(); s.selected=(enum panel_field)2; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.selected=(enum panel_field)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.selected=(enum panel_field)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.output=(enum view_output)6; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.output=(enum view_output)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.log_count=EVENT_LOG_CAPACITY+1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.log_count=6; s.log_offset=3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.logs[0].kind=EVENT_COUNT; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
@@ -264,6 +340,7 @@ int main(int argc,char **argv)
     struct { const char *name; void (*run)(void); } cases[]={
         {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
         {"temperature",test_temperature},{"logs",test_logs},
+        {"output_states",test_output_states},{"output_stale",test_output_stale},{"dds_logs",test_dds_logs},
         {"invalid_readings",test_invalid_readings},{"transitions",test_transitions},
         {"send_failure",test_send_failure},{"invalid_args",test_invalid_args}};
     for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {

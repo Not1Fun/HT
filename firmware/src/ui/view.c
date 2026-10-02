@@ -143,6 +143,7 @@ static void format_log_value(char text[VIEW_TEXT_BYTES], const struct event_entr
         }
         break;
     case EVENT_FREQUENCY:
+    case EVENT_DDS_START:
         format_value(text, VIEW_FREQUENCY, entry->value, true);
         if (text[0] != '-') {
             strcat(text, " kHz");
@@ -159,6 +160,7 @@ static void format_log_value(char text[VIEW_TEXT_BYTES], const struct event_entr
         break;
     case EVENT_TEMP_INIT_FAILED:
     case EVENT_IO_ERROR:
+    case EVENT_DDS_FAILED:
         text[0] = '-';
         text[1] = '-';
         format_number(text, entry->value, 0);
@@ -216,7 +218,7 @@ void view_reset(struct view *view)
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,
                  view_send_fn send, void *ctx)
 {
-    uint16_t icons[4];
+    uint16_t icons[5];
     uint16_t page[2];
     bool online;
     int result;
@@ -224,7 +226,8 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
         (unsigned int)snapshot->page > PANEL_PAGE_LOG ||
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
-        (unsigned int)snapshot->selected > PANEL_FREQUENCY ||
+        (unsigned int)snapshot->selected > PANEL_OUTPUT ||
+        (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED ||
         snapshot->log_count > EVENT_LOG_CAPACITY ||
         snapshot->log_offset > (snapshot->log_count > VIEW_LOG_ROWS ?
                                snapshot->log_count - VIEW_LOG_ROWS : 0u)) {
@@ -244,7 +247,8 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     icons[1] = (uint16_t)(online ? snapshot->battery : VIEW_POWER_UNKNOWN);
     icons[2] = (uint16_t)snapshot->selected;
     icons[3] = snapshot->editing ? 1u : 0u;
-    result = send_words(crc, send, ctx, 0x1000, icons, 4);
+    icons[4] = (uint16_t)(online ? snapshot->output : VIEW_OUTPUT_UNAVAILABLE);
+    result = send_words(crc, send, ctx, 0x1000, icons, 5);
     if (result == VIEW_OK) {
         result = send_values(snapshot, crc, send, ctx);
     }

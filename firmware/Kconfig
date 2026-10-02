@@ -25,4 +25,12 @@ config HT_SCREEN_TEMPERATURE
 	  Requires powered AVDD and the board's 22 kohm NTC pull-ups.
 	  Owns ADC1 exclusively; the measurement acquisition path stays disabled.
 
+config HT_DDS_BENCH
+	bool "PA4-only DDS bench control"
+	depends on HT_SCREEN_PANEL && HT_SCREEN_TEMPERATURE
+	help
+	  Requires the amplifier to be disconnected or unpowered. Explicit panel
+	  or serial requests produce at most 100 mVpp for 60 seconds, with relays off.
+	  No automatic start, output current control, or measurement acquisition.
+
 source "Kconfig.zephyr"

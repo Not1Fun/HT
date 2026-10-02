@@ -20,6 +20,10 @@ enum view_state {
     VIEW_STANDBY, VIEW_RUNNING, VIEW_SWITCHING, VIEW_FAULT, VIEW_OFFLINE
 };
 enum view_power { VIEW_POWER_NORMAL, VIEW_POWER_ALARM, VIEW_POWER_UNKNOWN };
+enum view_output {
+    VIEW_OUTPUT_OFF, VIEW_OUTPUT_ARMED, VIEW_OUTPUT_RUNNING,
+    VIEW_OUTPUT_UNAVAILABLE, VIEW_OUTPUT_FAULT, VIEW_OUTPUT_DISABLED
+};
 
 /* VP1100起，每槽0x10 word：电流mA、电压mV、阻抗挡Ω、频率挡Hz、
  * 本次运行秒数、候选阻抗Ω、候选频率Hz、NTC1..3（0.1°C，-200..1200）。
@@ -42,6 +46,7 @@ struct view_snapshot {
     enum view_state state;
     enum view_power battery;
     enum panel_field selected;
+    enum view_output output;
     bool editing;
     bool fresh;
     struct view_value values[VIEW_FIELD_COUNT];
@@ -56,7 +61,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v3：状态/设置数据及四行事件日志；完整清尾，同页不重发页命令。
+/* ui.json v4：三项设置、VP1004输出状态及四行事件日志；完整清尾，同页不重发页命令。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,

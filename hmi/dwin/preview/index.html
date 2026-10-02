@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>HT · 状态、挡位设置与日志</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=v3">
+  <link rel="stylesheet" href="style.css?v=dds">
 </head>
 <body>
 <main>
@@ -24,16 +24,16 @@
         <button id="right" aria-label="右键">→</button>
         <button id="down" aria-label="下键">↓</button>
       </div>
-      <p class="help">左右循环切页<br>上下选择项目或翻看日志</p>
+      <p class="help">左右循环切页 · 上下选择项目<br>状态页按下键可立即停止试波</p>
       <h2>旋转编码器</h2>
       <div class="encoder"><button id="ccw" aria-label="左旋：上一个挡位">↶</button><button id="press" aria-label="编码器下压确认"><span class="mark"></span><span>确认</span></button><button id="cw" aria-label="右旋：下一个挡位">↷</button></div>
-      <p class="help">设置：双向循环，下压确认<br>日志：旋转翻看，下压返回最新</p>
+      <p class="help">挡位循环预选，试波右开左关<br>下压确认；正在试波时下压停止</p>
       <p id="feedback" role="status">按右键进入挡位设置。</p>
     </aside>
   </div>
-  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="fault">过流保护示例</button><button data-scene="offline">离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label><label><input id="temperature-invalid" type="checkbox">NTC2 无效示例</label></section>
-  <footer>阻抗挡位：1 / 3 / 10 / 30 / 100 / 300 / 1000 Ω　·　频率挡位：2 / 5 / 8 / 10 kHz<br>页面仅演示交互；所有读数和日志均为模拟数据，刷新页面后重置，最多保留 32 条。</footer>
+  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">正常待机</button><button data-scene="fault">过流保护示例</button><button data-scene="offline">屏幕离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label><label><input id="temperature-invalid" type="checkbox">NTC2 无效示例</label><label><input id="bench-disabled" type="checkbox">未启用台架功能</label></section>
+  <footer>阻抗挡位：1 / 3 / 10 / 30 / 100 / 300 / 1000 Ω　·　频率挡位：2 / 5 / 8 / 10 kHz<br>DAC 试波仅面向 PA4 台架：100mVpp，60 秒自动停止。功放和继电器保持关闭。<br>页面仅演示交互；温度与日志为模拟数据，不会连接硬件。刷新后重置，日志最多保留 32 条。</footer>
 </main>
-<script src="preview.js?v=v3"></script>
+<script src="preview.js?v=dds"></script>
 </body>
 </html>

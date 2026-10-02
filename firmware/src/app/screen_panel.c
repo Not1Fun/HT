@@ -1,10 +1,13 @@
-/* @brief 屏幕、手动请求与可选温度显示；始终不启动激励或切换继电器。 */
+/* @brief 面板导航、温度和日志；可选DAC台架只显式启动，继电器保持全断。 */
 #include "app/screen_panel.h"
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
 #include "platform/screen_uart.h"
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE)
 #include "platform/temperature_io.h"
+#endif
+#if defined(CONFIG_HT_DDS_BENCH)
+#include "app/dds_bench.h"
 #endif
 #include "ui/dgus.h"
 #include "ui/encoder.h"
@@ -34,6 +37,8 @@ LOG_MODULE_REGISTER(screen_panel);
 #define VERSION_VP 0x000f
 #define TEMPERATURE_MS 200
 #define TEMPERATURE_STALE_MS 1000
+#define BENCH_MVPP 100u
+#define BENCH_SECONDS 60u
 
 BUILD_ASSERT(DT_SAME_NODE(DT_GPIO_CTLR(BOARD_NODE, encoder_a_gpios),
 			 DT_GPIO_CTLR(BOARD_NODE, encoder_b_gpios)),
@@ -95,7 +100,51 @@ struct service {
 	int64_t next_display;
 	int send_error;
 	bool link_expired;
+#if defined(CONFIG_HT_DDS_BENCH)
+	bool dds_ready;
+	bool dds_running;
+	bool dds_failed;
+#endif
 };
+
+static void record_event(struct service *service, enum event_kind kind, int32_t value);
+
+#if defined(CONFIG_HT_DDS_BENCH)
+static void update_dds(struct service *service, bool io_ok)
+{
+	int64_t now = k_uptime_get();
+	bool permitted = io_ok && service->digital_valid && service->link.connected &&
+		!(service->digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) &&
+		!(service->link.pending && now >= service->link.deadline) &&
+		service->temperature_active && service->temperature_seen &&
+		now - service->last_temperature < TEMPERATURE_STALE_MS;
+
+	if (service->dds_ready) {
+		int rc = dds_bench_poll(permitted);
+
+		if (rc != 0) {
+			service->dds_ready = false;
+			(void)dds_bench_stop();
+			LOG_ERR("DDS bench stopped: %d; reset required", rc);
+		}
+	}
+	struct dds_bench_snapshot dds;
+
+	if (dds_bench_snapshot(&dds) == 0) {
+		if (dds.faulted && !service->dds_failed) {
+			record_event(service, EVENT_DDS_FAILED, dds.last_error);
+			service->dds_failed = true;
+		}
+		if (dds.running != service->dds_running) {
+			record_event(service, dds.running ? EVENT_DDS_START : EVENT_DDS_STOP,
+				dds.running ? (int32_t)dds.frequency_hz : 0);
+			service->dds_running = dds.running;
+		}
+		(void)panel_set_output_state(&service->panel, dds.running,
+			service->dds_ready && dds.ready && dds.permitted && !dds.faulted);
+	}
+}
+#endif
 
 static void scroll_log(struct service *service, int32_t steps)
 {
@@ -276,6 +325,7 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 {
 	struct keys *keys = &service->keys;
 	uint8_t pressed = panel_pressed_keys(raw);
+	uint8_t events = 0;
 
 	if (!keys->synced) {
 		keys->candidate = pressed;
@@ -300,6 +350,18 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			keys->armed |= bit;
 		} else if (keys->armed & bit) {
 			keys->armed &= (uint8_t)~bit;
+			events |= bit;
+		}
+	}
+#if defined(CONFIG_HT_DDS_BENCH)
+	/* 同轮状态页的停止键先于导航与确认；请求队列拒绝越过STOP的新启动。 */
+	if (service->panel.page == PANEL_PAGE_STATUS && (events & BIT(PANEL_KEY_DOWN))) {
+		(void)dds_bench_request_stop();
+		events &= (uint8_t)~BIT(PANEL_KEY_DOWN);
+	}
+#endif
+	for (unsigned int i = 0; i < KEY_COUNT; ++i) {
+		if (events & BIT(i)) {
 			enum panel_page before = service->panel.page;
 			if (before == PANEL_PAGE_LOG) {
 				if (i == PANEL_KEY_UP || i == PANEL_KEY_DOWN) {
@@ -313,15 +375,31 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			if (action < 0) {
 				return action;
 			}
-			if (action != PANEL_ACTION_NONE) {
+			if (action == PANEL_ACTION_RANGE || action == PANEL_ACTION_FREQUENCY) {
+#if defined(CONFIG_HT_DDS_BENCH)
+				(void)dds_bench_request_stop();
+#endif
 				record_event(service, action == PANEL_ACTION_RANGE ? EVENT_RANGE : EVENT_FREQUENCY,
 					action == PANEL_ACTION_RANGE ?
 					(int32_t)panel_range_ohm(service->panel.range_index) :
 					(int32_t)service->panel.frequency_hz);
-				LOG_INF("Request only: range=%u ohm frequency=%u Hz; output disabled",
+				LOG_INF("Saved request: range=%u ohm frequency=%u Hz",
 					panel_range_ohm(service->panel.range_index),
 					service->panel.frequency_hz);
 			}
+#if defined(CONFIG_HT_DDS_BENCH)
+			if (action == PANEL_ACTION_OUTPUT_STOP) {
+				(void)dds_bench_request_stop();
+			} else if (action == PANEL_ACTION_OUTPUT_START) {
+				int rc = dds_bench_request_start(service->panel.frequency_hz,
+					BENCH_MVPP, BENCH_SECONDS);
+
+				if (rc != 0) {
+					service->panel.draft_index = 0;
+					LOG_WRN("DAC start request rejected: %d", rc);
+				}
+			}
+#endif
 			if (before != service->panel.page && service->panel.page == PANEL_PAGE_LOG) {
 				service->log_offset = 0;
 			}
@@ -356,7 +434,13 @@ static int update_inputs(struct service *service)
 		return rc;
 	}
 	update_digital(service, digital);
-	/* 目标始终为0，独立使能只更新安全模型，不存在START执行路径。 */
+#if defined(CONFIG_HT_DDS_BENCH)
+	/* 物理使能的释放沿也可停止台架，但不会用它启动DAC。 */
+	if (service->panel.enabled && (raw & BIT(6))) {
+		(void)dds_bench_request_stop();
+	}
+#endif
+	/* CC/VA目标保持0；DAC台架使用单独的显式请求。 */
 	(void)panel_inputs(&service->panel, PANEL_CC, !(raw & BIT(6)),
 		(service->digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) != 0);
 	rc = update_keys(service, raw, k_uptime_get());
@@ -478,6 +562,9 @@ static int display_send(void *ctx, const uint8_t *data, size_t length)
 		rc = screen_uart_write(SCREEN_UART_DISPLAY, data, length);
 	}
 	service->send_error = rc;
+#if defined(CONFIG_HT_DDS_BENCH)
+	update_dds(service, rc == 0);
+#endif
 	return rc;
 }
 
@@ -491,6 +578,7 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		.battery = !service->digital_valid ? VIEW_POWER_UNKNOWN :
 			(service->digital & BIT(BOARD_BAT)) ? VIEW_POWER_NORMAL : VIEW_POWER_ALARM,
 		.selected = panel->field,
+		.output = VIEW_OUTPUT_DISABLED,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
 	out->values[VIEW_RANGE_CHOICE] = (struct view_value){
@@ -511,6 +599,26 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 			service->temperature_active && service->temperature_seen &&
 			k_uptime_get() - service->last_temperature < TEMPERATURE_STALE_MS &&
 			service->temperature.samples[i].status == NTC_OK};
+	}
+#endif
+
+#if defined(CONFIG_HT_DDS_BENCH)
+	struct dds_bench_snapshot dds;
+
+	out->output = service->dds_failed ? VIEW_OUTPUT_FAULT : VIEW_OUTPUT_UNAVAILABLE;
+	if (dds_bench_snapshot(&dds) == 0) {
+		if (dds.faulted || service->dds_failed) {
+			out->state = VIEW_FAULT;
+			out->output = VIEW_OUTPUT_FAULT;
+		} else if (dds.running && !fault) {
+			out->state = VIEW_RUNNING;
+			out->output = VIEW_OUTPUT_RUNNING;
+			out->values[VIEW_FREQUENCY] = (struct view_value){dds.frequency_hz, true};
+			out->values[VIEW_ELAPSED] = (struct view_value){dds.elapsed_seconds, true};
+		} else if (panel->output_available) {
+			out->output = panel->field == PANEL_OUTPUT && panel->draft_index != 0 ?
+				VIEW_OUTPUT_ARMED : VIEW_OUTPUT_OFF;
+		}
 	}
 #endif
 	/* 其余字段无测量/应用状态拥有者，保持invalid，不能把请求当作实值。 */
@@ -570,8 +678,18 @@ int screen_panel_run(void)
 			LOG_WRN("Temperature initialization failed: %d", temp_rc);
 		}
 #endif
+#if defined(CONFIG_HT_DDS_BENCH)
+		int dds_rc = service.temperature_active ? dds_bench_init() : -EACCES;
+
+		service.dds_ready = dds_rc == 0;
+		if (dds_rc != 0) {
+			service.dds_failed = true;
+			record_event(&service, EVENT_DDS_FAILED, dds_rc);
+			LOG_ERR("DDS bench unavailable: %d", dds_rc);
+		}
+#endif
 	}
-	LOG_INF("Screen panel diagnostics: targets zero, requests only, output disabled");
+	LOG_INF("Screen panel: CC/VA targets zero; relays remain off");
 	while (rc == 0) {
 		rc = update_inputs(&service);
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE)
@@ -582,6 +700,9 @@ int screen_panel_run(void)
 		if (rc == 0) {
 			rc = update_link(&service);
 		}
+#if defined(CONFIG_HT_DDS_BENCH)
+		update_dds(&service, rc == 0);
+#endif
 		if (rc == 0 && service.link.connected && k_uptime_get() >= service.next_display) {
 			service.next_display = k_uptime_get() + REFRESH_MS;
 			rc = refresh_display(&service);
@@ -594,6 +715,9 @@ int screen_panel_run(void)
 			k_msleep(1);
 		}
 	}
+#if defined(CONFIG_HT_DDS_BENCH)
+	(void)dds_bench_stop();
+#endif
 	int stop_rc = stop_encoder();
 	if (rc != 0) {
 		record_event(&service, EVENT_IO_ERROR, rc);

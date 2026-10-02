@@ -1,4 +1,4 @@
-/* @brief 输出禁止的屏幕与面板联调服务。 */
+/* @brief 屏幕与面板联调；可选DAC台架控制，继电器保持全断。 */
 #ifndef HT_SCREEN_PANEL_H
 #define HT_SCREEN_PANEL_H
 

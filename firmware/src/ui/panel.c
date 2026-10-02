@@ -24,6 +24,9 @@ static uint8_t selected_index(const struct panel *panel)
     if (panel->field == PANEL_RANGE) {
         return panel->range_index;
     }
+    if (panel->field == PANEL_OUTPUT) {
+        return panel->output_running ? 1u : 0u;
+    }
     for (uint8_t index = 0; index < PANEL_FREQUENCY_COUNT; ++index) {
         if (frequencies[index] == panel->frequency_hz) {
             return index;
@@ -97,6 +100,9 @@ int panel_key(struct panel *panel, enum panel_key key)
         return PANEL_ACTION_NONE;
     }
     if (panel->page == PANEL_PAGE_STATUS) {
+        if (key == PANEL_KEY_DOWN) {
+            return PANEL_ACTION_OUTPUT_STOP;
+        }
         if (key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
             panel->draft_index = selected_index(panel);
             panel->page = PANEL_PAGE_SETTINGS;
@@ -109,7 +115,12 @@ int panel_key(struct panel *panel, enum panel_key key)
     switch (key) {
     case PANEL_KEY_UP:
     case PANEL_KEY_DOWN:
-        field = key == PANEL_KEY_UP ? PANEL_RANGE : PANEL_FREQUENCY;
+        field = panel->field;
+        if (key == PANEL_KEY_UP && field > PANEL_RANGE) {
+            --field;
+        } else if (key == PANEL_KEY_DOWN && field < PANEL_OUTPUT) {
+            ++field;
+        }
         if (field != panel->field) {
             panel->field = field;
             panel->draft_index = selected_index(panel);
@@ -117,6 +128,12 @@ int panel_key(struct panel *panel, enum panel_key key)
         break;
     case PANEL_KEY_OK:
     case PANEL_KEY_ENCODER:
+        if (panel->field == PANEL_OUTPUT) {
+            if (panel->output_running || panel->draft_index == 0) {
+                return PANEL_ACTION_OUTPUT_STOP;
+            }
+            return panel->output_available ? PANEL_ACTION_OUTPUT_START : PANEL_ACTION_NONE;
+        }
         if (panel->field == PANEL_RANGE) {
             panel->range_index = panel->draft_index;
             panel->auto_range = false;
@@ -142,6 +159,11 @@ int panel_rotate(struct panel *panel, int32_t detents)
     if (panel->page != PANEL_PAGE_SETTINGS) {
         return PANEL_OK;
     }
+    if (panel->field == PANEL_OUTPUT) {
+        next = (int64_t)panel->draft_index + detents;
+        panel->draft_index = next <= 0 ? 0u : 1u;
+        return PANEL_OK;
+    }
     count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT : PANEL_FREQUENCY_COUNT;
     next = ((int64_t)panel->draft_index + detents) % count;
     panel->draft_index = (uint8_t)(next < 0 ? next + count : next);
@@ -153,6 +175,23 @@ bool panel_draft_changed(const struct panel *panel)
     return check_ready(panel) == PANEL_OK && panel->page == PANEL_PAGE_SETTINGS &&
            (panel->draft_index != selected_index(panel) ||
             (panel->field == PANEL_RANGE && panel->auto_range));
+}
+
+int panel_set_output_state(struct panel *panel, bool running, bool available)
+{
+    int rc = check_ready(panel);
+
+    if (rc != PANEL_OK) {
+        return rc;
+    }
+    bool changed = panel->output_running != running;
+
+    panel->output_running = running;
+    panel->output_available = available;
+    if (panel->field == PANEL_OUTPUT && (changed || !available)) {
+        panel->draft_index = running ? 1u : 0u;
+    }
+    return PANEL_OK;
 }
 
 int panel_set_target(struct panel *panel, enum panel_mode mode, uint32_t value)
