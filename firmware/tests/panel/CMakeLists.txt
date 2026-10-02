@@ -19,7 +19,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 foreach(case IN ITEMS defaults tables key_mapping status_navigation draft_confirmation
-        cancel field_selection rotation_limits targets startup_enabled zero_target
+        cancel field_selection page_navigation log_controls rotation_cycles targets startup_enabled zero_target
         fault_rearm mode_change_stop stop_priority invalid_config invalid_inputs)
     add_test(NAME panel_${case} COMMAND panel_tests ${case})
 endforeach()

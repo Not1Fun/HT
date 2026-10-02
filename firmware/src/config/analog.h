@@ -13,6 +13,7 @@
 /* 沿用电路设计，不能替代实物核验。 */
 #define HT_DIV_HIGH_OHM     (7U * 51000U)
 #define HT_NTC_PULLUP_OHM   22000U
+#define HT_NTC_PULLUP_MV    3300U /* 3V3_AVDD标称值；须实测/标定，不能由VREFINT替代。 */
 #define HT_VREF_MV          2900U
 
 #endif

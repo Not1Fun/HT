@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>HT · 状态与挡位设置</title>
+  <title>HT · 状态、挡位设置与日志</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=blue2">
+  <link rel="stylesheet" href="style.css?v=v3">
 </head>
 <body>
 <main>
-  <header class="intro"><div><h1>HT 面板预览</h1><p>状态与挡位设置 · 800 × 480 DWIN</p></div><span class="demo-tag">演示数据 · 未连接设备</span></header>
+  <header class="intro"><div><h1>HT 面板预览</h1><p>状态、挡位设置与日志 · 800 × 480 DWIN</p></div><span class="demo-tag">演示数据 · 未连接设备</span></header>
   <div class="workspace">
     <section class="instrument" aria-label="屏幕预览">
       <div class="screen-stage"><div id="screen" role="img" aria-label="正在载入"></div></div>
@@ -24,16 +24,16 @@
         <button id="right" aria-label="右键">→</button>
         <button id="down" aria-label="下键">↓</button>
       </div>
-      <p class="help">左右切页，上下选项</p>
+      <p class="help">左右循环切页<br>上下选择项目或翻看日志</p>
       <h2>旋转编码器</h2>
       <div class="encoder"><button id="ccw" aria-label="左旋：上一个挡位">↶</button><button id="press" aria-label="编码器下压确认"><span class="mark"></span><span>确认</span></button><button id="cw" aria-label="右旋：下一个挡位">↷</button></div>
-      <p class="help">右旋下一挡，左旋上一挡<br>下压或 OK 确认选择</p>
+      <p class="help">设置：双向循环，下压确认<br>日志：旋转翻看，下压返回最新</p>
       <p id="feedback" role="status">按右键进入挡位设置。</p>
     </aside>
   </div>
-  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="fault">保护</button><button data-scene="offline">离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label></section>
-  <footer>阻抗挡位：1 / 3 / 10 / 30 / 100 / 300 / 1000 Ω　·　频率挡位：2 / 5 / 8 / 10 kHz</footer>
+  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">待机</button><button data-scene="run">运行示例</button><button data-scene="fault">过流保护示例</button><button data-scene="offline">离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label><label><input id="temperature-invalid" type="checkbox">NTC2 无效示例</label></section>
+  <footer>阻抗挡位：1 / 3 / 10 / 30 / 100 / 300 / 1000 Ω　·　频率挡位：2 / 5 / 8 / 10 kHz<br>页面仅演示交互；所有读数和日志均为模拟数据，刷新页面后重置，最多保留 32 条。</footer>
 </main>
-<script src="preview.js?v=blue2"></script>
+<script src="preview.js?v=v3"></script>
 </body>
 </html>

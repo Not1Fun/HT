@@ -18,4 +18,11 @@ config HT_SCREEN_BRINGUP
 	bool
 	select UART_INTERRUPT_DRIVEN
 
+config HT_SCREEN_TEMPERATURE
+	bool "Sample three NTC channels during panel bring-up"
+	depends on HT_SCREEN_PANEL
+	help
+	  Requires powered AVDD and the board's 22 kohm NTC pull-ups.
+	  Owns ADC1 exclusively; the measurement acquisition path stays disabled.
+
 source "Kconfig.zephyr"

@@ -87,18 +87,26 @@ int panel_key(struct panel *panel, enum panel_key key)
     if ((unsigned int)key > PANEL_KEY_ENCODER) {
         return PANEL_ERR_ARG;
     }
+    if (key == PANEL_KEY_LEFT || key == PANEL_KEY_RIGHT) {
+        if (key == PANEL_KEY_LEFT) {
+            panel->page = panel->page == PANEL_PAGE_STATUS ? PANEL_PAGE_LOG : panel->page - 1;
+        } else {
+            panel->page = panel->page == PANEL_PAGE_LOG ? PANEL_PAGE_STATUS : panel->page + 1;
+        }
+        panel->draft_index = selected_index(panel);
+        return PANEL_ACTION_NONE;
+    }
     if (panel->page == PANEL_PAGE_STATUS) {
-        if (key == PANEL_KEY_RIGHT || key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
+        if (key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
             panel->draft_index = selected_index(panel);
             panel->page = PANEL_PAGE_SETTINGS;
         }
         return PANEL_ACTION_NONE;
     }
+    if (panel->page == PANEL_PAGE_LOG) {
+        return PANEL_ACTION_NONE;
+    }
     switch (key) {
-    case PANEL_KEY_LEFT:
-        panel->draft_index = selected_index(panel);
-        panel->page = PANEL_PAGE_STATUS;
-        break;
     case PANEL_KEY_UP:
     case PANEL_KEY_DOWN:
         field = key == PANEL_KEY_UP ? PANEL_RANGE : PANEL_FREQUENCY;
@@ -116,8 +124,6 @@ int panel_key(struct panel *panel, enum panel_key key)
         }
         panel->frequency_hz = frequencies[panel->draft_index];
         return PANEL_ACTION_FREQUENCY;
-    case PANEL_KEY_RIGHT:
-        break;
     default:
         return PANEL_ERR_ARG;
     }
@@ -128,17 +134,17 @@ int panel_rotate(struct panel *panel, int32_t detents)
 {
     int result = check_ready(panel);
     int64_t next;
-    uint8_t maximum;
+    int64_t count;
 
     if (result != PANEL_OK) {
         return result;
     }
-    if (panel->page == PANEL_PAGE_STATUS) {
+    if (panel->page != PANEL_PAGE_SETTINGS) {
         return PANEL_OK;
     }
-    maximum = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT - 1 : PANEL_FREQUENCY_COUNT - 1;
-    next = (int64_t)panel->draft_index + detents;
-    panel->draft_index = next < 0 ? 0 : next > maximum ? maximum : (uint8_t)next;
+    count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT : PANEL_FREQUENCY_COUNT;
+    next = ((int64_t)panel->draft_index + detents) % count;
+    panel->draft_index = (uint8_t)(next < 0 ? next + count : next);
     return PANEL_OK;
 }
 

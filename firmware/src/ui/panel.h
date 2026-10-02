@@ -22,7 +22,8 @@ enum panel_mode {
 
 enum panel_page {
     PANEL_PAGE_STATUS = 0,
-    PANEL_PAGE_SETTINGS = 1
+    PANEL_PAGE_SETTINGS = 1,
+    PANEL_PAGE_LOG = 2
 };
 
 enum panel_field {
@@ -80,12 +81,13 @@ struct panel {
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
- * 状态页 RIGHT/OK/ENCODER 进入设置；设置页 LEFT 丢弃草稿并返回。
- * UP/DOWN 选择阻抗/频率并丢弃前项草稿；RIGHT 无动作。
- * OK/ENCODER 提交请求并留在设置页，确认阻抗同时置手动量程。
+ * LEFT/RIGHT 按状态、设置、日志三页循环；离开设置时丢弃草稿。
+ * 状态页 OK/ENCODER 进入设置；设置页 UP/DOWN 选择阻抗/频率。
+ * 设置页 OK/ENCODER 提交请求并留页，确认阻抗同时置手动量程。
+ * 日志页其余键不修改模型，由应用层处理浏览。
  */
 int panel_key(struct panel *panel, enum panel_key key);
-/* 仅设置页有效：正数右旋/下一个，负数左旋/上一个，端点钳制。 */
+/* 仅设置页有效：正数右旋/下一个，负数左旋/上一个，首尾循环。 */
 int panel_rotate(struct panel *panel, int32_t detents);
 bool panel_draft_changed(const struct panel *panel);
 /* 表项单位为 ohm/Hz，索引越界返回 0。 */

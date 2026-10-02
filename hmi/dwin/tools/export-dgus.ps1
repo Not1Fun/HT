@@ -25,10 +25,22 @@ if ([IntPtr]::Size -ne 4 -or $PSVersionTable.PSEdition -eq 'Core' -or
 $ui = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
 $sourceDir = Split-Path -Parent $Manifest
 if ($ui.width -ne 800 -or $ui.height -ne 480 -or $ui.touch) { throw 'Expected an 800 x 480 non-touch project.' }
-if ($ui.version -ne 2 -or @($ui.pages).Count -ne 2 -or
-    $ui.pages[0].id -ne 0 -or $ui.pages[1].id -ne 1) { throw 'Expected HT v2 status/settings pages.' }
-if (@($ui.fields).Count -ne 7 -or @($ui.icons).Count -ne 4 -or
-    @($ui.animations).Count -ne 0) { throw 'Expected seven fields, four icon controls and no animation.' }
+if ($ui.version -ne 3 -or @($ui.pages).Count -ne 3 -or
+    $ui.pages[0].id -ne 0 -or $ui.pages[1].id -ne 1 -or
+    $ui.pages[2].id -ne 2) { throw 'Expected HT v3 status/settings/logs pages.' }
+if (@($ui.fields).Count -ne 19 -or @($ui.icons).Count -ne 8 -or
+    @($ui.animations).Count -ne 0) { throw 'Expected nineteen fields, eight icon controls and no animation.' }
+$usedVp = @{}
+foreach ($spec in @($ui.fields) + @($ui.icons)) {
+    $words = if ($null -ne $spec.words) { [int]$spec.words } else { 1 }
+    if ($words -lt 1 -or $spec.vp -lt 0x1000 -or $spec.vp + $words -gt 0xff00) {
+        throw "Invalid VP range: $($spec.name)"
+    }
+    for ($vp = [int]$spec.vp; $vp -lt $spec.vp + $words; $vp++) {
+        if ($usedVp.ContainsKey($vp)) { throw "VP overlap: $($spec.name) / $($usedVp[$vp])" }
+        $usedVp[$vp] = $spec.name
+    }
+}
 if (-not (Test-Path -LiteralPath $FontFile -PathType Leaf) -or
     (Get-Item -LiteralPath $FontFile).Length -eq 0) { throw "ASCII font missing or empty: $FontFile" }
 foreach ($dll in @('DwinTerminal.dll', 'CoreDll.dll', 'DWINUI.dll')) {
@@ -77,7 +89,12 @@ function Add-Control($Document, $Spec, [string]$Kind) {
     if ($Spec.vp -lt 0x1000 -or $Spec.vp -ge 0xff00) { throw "Invalid user VP: $($Spec.name)" }
     switch ($Kind) {
         'text' {
-            if ($Spec.words -ne 16 -or $Spec.encoding -ne 'ascii' -or $Spec.font_height % 2) {
+            if ($Spec.words -ne 16 -or $Spec.encoding -ne 'ascii' -or
+                $Spec.display_encoding -ne 'gbk' -or $Spec.font_width -lt 4 -or
+                $Spec.font_width -gt 64 -or $Spec.font_height -ne 2 * $Spec.font_width -or
+                $Spec.max_chars -lt 1 -or $Spec.max_chars -gt 9 -or
+                $Spec.max_chars * $Spec.font_width -gt $Spec.width -or
+                $Spec.font_height -gt $Spec.height) {
                 throw "Invalid ASCII field: $($Spec.name)"
             }
             $typeId = 0x11
@@ -92,9 +109,10 @@ function Add-Control($Document, $Spec, [string]$Kind) {
             Set-Word $data 18 ($Spec.x + $Spec.width)
             Set-Word $data 20 ($Spec.y + $Spec.height)
             Set-Word $data 22 ($Spec.words * 2)
-            $data[26] = [byte]$Spec.font_width
+            # The built-in ASCII font uses GBK mode; ASCII width is half the configured X dots.
+            $data[26] = [byte]($Spec.font_width * 2)
             $data[27] = [byte]$Spec.font_height
-            $data[28] = 0x80 # 8-bit ASCII, fixed width, left/top alignment.
+            $data[28] = 0x82 # GBK, fixed ASCII width, left/top alignment.
             $initial = '--'
         }
         'icon' {

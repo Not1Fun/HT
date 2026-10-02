@@ -8,13 +8,13 @@ project(view_tests LANGUAGES C)
 enable_testing()
 
 add_executable(view_tests test_view.c ../../src/ui/view.c ../../src/ui/dgus.c)
-target_include_directories(view_tests PRIVATE ../../src/ui)
+target_include_directories(view_tests PRIVATE ../../src/ui ../../src)
 set_target_properties(view_tests PROPERTIES
     C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(view_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 
-foreach(case IN ITEMS mapping numbers time choices invalid_readings transitions send_failure invalid_args)
+foreach(case IN ITEMS mapping numbers time choices temperature logs invalid_readings transitions send_failure invalid_args)
     add_test(NAME view_${case} COMMAND view_tests ${case})
 endforeach()

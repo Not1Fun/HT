@@ -91,7 +91,8 @@ static void test_status_navigation(void)
 
         CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK);
         CHECK(panel_key(&panel, (enum panel_key)key) == PANEL_ACTION_NONE);
-        CHECK(panel.page == (enters ? PANEL_PAGE_SETTINGS : PANEL_PAGE_STATUS));
+        CHECK(panel.page == (enters ? PANEL_PAGE_SETTINGS :
+                             key == PANEL_KEY_LEFT ? PANEL_PAGE_LOG : PANEL_PAGE_STATUS));
         CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.draft_index == 0);
         CHECK(panel.mode == PANEL_CC && panel.armed && !panel.enabled);
     }
@@ -104,7 +105,6 @@ static void test_draft_confirmation(void)
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
     CHECK(panel_rotate(&panel, 2) == PANEL_OK);
     CHECK(panel.draft_index == 2 && panel.range_index == 0 && panel_draft_changed(&panel));
-    CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE && panel.draft_index == 2);
     CHECK(panel_key(&panel, PANEL_KEY_OK) == PANEL_ACTION_RANGE);
     CHECK(panel.range_index == 2 && !panel.auto_range && !panel_draft_changed(&panel));
     CHECK(panel.page == PANEL_PAGE_SETTINGS && panel.frequency_hz == 2000);
@@ -155,22 +155,81 @@ static void test_field_selection(void)
     CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.mode == PANEL_CC);
 }
 
-static void test_rotation_limits(void)
+static void test_page_navigation(void)
+{
+    static const enum panel_page left[] = {PANEL_PAGE_LOG, PANEL_PAGE_STATUS, PANEL_PAGE_SETTINGS};
+    static const enum panel_page right[] = {PANEL_PAGE_SETTINGS, PANEL_PAGE_LOG, PANEL_PAGE_STATUS};
+
+    for (int page = PANEL_PAGE_STATUS; page <= PANEL_PAGE_LOG; ++page) {
+        for (int direction = 0; direction < 2; ++direction) {
+            struct panel panel = initialize(false, false);
+
+            targets(&panel);
+            for (int step = 0; step < page; ++step) {
+                CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
+            }
+            CHECK(panel.page == (enum panel_page)page);
+            CHECK(panel_rotate(&panel, 3) == PANEL_OK);
+            CHECK(panel_key(&panel, direction ? PANEL_KEY_RIGHT : PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
+            CHECK(panel.page == (direction ? right[page] : left[page]));
+            CHECK(panel.range_index == 0 && panel.frequency_hz == 2000 && panel.draft_index == 0);
+            CHECK(!panel_draft_changed(&panel));
+            CHECK(panel.current_ma == 100 && panel.apparent_mva == 1000 && panel.armed);
+            CHECK(!panel.enabled && !panel.fault && panel.mode == PANEL_CC);
+        }
+    }
+}
+
+static void test_log_controls(void)
+{
+    struct panel panel = initialize(false, false);
+    struct panel original;
+
+    targets(&panel);
+    CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
+    CHECK(panel.page == PANEL_PAGE_LOG);
+    original = panel;
+    for (int key = PANEL_KEY_UP; key <= PANEL_KEY_ENCODER; ++key) {
+        if (key != PANEL_KEY_LEFT && key != PANEL_KEY_RIGHT) {
+            CHECK(panel_key(&panel, (enum panel_key)key) == PANEL_ACTION_NONE);
+            CHECK(memcmp(&panel, &original, sizeof(panel)) == 0);
+        }
+    }
+    CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK);
+    CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK);
+    CHECK(memcmp(&panel, &original, sizeof(panel)) == 0);
+    CHECK(panel_inputs(&panel, PANEL_CC, true, false) == PANEL_REQUEST_START);
+    CHECK(panel_inputs(&panel, PANEL_CC, true, true) == PANEL_REQUEST_STOP);
+}
+
+static void test_rotation_cycles(void)
 {
     struct panel panel = initialize(false, false);
 
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
     for (int field = PANEL_RANGE; field <= PANEL_FREQUENCY; ++field) {
-        uint8_t maximum = field == PANEL_RANGE ? 6 : 3;
+        uint8_t count = field == PANEL_RANGE ? 7 : 4;
 
+        for (uint8_t i = 1; i < count; ++i) {
+            CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == i);
+        }
+        CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == 0);
+        for (uint8_t i = count; i > 1; --i) {
+            CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == i - 1);
+        }
         CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == 0);
-        CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == 1);
-        CHECK(panel_rotate(&panel, 0) == PANEL_OK && panel.draft_index == 1);
-        CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK && panel.draft_index == maximum);
-        CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel.draft_index == maximum);
-        CHECK(panel_rotate(&panel, -1) == PANEL_OK && panel.draft_index == maximum - 1);
-        CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK && panel.draft_index == 0);
+        CHECK(panel_rotate(&panel, 0) == PANEL_OK && panel.draft_index == 0);
+        CHECK(panel_rotate(&panel, 2 * count + 2) == PANEL_OK && panel.draft_index == 2);
+        CHECK(panel_rotate(&panel, -2 * count - 2) == PANEL_OK && panel.draft_index == 0);
+        CHECK(panel_rotate(&panel, INT32_MAX) == PANEL_OK);
+        CHECK(panel.draft_index == (field == PANEL_RANGE ? 1 : 3));
+        CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK);
+        CHECK(panel.draft_index == (field == PANEL_RANGE ? 6 : 3));
         CHECK(panel.range_index == 0 && panel.frequency_hz == 2000);
+        CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
+        CHECK(panel.page == PANEL_PAGE_LOG && panel.draft_index == 0);
+        CHECK(panel_key(&panel, PANEL_KEY_LEFT) == PANEL_ACTION_NONE);
+        CHECK(panel.page == PANEL_PAGE_SETTINGS && panel.draft_index == 0);
         CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     }
 }
@@ -343,7 +402,8 @@ int main(int argc, char **argv)
         {"defaults", test_defaults}, {"tables", test_tables}, {"key_mapping", test_key_mapping},
         {"status_navigation", test_status_navigation}, {"draft_confirmation", test_draft_confirmation},
         {"cancel", test_cancel}, {"field_selection", test_field_selection},
-        {"rotation_limits", test_rotation_limits}, {"targets", test_targets},
+        {"page_navigation", test_page_navigation}, {"log_controls", test_log_controls},
+        {"rotation_cycles", test_rotation_cycles}, {"targets", test_targets},
         {"startup_enabled", test_startup_enabled}, {"zero_target", test_zero_target},
         {"fault_rearm", test_fault_rearm}, {"mode_change_stop", test_mode_change_stop},
         {"stop_priority", test_stop_priority}, {"invalid_config", test_invalid_config},

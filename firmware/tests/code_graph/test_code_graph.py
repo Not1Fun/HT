@@ -97,6 +97,22 @@ void run_b(void) { helper(); duplicate(); }
             self.assertIn("helper / a.c", GRAPH.render_markdown(graph))
             self.assertEqual(graph, GRAPH.build_graph(repo))
 
+    def test_bootloader_sources_exclude_external_mcuboot(self):
+        with temporary_source_tree() as repo:
+            for folder in ("firmware/src", "firmware/bootloader/src", ".tools/bootloader/mcuboot"):
+                (repo / folder).mkdir(parents=True)
+            (repo / "firmware/src/io.c").write_text("void safe_io(void) {}", encoding="utf-8")
+            (repo / "firmware/bootloader/src/safe.c").write_text(
+                "void boot_hook(void) { safe_io(); }", encoding="utf-8")
+            (repo / ".tools/bootloader/mcuboot/main.c").write_text(
+                "void external_boot(void) {}", encoding="utf-8")
+            graph = GRAPH.build_graph(repo)
+            self.assertEqual(len(graph["files"]), 2)
+            self.assertEqual(len(graph["direct_calls"]), 1)
+            self.assertIn("bootloader", graph["modules"])
+            self.assertEqual(graph["extra_source_roots"], ["firmware/bootloader/src"])
+            self.assertNotIn("external_boot", {f["name"] for f in graph["functions"]})
+
     def test_missing_source_is_an_error(self):
         with temporary_source_tree() as temporary:
             with self.assertRaises(ValueError):

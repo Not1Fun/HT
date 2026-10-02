@@ -1,14 +1,16 @@
-/* @brief 两页仪表快照与 DGUS VP 同步，不执行测量或挡位切换。 */
+/* @brief 仪表、设置和事件日志快照，不执行测量或挡位切换。 */
 #ifndef VIEW_H
 #define VIEW_H
 #include "dgus.h"
 #include "panel.h"
+#include "core/event_log.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #define VIEW_TEXT_BYTES 32u
 #define VIEW_TEXT_MAX_CHARS 9u
+#define VIEW_LOG_ROWS 4u
 
 enum view_result {
     VIEW_OK = 0, VIEW_ERR_ARG = -1, VIEW_ERR_CRC = -2,
@@ -20,11 +22,13 @@ enum view_state {
 enum view_power { VIEW_POWER_NORMAL, VIEW_POWER_ALARM, VIEW_POWER_UNKNOWN };
 
 /* VP1100起，每槽0x10 word：电流mA、电压mV、阻抗挡Ω、频率挡Hz、
- * 本次运行秒数、候选阻抗Ω、候选频率Hz。频率仅2000/5000/8000/10000。
+ * 本次运行秒数、候选阻抗Ω、候选频率Hz、NTC1..3（0.1°C，-200..1200）。
+ * 频率仅2000/5000/8000/10000；温度显示范围-20.0..120.0°C。
  */
 enum view_field {
     VIEW_CURRENT, VIEW_VOLTAGE, VIEW_RANGE, VIEW_FREQUENCY, VIEW_ELAPSED,
-    VIEW_RANGE_CHOICE, VIEW_FREQUENCY_CHOICE, VIEW_FIELD_COUNT
+    VIEW_RANGE_CHOICE, VIEW_FREQUENCY_CHOICE,
+    VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_FIELD_COUNT
 };
 struct view_value { int64_t value; bool valid; };
 
@@ -41,6 +45,10 @@ struct view_snapshot {
     bool editing;
     bool fresh;
     struct view_value values[VIEW_FIELD_COUNT];
+    /* 按新到旧填充当前窗口，空行EVENT_NONE；count为全部记录数，offset为窗口起点。 */
+    struct event_entry logs[VIEW_LOG_ROWS];
+    uint8_t log_count;
+    uint8_t log_offset;
 };
 struct view { bool synced; enum panel_page page; };
 
@@ -48,7 +56,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v2：4图标+7文本槽，必要时切页。槽完整清尾，同页不重发页命令。
+/* ui.json v3：状态/设置数据及四行事件日志；完整清尾，同页不重发页命令。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,

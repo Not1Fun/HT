@@ -1,0 +1,12 @@
+/* @brief Keep the bootloader at flash origin and use USART1 for serial recovery. */
+#include "../boards/ht_main_boot.overlay"
+
+/ {
+	chosen {
+		zephyr,code-partition = &boot_partition;
+		zephyr,uart-mcumgr = &usart1;
+		/delete-property/ zephyr,console;
+	};
+};
+
+&usart3 { status = "disabled"; };

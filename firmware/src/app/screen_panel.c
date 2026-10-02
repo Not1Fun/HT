@@ -1,8 +1,11 @@
-/* @brief 只处理屏幕与手动请求，始终不启动测量或切换继电器。 */
+/* @brief 屏幕、手动请求与可选温度显示；始终不启动激励或切换继电器。 */
 #include "app/screen_panel.h"
 #include "platform/board_io.h"
 #include "platform/relay_io.h"
 #include "platform/screen_uart.h"
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+#include "platform/temperature_io.h"
+#endif
 #include "ui/dgus.h"
 #include "ui/encoder.h"
 #include "ui/panel.h"
@@ -29,6 +32,8 @@ LOG_MODULE_REGISTER(screen_panel);
 #define REBUILD_MS 5000
 #define RX_GAP_MS 50
 #define VERSION_VP 0x000f
+#define TEMPERATURE_MS 200
+#define TEMPERATURE_STALE_MS 1000
 
 BUILD_ASSERT(DT_SAME_NODE(DT_GPIO_CTLR(BOARD_NODE, encoder_a_gpios),
 			 DT_GPIO_CTLR(BOARD_NODE, encoder_b_gpios)),
@@ -74,13 +79,88 @@ struct service {
 	struct keys keys;
 	struct link link;
 	struct view view;
+	struct event_log log;
+	uint8_t log_offset;
+	bool digital_valid;
 	uint32_t digital;
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+	struct temperature_snapshot temperature;
+	bool temperature_active;
+	bool temperature_seen;
+	int64_t next_temperature;
+	int64_t last_temperature;
+#endif
 	int64_t next_input;
 	int64_t next_relay;
 	int64_t next_display;
 	int send_error;
 	bool link_expired;
 };
+
+static void scroll_log(struct service *service, int32_t steps)
+{
+	size_t count = event_log_count(&service->log);
+	int64_t limit = count > VIEW_LOG_ROWS ? count - VIEW_LOG_ROWS : 0;
+	int64_t next = (int64_t)service->log_offset + steps;
+
+	service->log_offset = (uint8_t)CLAMP(next, 0, limit);
+}
+
+static void record_event(struct service *service, enum event_kind kind, int32_t value)
+{
+	(void)event_log_add(&service->log, (uint32_t)(k_uptime_get() / 1000), kind, value);
+	/* 翻看历史时尽量保持当前位置；最新视图随新事件更新。 */
+	scroll_log(service, service->log_offset != 0 ? 1 : 0);
+}
+
+static void update_digital(struct service *service, uint32_t state)
+{
+	const enum board_input pins[] = {BOARD_BAT, BOARD_OC, BOARD_OV};
+	const enum event_kind active[] = {EVENT_BATTERY_OK, EVENT_OC_ACTIVE, EVENT_OV_ACTIVE};
+	const enum event_kind inactive[] = {EVENT_BATTERY_ALARM, EVENT_OC_CLEAR, EVENT_OV_CLEAR};
+
+	for (size_t i = 0; i < ARRAY_SIZE(pins); ++i) {
+		bool on = (state & BIT(pins[i])) != 0;
+		if ((!service->digital_valid && (i == 0 || on)) ||
+		    (service->digital_valid && ((service->digital ^ state) & BIT(pins[i])))) {
+			record_event(service, on ? active[i] : inactive[i], 0);
+		}
+	}
+	service->digital = state;
+	service->digital_valid = true;
+}
+
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+static void update_temperature(struct service *service)
+{
+	int64_t now = k_uptime_get();
+	struct temperature_snapshot next;
+
+	if (!service->temperature_active || now < service->next_temperature) {
+		return;
+	}
+	service->next_temperature = now + TEMPERATURE_MS;
+	int rc = temperature_io_read(&next);
+
+	if (rc != 0) {
+		temperature_io_stop();
+		service->temperature_active = false;
+		record_event(service, EVENT_TEMP_INIT_FAILED, rc);
+		LOG_WRN("Temperature sampling stopped: %d", rc);
+	}
+	for (size_t i = 0; i < TEMPERATURE_CHANNEL_COUNT; ++i) {
+		bool valid = rc == 0 && next.samples[i].status == NTC_OK;
+		bool previous = service->temperature.samples[i].status == NTC_OK;
+
+		if (!service->temperature_seen || previous != valid) {
+			record_event(service, valid ? EVENT_TEMP_READY : EVENT_TEMP_INVALID, (int32_t)i + 1);
+		}
+	}
+	service->temperature = next;
+	service->temperature_seen = true;
+	service->last_temperature = now;
+}
+#endif
 
 static int read_encoder(uint8_t *ab)
 {
@@ -220,15 +300,30 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			keys->armed |= bit;
 		} else if (keys->armed & bit) {
 			keys->armed &= (uint8_t)~bit;
+			enum panel_page before = service->panel.page;
+			if (before == PANEL_PAGE_LOG) {
+				if (i == PANEL_KEY_UP || i == PANEL_KEY_DOWN) {
+					scroll_log(service, i == PANEL_KEY_UP ? -1 : 1);
+				} else if (i == PANEL_KEY_OK || i == PANEL_KEY_ENCODER) {
+					service->log_offset = 0;
+				}
+			}
 			int action = panel_key(&service->panel, (enum panel_key)i);
 
 			if (action < 0) {
 				return action;
 			}
 			if (action != PANEL_ACTION_NONE) {
+				record_event(service, action == PANEL_ACTION_RANGE ? EVENT_RANGE : EVENT_FREQUENCY,
+					action == PANEL_ACTION_RANGE ?
+					(int32_t)panel_range_ohm(service->panel.range_index) :
+					(int32_t)service->panel.frequency_hz);
 				LOG_INF("Request only: range=%u ohm frequency=%u Hz; output disabled",
 					panel_range_ohm(service->panel.range_index),
 					service->panel.frequency_hz);
+			}
+			if (before != service->panel.page && service->panel.page == PANEL_PAGE_LOG) {
+				service->log_offset = 0;
 			}
 		}
 	}
@@ -239,6 +334,7 @@ static int update_inputs(struct service *service)
 {
 	int64_t now = k_uptime_get();
 	uint8_t raw;
+	uint32_t digital;
 	int rc = (int)atomic_get(&rotary.error);
 
 	if (rc != 0 || now < service->next_input) {
@@ -254,11 +350,12 @@ static int update_inputs(struct service *service)
 	}
 	rc = relay_io_read_panel(&raw);
 	if (rc == 0) {
-		rc = board_io_read(&service->digital);
+		rc = board_io_read(&digital);
 	}
 	if (rc != 0) {
 		return rc;
 	}
+	update_digital(service, digital);
 	/* 目标始终为0，独立使能只更新安全模型，不存在START执行路径。 */
 	(void)panel_inputs(&service->panel, PANEL_CC, !(raw & BIT(6)),
 		(service->digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) != 0);
@@ -266,7 +363,11 @@ static int update_inputs(struct service *service)
 	if (rc == 0) {
 		int32_t detents = (int32_t)atomic_set(&rotary.detents, 0);
 
-		rc = panel_rotate(&service->panel, detents);
+		if (service->panel.page == PANEL_PAGE_LOG) {
+			scroll_log(service, detents);
+		} else {
+			rc = panel_rotate(&service->panel, detents);
+		}
 	}
 	return rc;
 }
@@ -315,6 +416,7 @@ static int update_link(struct service *service)
 	if (link->response) {
 		link->response = false;
 		if (!link->connected || link->version != link->response_version) {
+			record_event(service, EVENT_DISPLAY_ONLINE, link->response_version);
 			LOG_INF("Display response: version=0x%04x CRC=%s",
 				link->response_version, link->crc == DGUS_CRC_NONE ? "none" : "modbus");
 		}
@@ -331,6 +433,7 @@ static int update_link(struct service *service)
 	}
 	if (link->pending && now >= link->deadline) {
 		if (link->connected) {
+			record_event(service, EVENT_DISPLAY_OFFLINE, 0);
 			LOG_WRN("Display response timeout; VP writes stopped");
 		}
 		link->connected = false;
@@ -385,7 +488,9 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 
 	*out = (struct view_snapshot){
 		.page = panel->page, .state = fault ? VIEW_FAULT : VIEW_STANDBY,
-		.battery = VIEW_POWER_UNKNOWN, .selected = panel->field,
+		.battery = !service->digital_valid ? VIEW_POWER_UNKNOWN :
+			(service->digital & BIT(BOARD_BAT)) ? VIEW_POWER_NORMAL : VIEW_POWER_ALARM,
+		.selected = panel->field,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
 	out->values[VIEW_RANGE_CHOICE] = (struct view_value){
@@ -394,6 +499,20 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 	out->values[VIEW_FREQUENCY_CHOICE] = (struct view_value){
 		panel->field == PANEL_FREQUENCY ? panel_frequency_hz(panel->draft_index) :
 		panel->frequency_hz, true};
+	out->log_count = (uint8_t)event_log_count(&service->log);
+	out->log_offset = service->log_offset;
+	for (size_t row = 0; row < VIEW_LOG_ROWS; ++row) {
+		(void)event_log_get(&service->log, service->log_offset + row, &out->logs[row]);
+	}
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+	for (size_t i = 0; i < TEMPERATURE_CHANNEL_COUNT; ++i) {
+		out->values[VIEW_NTC1 + i] = (struct view_value){
+			service->temperature.samples[i].decicelsius,
+			service->temperature_active && service->temperature_seen &&
+			k_uptime_get() - service->last_temperature < TEMPERATURE_STALE_MS &&
+			service->temperature.samples[i].status == NTC_OK};
+	}
+#endif
 	/* 其余字段无测量/应用状态拥有者，保持invalid，不能把请求当作实值。 */
 }
 
@@ -429,6 +548,7 @@ int screen_panel_run(void)
 	struct service service = {.link.crc = DGUS_CRC_NONE};
 	const struct panel_config limits = {.current_max_ma = 7070, .apparent_max_mva = 50000};
 	int rc = panel_init(&service.panel, &limits, PANEL_CC, true, false);
+	event_log_init(&service.log);
 
 	if (rc == 0) {
 		rc = dgus_init(&service.link.parser, service.link.crc, receive_frame, &service.link);
@@ -439,9 +559,26 @@ int screen_panel_run(void)
 	if (rc == 0) {
 		rc = start_encoder();
 	}
+	if (rc == 0) {
+		record_event(&service, EVENT_BOOT, 0);
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+		int temp_rc = temperature_io_init();
+
+		service.temperature_active = temp_rc == 0;
+		if (temp_rc != 0) {
+			record_event(&service, EVENT_TEMP_INIT_FAILED, temp_rc);
+			LOG_WRN("Temperature initialization failed: %d", temp_rc);
+		}
+#endif
+	}
 	LOG_INF("Screen panel diagnostics: targets zero, requests only, output disabled");
 	while (rc == 0) {
 		rc = update_inputs(&service);
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+		if (rc == 0) {
+			update_temperature(&service);
+		}
+#endif
 		if (rc == 0) {
 			rc = update_link(&service);
 		}
@@ -458,6 +595,12 @@ int screen_panel_run(void)
 		}
 	}
 	int stop_rc = stop_encoder();
+	if (rc != 0) {
+		record_event(&service, EVENT_IO_ERROR, rc);
+	}
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+	temperature_io_stop();
+#endif
 
 	screen_uart_stop(SCREEN_UART_DISPLAY);
 	if (stop_rc != 0) {

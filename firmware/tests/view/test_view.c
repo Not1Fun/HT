@@ -1,11 +1,12 @@
-/* @brief 验证两页VP契约、运行时间、候选隔离、失效与发送重建。 */
+/* @brief 验证三页VP契约、温度与事件边界、清尾和发送重建。 */
 #include "view.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
-#define FRAME_COUNT 9u
+#define BASE_FRAME_COUNT (VIEW_FIELD_COUNT + 2u)
+#define FRAME_COUNT (BASE_FRAME_COUNT + 10u)
 struct capture {
     enum dgus_crc crc;
     size_t count, attempts, fail_at;
@@ -25,7 +26,7 @@ static struct view_snapshot sample(void)
 {
     struct view_snapshot s = {.page=PANEL_PAGE_STATUS, .state=VIEW_RUNNING,
         .battery=VIEW_POWER_NORMAL, .selected=PANEL_RANGE, .fresh=true};
-    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 30, 5000};
+    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 30, 5000, 251, -125, 1200};
     for (size_t i=0; i<VIEW_FIELD_COUNT; ++i) s.values[i]=(struct view_value){values[i],true};
     return s;
 }
@@ -48,18 +49,18 @@ static void text_is(const struct capture *c, enum view_field field, const char *
 }
 static void test_mapping(void)
 {
-    const char *expected[]={"2.240","22.360","10","2","01:02:03","30","5"};
+    const char *expected[]={"2.240","22.360","10","2","01:02:03","30","5","25.1","-12.5","120.0"};
     for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
         struct view v={0}; struct capture c; struct view_snapshot s=sample();
         s.selected=PANEL_FREQUENCY; s.editing=true;
         refresh(&v,&c,&s,(enum dgus_crc)crc);
-        CHECK(c.count==9 && v.synced);
+        CHECK(c.count==BASE_FRAME_COUNT && v.synced);
         CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==4);
         CHECK(c.frames[0].words[0]==1 && c.frames[0].words[1]==0);
         CHECK(c.frames[0].words[2]==1 && c.frames[0].words[3]==1);
         for(int i=0;i<VIEW_FIELD_COUNT;++i) text_is(&c,(enum view_field)i,expected[i]);
-        CHECK(c.frames[8].vp==0x0084 && c.frames[8].count==2);
-        CHECK(c.frames[8].words[0]==0x5a01 && c.frames[8].words[1]==0);
+        CHECK(c.frames[BASE_FRAME_COUNT-1].vp==0x0084 && c.frames[BASE_FRAME_COUNT-1].count==2);
+        CHECK(c.frames[BASE_FRAME_COUNT-1].words[0]==0x5a01 && c.frames[BASE_FRAME_COUNT-1].words[1]==0);
     }
 }
 static void test_numbers(void)
@@ -106,6 +107,96 @@ static void test_choices(void)
         text_is(&c,VIEW_RANGE_CHOICE,"--"); text_is(&c,VIEW_FREQUENCY_CHOICE,"--");
     }
 }
+static void test_temperature(void)
+{
+    const int64_t values[]={-201,-200,-1,0,1,251,1200,1201,INT64_MIN,INT64_MAX};
+    const char *expected[]={"--","-20.0","-0.1","0.0","0.1","25.1","120.0","--","--","--"};
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    for(size_t i=0;i<sizeof(values)/sizeof(values[0]);++i) {
+        s.values[VIEW_NTC1].value=values[i];
+        refresh(&v,&c,&s,DGUS_CRC_NONE);
+        text_is(&c,VIEW_NTC1,expected[i]);
+        text_is(&c,VIEW_NTC2,"-12.5");
+    }
+    s.values[VIEW_NTC1]=(struct view_value){250,true};
+    s.values[VIEW_NTC2].valid=false;
+    s.state=VIEW_FAULT;
+    refresh(&v,&c,&s,DGUS_CRC_MODBUS);
+    text_is(&c,VIEW_NTC1,"25.0"); text_is(&c,VIEW_NTC2,"--");
+    s.fresh=false;
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    text_is(&c,VIEW_NTC1,"--"); text_is(&c,VIEW_NTC3,"--");
+}
+static void vp_text_is(const struct capture *c, uint16_t vp, const char *expected)
+{
+    for(size_t i=0;i<c->count;++i) {
+        const struct dgus_frame *f=&c->frames[i];
+        if(f->vp!=vp) continue;
+        CHECK(f->count==16);
+        for(size_t j=0;j<VIEW_TEXT_BYTES;++j) {
+            unsigned int byte=j%2 ? f->words[j/2]&255u : f->words[j/2]>>8;
+            CHECK(byte==(j<strlen(expected)?(uint8_t)expected[j]:0));
+        }
+        return;
+    }
+    CHECK(0);
+}
+static void test_logs(void)
+{
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    s.page=PANEL_PAGE_LOG; s.log_count=6; s.log_offset=1;
+    s.logs[0]=(struct event_entry){3661,EVENT_RANGE,30};
+    s.logs[1]=(struct event_entry){3660,EVENT_FREQUENCY,10000};
+    s.logs[2]=(struct event_entry){3599,EVENT_TEMP_INVALID,2};
+    s.logs[3]=(struct event_entry){0,EVENT_BATTERY_ALARM,0};
+    for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
+        view_reset(&v); refresh(&v,&c,&s,(enum dgus_crc)crc);
+        CHECK(c.count==FRAME_COUNT);
+        CHECK(c.frames[VIEW_FIELD_COUNT+1].vp==0x1010);
+        CHECK(c.frames[VIEW_FIELD_COUNT+1].words[2]==EVENT_TEMP_INVALID);
+        vp_text_is(&c,0x1200,"01:01:01"); vp_text_is(&c,0x1210,"30 ohm");
+        vp_text_is(&c,0x1230,"10 kHz"); vp_text_is(&c,0x1250,"NTC2");
+        vp_text_is(&c,0x1270,""); vp_text_is(&c,0x1280,"02-05/06");
+        CHECK(c.frames[FRAME_COUNT-1].vp==0x0084 && c.frames[FRAME_COUNT-1].words[1]==2);
+    }
+    s.logs[0]=(struct event_entry){UINT32_MAX,EVENT_RANGE,INT32_MAX};
+    s.logs[1]=(struct event_entry){3599999,EVENT_FREQUENCY,2101};
+    s.logs[2]=(struct event_entry){0,EVENT_TEMP_INVALID,4};
+    s.logs[3]=(struct event_entry){1,EVENT_IO_ERROR,INT32_MIN};
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    CHECK(c.count==FRAME_COUNT-1);
+    vp_text_is(&c,0x1200,"--"); vp_text_is(&c,0x1210,"--");
+    vp_text_is(&c,0x1220,"999:59:59"); vp_text_is(&c,0x1230,"--");
+    vp_text_is(&c,0x1250,"--"); vp_text_is(&c,0x1270,"--");
+    s.logs[0]=(struct event_entry){1,EVENT_RANGE,1000};
+    s.logs[1]=(struct event_entry){1,EVENT_FREQUENCY,2000};
+    s.logs[2]=(struct event_entry){1,EVENT_TEMP_INIT_FAILED,-99999999};
+    s.logs[3]=(struct event_entry){1,EVENT_IO_ERROR,INT32_MAX};
+    s.log_count=32; s.log_offset=28;
+    refresh(&v,&c,&s,DGUS_CRC_MODBUS);
+    vp_text_is(&c,0x1210,"1000 ohm"); vp_text_is(&c,0x1230,"2 kHz");
+    vp_text_is(&c,0x1250,"-99999999"); vp_text_is(&c,0x1270,"--");
+    vp_text_is(&c,0x1280,"29-32/32");
+    s.logs[0].value=1; s.logs[1].value=5000; s.logs[2].value=-5;
+    s.logs[3]=(struct event_entry){1,EVENT_TEMP_READY,1};
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    vp_text_is(&c,0x1210,"1 ohm"); vp_text_is(&c,0x1230,"5 kHz");
+    vp_text_is(&c,0x1250,"-5"); vp_text_is(&c,0x1270,"NTC1");
+    memset(s.logs,0,sizeof(s.logs)); s.log_count=0; s.log_offset=0;
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    for(size_t row=0;row<VIEW_LOG_ROWS;++row) {
+        CHECK(c.frames[VIEW_FIELD_COUNT+1].words[row]==EVENT_NONE);
+        vp_text_is(&c,(uint16_t)(0x1200u+row*0x20u),"");
+        vp_text_is(&c,(uint16_t)(0x1210u+row*0x20u),"");
+    }
+    vp_text_is(&c,0x1280,"00-00/00");
+    for(size_t fail=0;fail<FRAME_COUNT;++fail) {
+        view_reset(&v); c=(struct capture){.crc=DGUS_CRC_NONE,.fail_at=fail};
+        CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_SEND);
+        CHECK(!v.synced && c.attempts==fail+1);
+        refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==FRAME_COUNT);
+    }
+}
 static void test_invalid_readings(void)
 {
     struct view v={0}; struct capture c; struct view_snapshot s=sample();
@@ -129,25 +220,25 @@ static void test_invalid_readings(void)
 static void test_transitions(void)
 {
     struct view v={0}, second={0}; struct capture c; struct view_snapshot s=sample();
-    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==9);
-    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==8);
+    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT);
+    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT-1);
     s.state=VIEW_FAULT;
-    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==8);
+    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT-1);
     s.page=PANEL_PAGE_SETTINGS;
-    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==9 && c.frames[8].words[1]==1);
-    refresh(&second,&c,&s,DGUS_CRC_NONE); CHECK(c.count==9);
+    refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT && c.frames[BASE_FRAME_COUNT-1].words[1]==1);
+    refresh(&second,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT);
     view_reset(&v);
-    refresh(&v,&c,&s,DGUS_CRC_MODBUS); CHECK(c.count==9);
+    refresh(&v,&c,&s,DGUS_CRC_MODBUS); CHECK(c.count==BASE_FRAME_COUNT);
     view_reset(NULL);
 }
 static void test_send_failure(void)
 {
     struct view_snapshot s=sample();
-    for(size_t fail=0;fail<FRAME_COUNT;++fail) {
+    for(size_t fail=0;fail<BASE_FRAME_COUNT;++fail) {
         struct view v={0}; struct capture c={.crc=DGUS_CRC_NONE,.fail_at=fail};
         CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_SEND);
         CHECK(!v.synced && c.attempts==fail+1 && c.count==fail);
-        refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==9);
+        refresh(&v,&c,&s,DGUS_CRC_NONE); CHECK(c.count==BASE_FRAME_COUNT);
     }
 }
 static void test_invalid_args(void)
@@ -162,6 +253,9 @@ static void test_invalid_args(void)
     s=sample(); s.state=(enum view_state)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.battery=(enum view_power)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.selected=(enum panel_field)2; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.log_count=EVENT_LOG_CAPACITY+1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.log_count=6; s.log_offset=3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.logs[0].kind=EVENT_COUNT; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     CHECK(c.attempts==0);
 }
 int main(int argc,char **argv)
@@ -169,6 +263,7 @@ int main(int argc,char **argv)
     CHECK(argc==2);
     struct { const char *name; void (*run)(void); } cases[]={
         {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
+        {"temperature",test_temperature},{"logs",test_logs},
         {"invalid_readings",test_invalid_readings},{"transitions",test_transitions},
         {"send_failure",test_send_failure},{"invalid_args",test_invalid_args}};
     for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {

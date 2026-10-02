@@ -22,7 +22,7 @@ NON_CALLS = EXPRESSION_PREFIXES | {
     "unsigned", "_Bool", "bool", "struct", "union", "enum", "_Atomic",
 }
 LIMITATIONS = [
-    "仅扫描 firmware/src 下的 .c/.h；模块按一级目录划分，根目录文件归入口模块。",
+    "仅扫描 firmware/src 与 firmware/bootloader/src 下的原创 .c/.h；后者归 bootloader 模块，不扫描第三方 MCUboot。",
     "源码按 UTF-8 解码（允许 BOM），CRLF/CR 统一为 LF 后再解析和计算 SHA256；换行格式不影响图谱。",
     "有界词法解析支持普通函数定义及 ISR_DIRECT_DECLARE；不是 C 编译器，不展开宏或计算条件编译。",
     "直接调用边只连接可唯一定位的源码函数定义；注释、字符串和预处理指令不参与调用识别。",
@@ -195,14 +195,19 @@ def parse_source(source, path):
 
 def build_graph(repo):
     source_root = repo / "firmware" / "src"
-    paths = sorted(path for path in source_root.rglob("*") if path.suffix in {".c", ".h"})
+    boot_root = repo / "firmware" / "bootloader" / "src"
+    paths = sorted(path for root in (source_root, boot_root) for path in root.rglob("*")
+                   if path.suffix in {".c", ".h"})
     if not paths:
         raise ValueError("firmware/src 下没有 C/H 源码，暂不生成空图谱")
     files, functions, candidates, diagnostics = [], [], [], []
     for path in paths:
         relative = path.relative_to(repo).as_posix()
-        source_relative = path.relative_to(source_root)
-        module = source_relative.parts[0] if len(source_relative.parts) > 1 else "."
+        if path.is_relative_to(boot_root):
+            module = "bootloader"
+        else:
+            source_relative = path.relative_to(source_root)
+            module = source_relative.parts[0] if len(source_relative.parts) > 1 else "."
         source = path.read_bytes().decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
         includes, definitions, calls = parse_source(source, relative)
         files.append({"path": relative, "module": module, "brief": source_brief(source),
@@ -269,7 +274,8 @@ def build_graph(repo):
         if pair[0] != pair[1]:
             module_edges[pair].add("include")
     return {"schema_version": 1, "generator": "firmware/tools/code_graph.py",
-            "source_root": "firmware/src", "limitations": LIMITATIONS, "modules": modules,
+            "source_root": "firmware/src", "extra_source_roots": ["firmware/bootloader/src"],
+            "limitations": LIMITATIONS, "modules": modules,
             "files": files, "functions": functions, "include_edges": include_edges,
             "direct_calls": sorted(direct, key=lambda item: (item["caller"], item["line"], item["callee"])),
             "unresolved_calls": sorted(unresolved, key=lambda item: (item["caller"], item["line"], item["name"])),

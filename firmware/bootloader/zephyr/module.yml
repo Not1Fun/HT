@@ -1,0 +1,3 @@
+name: ht_boot_safe
+build:
+  cmake: .

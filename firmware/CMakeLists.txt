@@ -21,6 +21,7 @@ target_sources(app PRIVATE
   src/ui/dgus.c
   src/ui/view.c
   src/ui/encoder.c
+  src/core/event_log.c
 )
 target_include_directories(app PRIVATE src)
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)
@@ -28,3 +29,5 @@ target_compile_options(app PRIVATE -Wall -Wextra -Werror)
 target_sources_ifdef(CONFIG_HT_SCREEN_BRINGUP app PRIVATE src/platform/screen_uart.c)
 target_sources_ifdef(CONFIG_HT_SCREEN_BRIDGE app PRIVATE src/app/screen_bridge.c)
 target_sources_ifdef(CONFIG_HT_SCREEN_PANEL app PRIVATE src/app/screen_panel.c)
+target_sources_ifdef(CONFIG_HT_SCREEN_TEMPERATURE app PRIVATE
+  src/core/ntc.c src/platform/temperature_io.c)

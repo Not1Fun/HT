@@ -21,6 +21,10 @@ int board_io_init(void);
 /* Screen bring-up only: leave the analog reference disabled and high impedance. */
 int board_io_init_digital(void);
 #endif
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+/* Temperature bring-up only, after AVDD wiring has been confirmed. */
+int board_io_start_reference(void);
+#endif
 /* Each set bit means the corresponding active-low signal is asserted. */
 int board_io_read(uint32_t *state);
 

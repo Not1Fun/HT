@@ -4,6 +4,8 @@ param(
     [switch]$InternalClock,
     [ValidateSet('Off', 'Bridge', 'Panel')]
     [string]$ScreenMode = 'Off',
+    [switch]$Temperature,
+    [switch]$Bootloader,
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
 
@@ -28,6 +30,9 @@ function Invoke-Checked {
 
 Push-Location $root
 try {
+    if ($Temperature -and $ScreenMode -ne 'Panel') {
+        throw '-Temperature requires -ScreenMode Panel and powered AVDD.'
+    }
     if ($Setup) {
         if (-not (Test-Path -LiteralPath $python)) {
             Invoke-Checked 'python' @('-m', 'venv', '.tools/venv')
@@ -39,6 +44,10 @@ try {
         Invoke-Checked $python @('-m', 'west', 'update', '--narrow', '-o=--depth=1')
         Invoke-Checked $python @('-m', 'pip', 'install', '-r',
             '.tools/zephyr/scripts/requirements-base.txt')
+        if ($Bootloader) {
+            Invoke-Checked $python @('-m', 'pip', 'install', '-r',
+                '.tools/bootloader/mcuboot/scripts/requirements.txt')
+        }
     }
     if (-not (Test-Path -LiteralPath $python) -or
         -not (Test-Path -LiteralPath '.tools/zephyr/CMakeLists.txt')) {
@@ -66,6 +75,18 @@ try {
             $conf = ''
         }
     }
+    if ($Temperature) {
+        $buildDir += '-temperature'
+        $conf += ';screen-temperature.conf'
+    }
+    if ($Bootloader) {
+        if (-not (Test-Path -LiteralPath '.tools/bootloader/mcuboot/boot/zephyr/CMakeLists.txt') -or
+            -not (Test-Path -LiteralPath '.tools/modules/lib/zcbor/zephyr/module.yml')) {
+            throw 'MCUboot dependencies missing. Run with -Setup -Bootloader first.'
+        }
+        $buildDir += '-boot'
+        $overlays += 'boards/ht_main_boot.overlay'
+    }
     $overlay = $overlays -join ';'
     $env:DTC_OVERLAY_FILE = $null
     $env:EXTRA_DTC_OVERLAY_FILE = $null
@@ -73,11 +94,22 @@ try {
     $env:CONF_FILE = $null
     $buildArgs = @('-m', 'west', 'build', '-b', 'ht_main',
         'firmware', '-d', $buildDir)
+    if ($Bootloader) { $buildArgs += '--sysbuild' }
     if ($Pristine) {
         $buildArgs += @('-p', 'always')
     }
     $buildArgs += @('--', "-DDTC_OVERLAY_FILE:STRING=$overlay", '-DEXTRA_DTC_OVERLAY_FILE:STRING=',
         "-DCONF_FILE:STRING=$baseConf", "-DEXTRA_CONF_FILE:STRING=$conf")
+    if ($Bootloader) {
+        $firmwareDir = (Join-Path $root 'firmware').Replace('\', '/')
+        $bootOverlays = @("$firmwareDir/sysbuild/mcuboot.overlay")
+        if ($InternalClock) { $bootOverlays += "$firmwareDir/boards/ht_main_hsi.overlay" }
+        $buildArgs += @("-DBOARD_ROOT:PATH=$firmwareDir", "-DDTS_ROOT:PATH=$firmwareDir",
+            "-Dmcuboot_CONF_FILE:FILEPATH=$firmwareDir/sysbuild/mcuboot.conf",
+            '-Dmcuboot_EXTRA_CONF_FILE:STRING=',
+            "-Dmcuboot_DTC_OVERLAY_FILE:STRING=$($bootOverlays -join ';')",
+            "-Dmcuboot_EXTRA_ZEPHYR_MODULES:STRING=$firmwareDir/bootloader")
+    }
     Invoke-Checked $python $buildArgs
 }
 finally {

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "name": "HT",
   "width": 800,
   "height": 480,
@@ -31,6 +31,11 @@
       "id": 1,
       "name": "settings",
       "image": "assets/pages/001.png"
+    },
+    {
+      "id": 2,
+      "name": "logs",
+      "image": "assets/pages/002.png"
     }
   ],
   "fields": [
@@ -41,10 +46,11 @@
       "vp": 4352,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1000,
       "decimals": 3,
       "x": 48,
-      "y": 150,
+      "y": 128,
       "width": 288,
       "height": 72,
       "font_width": 32,
@@ -62,10 +68,11 @@
       "vp": 4368,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1000,
       "decimals": 3,
       "x": 432,
-      "y": 150,
+      "y": 128,
       "width": 288,
       "height": 72,
       "font_width": 32,
@@ -83,15 +90,16 @@
       "vp": 4384,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1,
       "decimals": 0,
-      "x": 48,
-      "y": 328,
-      "width": 216,
-      "height": 44,
-      "font_width": 20,
-      "font_height": 40,
-      "max_chars": 9,
+      "x": 200,
+      "y": 246,
+      "width": 112,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 4,
       "color": "#303133",
       "pages": [
         0
@@ -104,15 +112,16 @@
       "vp": 4400,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1000,
       "decimals": 0,
-      "x": 432,
-      "y": 328,
-      "width": 216,
-      "height": 44,
-      "font_width": 20,
-      "font_height": 40,
-      "max_chars": 9,
+      "x": 600,
+      "y": 246,
+      "width": 88,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 2,
       "color": "#303133",
       "pages": [
         0
@@ -125,6 +134,7 @@
       "vp": 4416,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1,
       "decimals": 0,
       "x": 146,
@@ -146,6 +156,7 @@
       "vp": 4432,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1,
       "decimals": 0,
       "x": 458,
@@ -167,6 +178,7 @@
       "vp": 4448,
       "words": 16,
       "encoding": "ascii",
+      "display_encoding": "gbk",
       "input_scale": 1000,
       "decimals": 0,
       "x": 458,
@@ -179,6 +191,270 @@
       "color": "#303133",
       "pages": [
         1
+      ]
+    },
+    {
+      "name": "ntc1",
+      "label": "NTC1",
+      "unit": "degC",
+      "vp": 4464,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 40,
+      "y": 346,
+      "width": 160,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        0
+      ]
+    },
+    {
+      "name": "ntc2",
+      "label": "NTC2",
+      "unit": "degC",
+      "vp": 4480,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 296,
+      "y": 346,
+      "width": 160,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        0
+      ]
+    },
+    {
+      "name": "ntc3",
+      "label": "NTC3",
+      "unit": "degC",
+      "vp": 4496,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 10,
+      "decimals": 1,
+      "x": 552,
+      "y": 346,
+      "width": 160,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        0
+      ]
+    },
+    {
+      "name": "log_time_0",
+      "label": "事件时间",
+      "unit": "HHH:MM:SS",
+      "vp": 4608,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 40,
+      "y": 157,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_value_0",
+      "label": "事件数值",
+      "unit": "",
+      "vp": 4624,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 626,
+      "y": 157,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_time_1",
+      "label": "事件时间",
+      "unit": "HHH:MM:SS",
+      "vp": 4640,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 40,
+      "y": 217,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_value_1",
+      "label": "事件数值",
+      "unit": "",
+      "vp": 4656,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 626,
+      "y": 217,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_time_2",
+      "label": "事件时间",
+      "unit": "HHH:MM:SS",
+      "vp": 4672,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 40,
+      "y": 277,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_value_2",
+      "label": "事件数值",
+      "unit": "",
+      "vp": 4688,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 626,
+      "y": 277,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_time_3",
+      "label": "事件时间",
+      "unit": "HHH:MM:SS",
+      "vp": 4704,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 40,
+      "y": 337,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_value_3",
+      "label": "事件数值",
+      "unit": "",
+      "vp": 4720,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 626,
+      "y": 337,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_position",
+      "label": "日志位置",
+      "unit": "",
+      "vp": 4736,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 626,
+      "y": 402,
+      "width": 126,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        2
       ]
     }
   ],
@@ -202,7 +478,8 @@
       ],
       "pages": [
         0,
-        1
+        1,
+        2
       ]
     },
     {
@@ -258,6 +535,134 @@
       ],
       "pages": [
         1
+      ]
+    },
+    {
+      "name": "log_event_0",
+      "vp": 4112,
+      "x": 208,
+      "y": 146,
+      "width": 380,
+      "height": 50,
+      "first": 12,
+      "last": 27,
+      "initial": 0,
+      "values": [
+        "",
+        "启动完成",
+        "屏幕连接",
+        "屏幕断开",
+        "阻抗请求确认",
+        "频率请求确认",
+        "电池正常",
+        "电池低电或异常",
+        "过流保护触发",
+        "过流保护解除",
+        "过压保护触发",
+        "过压保护解除",
+        "温度就绪",
+        "温度无效",
+        "温度采样未就绪",
+        "输入输出错误"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_event_1",
+      "vp": 4113,
+      "x": 208,
+      "y": 206,
+      "width": 380,
+      "height": 50,
+      "first": 12,
+      "last": 27,
+      "initial": 0,
+      "values": [
+        "",
+        "启动完成",
+        "屏幕连接",
+        "屏幕断开",
+        "阻抗请求确认",
+        "频率请求确认",
+        "电池正常",
+        "电池低电或异常",
+        "过流保护触发",
+        "过流保护解除",
+        "过压保护触发",
+        "过压保护解除",
+        "温度就绪",
+        "温度无效",
+        "温度采样未就绪",
+        "输入输出错误"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_event_2",
+      "vp": 4114,
+      "x": 208,
+      "y": 266,
+      "width": 380,
+      "height": 50,
+      "first": 12,
+      "last": 27,
+      "initial": 0,
+      "values": [
+        "",
+        "启动完成",
+        "屏幕连接",
+        "屏幕断开",
+        "阻抗请求确认",
+        "频率请求确认",
+        "电池正常",
+        "电池低电或异常",
+        "过流保护触发",
+        "过流保护解除",
+        "过压保护触发",
+        "过压保护解除",
+        "温度就绪",
+        "温度无效",
+        "温度采样未就绪",
+        "输入输出错误"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    {
+      "name": "log_event_3",
+      "vp": 4115,
+      "x": 208,
+      "y": 326,
+      "width": 380,
+      "height": 50,
+      "first": 12,
+      "last": 27,
+      "initial": 0,
+      "values": [
+        "",
+        "启动完成",
+        "屏幕连接",
+        "屏幕断开",
+        "阻抗请求确认",
+        "频率请求确认",
+        "电池正常",
+        "电池低电或异常",
+        "过流保护触发",
+        "过流保护解除",
+        "过压保护触发",
+        "过压保护解除",
+        "温度就绪",
+        "温度无效",
+        "温度采样未就绪",
+        "输入输出错误"
+      ],
+      "pages": [
+        2
       ]
     }
   ],
