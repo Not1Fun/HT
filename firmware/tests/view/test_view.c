@@ -26,7 +26,8 @@ static struct view_snapshot sample(void)
 {
     struct view_snapshot s = {.page=PANEL_PAGE_STATUS, .state=VIEW_RUNNING,
         .battery=VIEW_POWER_NORMAL, .selected=PANEL_RANGE, .output=VIEW_OUTPUT_RUNNING, .fresh=true};
-    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 30, 5000, 251, -125, 1200};
+    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 30, 5000, 251, -125, 1200, 25000};
+    _Static_assert(sizeof(values)/sizeof(values[0]) == VIEW_FIELD_COUNT, "Sample must cover every VP field");
     for (size_t i=0; i<VIEW_FIELD_COUNT; ++i) s.values[i]=(struct view_value){values[i],true};
     return s;
 }
@@ -49,7 +50,8 @@ static void text_is(const struct capture *c, enum view_field field, const char *
 }
 static void test_mapping(void)
 {
-    const char *expected[]={"2.240","22.360","10","2","01:02:03","30","5","25.1","-12.5","120.0"};
+    const char *expected[]={"2.240","22.360","10","2","01:02:03","30","5","25.1","-12.5","120.0","25"};
+    _Static_assert(sizeof(expected)/sizeof(expected[0]) == VIEW_FIELD_COUNT, "Expected text must cover every VP field");
     for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
         struct view v={0}; struct capture c; struct view_snapshot s=sample();
         s.selected=PANEL_FREQUENCY; s.editing=true;
@@ -74,7 +76,7 @@ static void test_output_states(void)
             s.editing=output==VIEW_OUTPUT_ARMED;
             refresh(&v,&c,&s,(enum dgus_crc)crc);
             CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==5);
-            CHECK(c.frames[0].words[2]==2);
+            CHECK(c.frames[0].words[2]==3);
             CHECK(c.frames[0].words[3]==(output==VIEW_OUTPUT_ARMED?1u:0u));
             CHECK(c.frames[0].words[4]==(uint16_t)output);
             text_is(&c,VIEW_FREQUENCY,"2");
@@ -153,6 +155,32 @@ static void test_choices(void)
         refresh(&v,&c,&s,DGUS_CRC_NONE);
         text_is(&c,VIEW_RANGE_CHOICE,"--"); text_is(&c,VIEW_FREQUENCY_CHOICE,"--");
     }
+}
+static void test_power_choice(void)
+{
+    const int64_t values[]={0,1000,25000,49000,50000,50001,-1,INT64_MIN,INT64_MAX};
+    const char *expected[]={"0","1","25","49","50","--","--","--","--"};
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    s.page=PANEL_PAGE_SETTINGS; s.selected=PANEL_POWER; s.editing=true;
+    for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
+        for(size_t i=0;i<sizeof(values)/sizeof(values[0]);++i) {
+            s.values[VIEW_POWER_CHOICE]=(struct view_value){values[i],true};
+            refresh(&v,&c,&s,(enum dgus_crc)crc);
+            CHECK(c.frames[0].words[2]==2 && c.frames[0].words[3]==1);
+            CHECK(c.frames[1+VIEW_POWER_CHOICE].vp==0x11a0);
+            text_is(&c,VIEW_POWER_CHOICE,expected[i]);
+            text_is(&c,VIEW_CURRENT,"2.240"); text_is(&c,VIEW_VOLTAGE,"22.360");
+        }
+    }
+    s.fresh=false; s.state=VIEW_OFFLINE; s.editing=false;
+    s.values[VIEW_POWER_CHOICE]=(struct view_value){50000,true};
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    text_is(&c,VIEW_POWER_CHOICE,"50"); text_is(&c,VIEW_CURRENT,"--");
+    CHECK(c.frames[0].words[3]==0);
+    s.values[VIEW_POWER_CHOICE].valid=false;
+    refresh(&v,&c,&s,DGUS_CRC_NONE); text_is(&c,VIEW_POWER_CHOICE,"--");
+    s.values[VIEW_POWER_CHOICE]=(struct view_value){0,true};
+    refresh(&v,&c,&s,DGUS_CRC_NONE); text_is(&c,VIEW_POWER_CHOICE,"0");
 }
 static void test_temperature(void)
 {
@@ -325,7 +353,7 @@ static void test_invalid_args(void)
     s.page=(enum panel_page)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.state=(enum view_state)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.battery=(enum view_power)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
-    s=sample(); s.selected=(enum panel_field)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.selected=(enum panel_field)(PANEL_OUTPUT+1); CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.selected=(enum panel_field)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.output=(enum view_output)6; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.output=(enum view_output)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
@@ -339,6 +367,7 @@ int main(int argc,char **argv)
     CHECK(argc==2);
     struct { const char *name; void (*run)(void); } cases[]={
         {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
+        {"power_choice",test_power_choice},
         {"temperature",test_temperature},{"logs",test_logs},
         {"output_states",test_output_states},{"output_stale",test_output_stale},{"dds_logs",test_dds_logs},
         {"invalid_readings",test_invalid_readings},{"transitions",test_transitions},

@@ -20,7 +20,8 @@ endif()
 
 foreach(case IN ITEMS defaults tables key_mapping status_navigation draft_confirmation
         cancel field_selection page_navigation log_controls rotation_cycles targets
-        output_requests output_cancel output_stop_priority output_rotation startup_enabled zero_target
+        output_requests output_cancel output_stop_priority output_rotation power_confirmation power_cancel
+        power_bounds startup_enabled zero_target
         fault_rearm mode_change_stop stop_priority invalid_config invalid_inputs)
     add_test(NAME panel_${case} COMMAND panel_tests ${case})
 endforeach()

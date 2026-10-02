@@ -1,4 +1,4 @@
-/* @brief 独占DAC1/TIM6/DMA1通道1输出不可变波表，错误锁存并直接静音。 */
+/* @brief 独占DAC1/TIM6/DMA1通道1；输出模式仅在DMA空闲半区调幅。 */
 #include "platform/dds_io.h"
 #include "core/dds.h"
 
@@ -21,6 +21,13 @@
 #define DAC_TRIGGER LL_DAC_TRIG_EXT_TIM6_TRGO
 #define DMA_CLOCKS (LL_AHB1_GRP1_PERIPH_DMA1 | LL_AHB1_GRP1_PERIPH_DMAMUX1)
 #define STOP_POLLS 128u
+#if defined(CONFIG_HT_OUTPUT)
+#define DMA_IRQS (DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE)
+static volatile uint16_t pending_amplitude;
+static uint16_t half_amplitude[2];
+#else
+#define DMA_IRQS DMA_CCR_TEIE
+#endif
 
 BUILD_ASSERT(!DT_NODE_HAS_STATUS(DT_NODELABEL(dac1), okay), "DAC1 is LL-owned");
 BUILD_ASSERT(!DT_NODE_HAS_STATUS(DT_NODELABEL(dac3), okay), "TIM6_DAC IRQ is reserved");
@@ -36,7 +43,7 @@ static bool configured;
 static volatile bool running;
 static volatile enum dds_fault fault;
 static uint32_t frequency;
-static uint16_t amplitude;
+static volatile uint16_t amplitude;
 static uint16_t timer_arr;
 
 static bool clocks_ready(void)
@@ -77,7 +84,7 @@ static bool quiet(void)
 		DAC1->CR &= ~(DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1 | DAC_CR_TEN1);
 	}
 	if (dma_clock) {
-		DMA1_Channel1->CCR &= ~(DMA_CCR_EN | DMA_CCR_TEIE);
+		DMA1_Channel1->CCR &= ~(DMA_CCR_EN | DMA_IRQS);
 		for (unsigned int i = 0; i < STOP_POLLS; ++i) {
 			if (!(DMA1_Channel1->CCR & DMA_CCR_EN)) {
 				break;
@@ -127,7 +134,34 @@ static void dma_error(const void *context)
 	(void)context;
 	if (LL_DMA_IsActiveFlag_TE1(DMA1)) {
 		fail(DDS_FAULT_DMA);
+		return;
 	}
+#if defined(CONFIG_HT_OUTPUT)
+	bool half = LL_DMA_IsActiveFlag_HT1(DMA1);
+	bool full = LL_DMA_IsActiveFlag_TC1(DMA1);
+	if (!running) { DMA1->IFCR = DMA_IFCR_CGIF1; return; }
+	if (half && full) { fail(DDS_FAULT_DMA); return; }
+	if (!half && !full) return;
+	unsigned int index = full ? 1u : 0u;
+	if (half) LL_DMA_ClearFlag_HT1(DMA1);
+	else LL_DMA_ClearFlag_TC1(DMA1);
+	uint32_t count = DMA1_Channel1->CNDTR;
+	if (count == 0 || (half ? count > DDS_BUFFER_SAMPLES / 2u : count <= DDS_BUFFER_SAMPLES / 2u)) {
+		fail(DDS_FAULT_DMA); return;
+	}
+	uint16_t next = pending_amplitude;
+	if (half_amplitude[index] != next) {
+		(void)dds_wave(samples + index * (DDS_BUFFER_SAMPLES / 2u), DDS_BUFFER_SAMPLES / 2u, next);
+		__DMB();
+		half_amplitude[index] = next;
+	}
+	count = DMA1_Channel1->CNDTR;
+	if (count == 0 || (half ? count > DDS_BUFFER_SAMPLES / 2u : count <= DDS_BUFFER_SAMPLES / 2u) ||
+	    LL_DMA_IsActiveFlag_HT1(DMA1) || LL_DMA_IsActiveFlag_TC1(DMA1)) {
+		fail(DDS_FAULT_DMA); return;
+	}
+	if (half_amplitude[0] == half_amplitude[1]) amplitude = next;
+#endif
 }
 
 static void dac_error(const void *context)
@@ -152,7 +186,7 @@ static int check(void)
 
 	if (running) {
 		dac = DAC_TRIGGER | DAC_CR_EN1 | DAC_CR_TEN1 | DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1;
-		dma |= DMA_CCR_EN | DMA_CCR_TEIE;
+		dma |= DMA_CCR_EN | DMA_IRQS;
 		timer |= TIM_CR1_CEN;
 	}
 	if (!clocks_ready() || !reference_ready() ||
@@ -258,6 +292,11 @@ int dds_io_configure(uint32_t frequency_hz, uint16_t requested_amplitude)
 		(void)dds_wave(samples, DDS_BUFFER_SAMPLES, requested_amplitude);
 		frequency = frequency_hz;
 		amplitude = requested_amplitude;
+#if defined(CONFIG_HT_OUTPUT)
+		pending_amplitude = requested_amplitude;
+		half_amplitude[0] = requested_amplitude;
+		half_amplitude[1] = requested_amplitude;
+#endif
 		timer_arr = arr;
 		TIM6->ARR = arr;
 		TIM6->CNT = 0;
@@ -307,7 +346,7 @@ int dds_io_start(void)
 		DAC1->CR |= DAC_CR_TEN1;
 		DAC1->DHR12R1 = samples[DDS_BUFFER_SAMPLES - 1u];
 		__DMB();
-		DMA1_Channel1->CCR = DMA_SETTINGS | DMA_CCR_TEIE | DMA_CCR_EN;
+		DMA1_Channel1->CCR = DMA_SETTINGS | DMA_IRQS | DMA_CCR_EN;
 		DAC1->CR |= DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1;
 		running = true;
 		TIM6->CR1 |= TIM_CR1_CEN;
@@ -338,6 +377,22 @@ int dds_io_stop(void)
 	k_mutex_unlock(&lock);
 	return stopped ? 0 : -EIO;
 }
+
+#if defined(CONFIG_HT_OUTPUT)
+int dds_io_set_amplitude(uint16_t next)
+{
+	if (next > DDS_AMPLITUDE_MAX) return -EINVAL;
+	k_mutex_lock(&lock, K_FOREVER);
+	int rc = check();
+	uint32_t key = __get_PRIMASK();
+	__disable_irq();
+	if (rc == 0 && running && fault == DDS_FAULT_NONE) pending_amplitude = next;
+	else if (rc == 0) rc = -EACCES;
+	__set_PRIMASK(key);
+	k_mutex_unlock(&lock);
+	return rc;
+}
+#endif
 
 int dds_io_check(void)
 {

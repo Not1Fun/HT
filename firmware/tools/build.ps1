@@ -6,6 +6,7 @@ param(
     [string]$ScreenMode = 'Off',
     [switch]$Temperature,
     [switch]$Dds,
+    [switch]$Output,
     [switch]$Bootloader,
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
@@ -31,6 +32,9 @@ function Invoke-Checked {
 
 Push-Location $root
 try {
+    if ($Output -and ($ScreenMode -ne 'Panel' -or $Temperature -or $Dds)) {
+        throw '-Output requires -ScreenMode Panel; it owns ADC temperature sampling and cannot combine with -Temperature or -Dds.'
+    }
     if ($Temperature -and $ScreenMode -ne 'Panel') {
         throw '-Temperature requires -ScreenMode Panel and powered AVDD.'
     }
@@ -87,6 +91,11 @@ try {
         $buildDir += '-dds'
         $conf += ';dds-bench.conf'
         $overlays += 'boards/ht_main_dds.overlay'
+    }
+    if ($Output) {
+        $buildDir += '-output'
+        $conf += ';output.conf'
+        $overlays += 'boards/ht_main_output.overlay'
     }
     if ($Bootloader) {
         if (-not (Test-Path -LiteralPath '.tools/bootloader/mcuboot/boot/zephyr/CMakeLists.txt') -or

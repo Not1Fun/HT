@@ -27,6 +27,7 @@ static uint8_t selected_index(const struct panel *panel)
     if (panel->field == PANEL_OUTPUT) {
         return panel->output_running ? 1u : 0u;
     }
+    if (panel->field == PANEL_POWER) return (uint8_t)(panel->apparent_mva / 1000u);
     for (uint8_t index = 0; index < PANEL_FREQUENCY_COUNT; ++index) {
         if (frequencies[index] == panel->frequency_hz) {
             return index;
@@ -128,6 +129,10 @@ int panel_key(struct panel *panel, enum panel_key key)
         break;
     case PANEL_KEY_OK:
     case PANEL_KEY_ENCODER:
+        if (panel->field == PANEL_POWER) {
+            panel->apparent_mva = (uint32_t)panel->draft_index * 1000u;
+            return PANEL_ACTION_POWER;
+        }
         if (panel->field == PANEL_OUTPUT) {
             if (panel->output_running || panel->draft_index == 0) {
                 return PANEL_ACTION_OUTPUT_STOP;
@@ -162,6 +167,13 @@ int panel_rotate(struct panel *panel, int32_t detents)
     if (panel->field == PANEL_OUTPUT) {
         next = (int64_t)panel->draft_index + detents;
         panel->draft_index = next <= 0 ? 0u : 1u;
+        return PANEL_OK;
+    }
+    if (panel->field == PANEL_POWER) {
+        next = (int64_t)panel->draft_index + detents;
+        uint32_t limit = panel->config.apparent_max_mva / 1000u;
+        if (limit > 50) limit = 50;
+        panel->draft_index = next < 0 ? 0u : next > limit ? (uint8_t)limit : (uint8_t)next;
         return PANEL_OK;
     }
     count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT : PANEL_FREQUENCY_COUNT;

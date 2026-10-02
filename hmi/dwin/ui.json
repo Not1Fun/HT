@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "name": "HT",
   "width": 800,
   "height": 480,
@@ -160,11 +160,11 @@
       "input_scale": 1,
       "decimals": 0,
       "x": 458,
-      "y": 134,
+      "y": 130,
       "width": 216,
-      "height": 44,
-      "font_width": 20,
-      "font_height": 40,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
       "max_chars": 9,
       "color": "#303133",
       "pages": [
@@ -182,11 +182,11 @@
       "input_scale": 1000,
       "decimals": 0,
       "x": 458,
-      "y": 222,
+      "y": 196,
       "width": 216,
-      "height": 44,
-      "font_width": 20,
-      "font_height": 40,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
       "max_chars": 9,
       "color": "#303133",
       "pages": [
@@ -456,6 +456,28 @@
       "pages": [
         2
       ]
+    },
+    {
+      "name": "power_choice",
+      "label": "目标视在功率",
+      "unit": "VA",
+      "vp": 4512,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1000,
+      "decimals": 0,
+      "x": 458,
+      "y": 262,
+      "width": 216,
+      "height": 36,
+      "font_width": 16,
+      "font_height": 32,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        1
+      ]
     }
   ],
   "icons": [
@@ -507,13 +529,14 @@
       "x": 24,
       "y": 118,
       "width": 752,
-      "height": 252,
+      "height": 256,
       "first": 31,
-      "last": 33,
+      "last": 34,
       "initial": 0,
       "values": [
         "range",
         "frequency",
+        "power",
         "output"
       ],
       "pages": [
@@ -542,11 +565,11 @@
       "name": "output",
       "vp": 4100,
       "x": 346,
-      "y": 310,
+      "y": 323,
       "width": 400,
       "height": 44,
-      "first": 34,
-      "last": 39,
+      "first": 35,
+      "last": 40,
       "initial": 5,
       "values": [
         "off",
@@ -587,9 +610,9 @@
         "温度无效",
         "温度采样未就绪",
         "输入输出错误",
-        "DAC试波启动",
-        "DAC试波停止",
-        "DAC试波故障"
+        "输出启动",
+        "输出停止",
+        "输出故障"
       ],
       "pages": [
         2
@@ -622,9 +645,9 @@
         "温度无效",
         "温度采样未就绪",
         "输入输出错误",
-        "DAC试波启动",
-        "DAC试波停止",
-        "DAC试波故障"
+        "输出启动",
+        "输出停止",
+        "输出故障"
       ],
       "pages": [
         2
@@ -657,9 +680,9 @@
         "温度无效",
         "温度采样未就绪",
         "输入输出错误",
-        "DAC试波启动",
-        "DAC试波停止",
-        "DAC试波故障"
+        "输出启动",
+        "输出停止",
+        "输出故障"
       ],
       "pages": [
         2
@@ -692,9 +715,9 @@
         "温度无效",
         "温度采样未就绪",
         "输入输出错误",
-        "DAC试波启动",
-        "DAC试波停止",
-        "DAC试波故障"
+        "输出启动",
+        "输出停止",
+        "输出故障"
       ],
       "pages": [
         2

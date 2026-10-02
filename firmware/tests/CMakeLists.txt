@@ -17,6 +17,8 @@ add_subdirectory(dds)
 add_subdirectory(dds_io)
 add_subdirectory(dds_bench)
 add_subdirectory(screen_panel)
+add_subdirectory(power)
+add_subdirectory(output)
 add_subdirectory(bootloader)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)

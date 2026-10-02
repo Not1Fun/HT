@@ -19,7 +19,8 @@ static uint32_t primask;
 static inline uint32_t __get_PRIMASK(void) { return primask; }
 static inline void __disable_irq(void) { primask = 1; }
 static inline void __set_PRIMASK(uint32_t value) { primask = value; }
-static inline void __DMB(void) { }
+static void (*barrier_hook)(void);
+static inline void __DMB(void) { if (barrier_hook) barrier_hook(); }
 #define DMA1_Channel1_IRQn 0
 #define TIM6_DAC_IRQn 1
 static void (*handlers[2])(const void *);
@@ -28,6 +29,8 @@ static bool irq_enabled[2];
 static inline void NVIC_ClearPendingIRQ(int irq) { (void)irq; }
 static inline void irq_enable(int irq) { irq_enabled[irq] = true; }
 #define DMA_CCR_EN 0x1u
+#define DMA_CCR_TCIE 0x2u
+#define DMA_CCR_HTIE 0x4u
 #define DMA_CCR_TEIE 0x8u
 #define DMA_CCR_DIR 0x10u
 #define DMA_CCR_CIRC 0x20u
@@ -127,6 +130,10 @@ static inline void LL_DAC_Enable(DAC_TypeDef *reg, uint32_t ch) { assert(ch == 0
 static inline void LL_DAC_Disable(DAC_TypeDef *reg, uint32_t ch) { assert(ch == 0); reg->CR &= ~DAC_CR_EN1; }
 static inline bool LL_DAC_IsReady(DAC_TypeDef *reg, uint32_t ch) { (void)reg; assert(ch == 0); return dac_ready; }
 #define LL_DMA_IsActiveFlag_TE1(reg) (((reg)->ISR & 8u) != 0)
+#define LL_DMA_IsActiveFlag_HT1(reg) (((reg)->ISR & 4u) != 0)
+#define LL_DMA_IsActiveFlag_TC1(reg) (((reg)->ISR & 2u) != 0)
+#define LL_DMA_ClearFlag_HT1(reg) ((reg)->ISR &= ~4u)
+#define LL_DMA_ClearFlag_TC1(reg) ((reg)->ISR &= ~2u)
 #define LL_DAC_IsActiveFlag_DMAUDR1(reg) (((reg)->SR & 0x2000u) != 0)
 #define LL_DAC_ClearFlag_DMAUDR1(reg) ((reg)->SR &= ~0x2000u)
 #endif

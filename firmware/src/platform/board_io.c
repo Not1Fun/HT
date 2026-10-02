@@ -116,7 +116,7 @@ int board_io_init(void)
 	return init_board(true);
 }
 
-#if defined(CONFIG_HT_SCREEN_TEMPERATURE)
+#if defined(CONFIG_HT_SCREEN_TEMPERATURE) || defined(CONFIG_HT_OUTPUT)
 int board_io_start_reference(void)
 {
 	return ready ? start_vref() : -EACCES;

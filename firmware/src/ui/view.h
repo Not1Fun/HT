@@ -32,7 +32,7 @@ enum view_output {
 enum view_field {
     VIEW_CURRENT, VIEW_VOLTAGE, VIEW_RANGE, VIEW_FREQUENCY, VIEW_ELAPSED,
     VIEW_RANGE_CHOICE, VIEW_FREQUENCY_CHOICE,
-    VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_FIELD_COUNT
+    VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_POWER_CHOICE, VIEW_FIELD_COUNT
 };
 struct view_value { int64_t value; bool valid; };
 
@@ -61,7 +61,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v4：三项设置、VP1004输出状态及四行事件日志；完整清尾，同页不重发页命令。
+/* ui.json v5：四项设置、VP11A0目标VA、VP1004输出状态及事件日志。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,

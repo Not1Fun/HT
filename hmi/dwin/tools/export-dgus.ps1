@@ -25,11 +25,11 @@ if ([IntPtr]::Size -ne 4 -or $PSVersionTable.PSEdition -eq 'Core' -or
 $ui = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
 $sourceDir = Split-Path -Parent $Manifest
 if ($ui.width -ne 800 -or $ui.height -ne 480 -or $ui.touch) { throw 'Expected an 800 x 480 non-touch project.' }
-if ($ui.version -ne 4 -or @($ui.pages).Count -ne 3 -or
+if ($ui.version -ne 5 -or @($ui.pages).Count -ne 3 -or
     $ui.pages[0].id -ne 0 -or $ui.pages[1].id -ne 1 -or
-    $ui.pages[2].id -ne 2) { throw 'Expected HT v4 status/settings/logs pages.' }
-if (@($ui.fields).Count -ne 19 -or @($ui.icons).Count -ne 9 -or
-    @($ui.animations).Count -ne 0) { throw 'Expected nineteen fields, nine icon controls and no animation.' }
+    $ui.pages[2].id -ne 2) { throw 'Expected HT v5 status/settings/logs pages.' }
+if (@($ui.fields).Count -ne 20 -or @($ui.icons).Count -ne 9 -or
+    @($ui.animations).Count -ne 0) { throw 'Expected twenty fields, nine icon controls and no animation.' }
 $usedVp = @{}
 foreach ($spec in @($ui.fields) + @($ui.icons)) {
     $words = if ($null -ne $spec.words) { [int]$spec.words } else { 1 }

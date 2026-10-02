@@ -81,6 +81,8 @@ static void format_value(char text[VIEW_TEXT_BYTES], enum view_field field, int6
     }
     if (field == VIEW_ELAPSED) {
         format_time(text, value);
+    } else if (field == VIEW_POWER_CHOICE) {
+        if (value >= 0 && value <= 50000) format_number(text, value / 1000, 0);
     } else if (field == VIEW_FREQUENCY || field == VIEW_FREQUENCY_CHOICE) {
         if (value == 2000 || value == 5000 || value == 8000 || value == 10000) {
             format_number(text, value / 1000, 0);
@@ -115,7 +117,7 @@ static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
 {
     for (size_t field = 0; field < VIEW_FIELD_COUNT; ++field) {
         char text[VIEW_TEXT_BYTES];
-        bool setting = field == VIEW_RANGE_CHOICE || field == VIEW_FREQUENCY_CHOICE;
+        bool setting = field == VIEW_RANGE_CHOICE || field == VIEW_FREQUENCY_CHOICE || field == VIEW_POWER_CHOICE;
         bool valid = snapshot->values[field].valid &&
                      (setting || (snapshot->fresh && snapshot->state != VIEW_OFFLINE));
         int result;

@@ -187,7 +187,7 @@ static void stopped_view(struct service *s)
     assert(value.state != VIEW_RUNNING && value.output != VIEW_OUTPUT_RUNNING);
     for (int field = VIEW_CURRENT; field <= VIEW_ELAPSED; ++field)
         assert(!value.values[field].valid);
-    assert(s->panel.current_ma == 0 && s->panel.apparent_mva == 0);
+    assert(s->panel.current_ma == 0 && s->panel.apparent_mva <= 50000);
 }
 
 static void startup(void)
@@ -209,7 +209,7 @@ static void startup(void)
     }
     assert(saw_icons);
 }
-static void three_fields(void)
+static void four_fields(void)
 {
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
@@ -217,6 +217,8 @@ static void three_fields(void)
     assert(s.panel.field == PANEL_RANGE);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_FREQUENCY);
+    press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.field == PANEL_POWER);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_OUTPUT);
     press(&s, PANEL_KEY_DOWN);
@@ -275,8 +277,8 @@ static void request_confirm(bool frequency)
 {
     struct service s = ready();
     start(&s);
-    press(&s, PANEL_KEY_UP);
-    if (!frequency) press(&s, PANEL_KEY_UP);
+    enum panel_field target = frequency ? PANEL_FREQUENCY : PANEL_RANGE;
+    while (s.panel.field != target) press(&s, PANEL_KEY_UP);
     assert(panel_rotate(&s.panel, 1) == 0);
     press(&s, PANEL_KEY_OK);
     healthy_poll(&s);
@@ -289,6 +291,84 @@ static void request_confirm(bool frequency)
     healthy_poll(&s);
     assert(starts == 1);
     stopped_view(&s);
+}
+static void power_confirm(void)
+{
+    struct service s = ready();
+    start(&s);
+    press(&s, PANEL_KEY_UP);
+    assert(s.panel.field == PANEL_POWER);
+    assert(panel_rotate(&s.panel, 17) == 0);
+    struct view_snapshot value;
+    snapshot(&s, &value);
+    assert(s.panel.apparent_mva == 0 && value.editing);
+    assert(value.values[VIEW_POWER_CHOICE].valid && value.values[VIEW_POWER_CHOICE].value == 17000);
+    press(&s, PANEL_KEY_OK);
+    healthy_poll(&s);
+    stopped_view(&s);
+    snapshot(&s, &value);
+    assert(s.panel.apparent_mva == 17000 && !value.editing);
+    assert(value.values[VIEW_POWER_CHOICE].value == 17000);
+    assert(events(&s, EVENT_DDS_STOP) == 1);
+    output_page(&s);
+    assert(s.panel.draft_index == 0);
+    press(&s, PANEL_KEY_OK);
+    healthy_poll(&s);
+    stopped_view(&s);
+    assert(starts == 1 && s.panel.apparent_mva == 17000);
+}
+static void power_cancel(void)
+{
+    struct service s = ready();
+    press(&s, PANEL_KEY_RIGHT);
+    press(&s, PANEL_KEY_DOWN);
+    press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.field == PANEL_POWER);
+    assert(panel_rotate(&s.panel, 25) == 0);
+    struct view_snapshot value;
+    snapshot(&s, &value);
+    assert(value.values[VIEW_POWER_CHOICE].value == 25000 && s.panel.apparent_mva == 0);
+    press(&s, PANEL_KEY_UP);
+    snapshot(&s, &value);
+    assert(s.panel.field == PANEL_FREQUENCY && value.values[VIEW_POWER_CHOICE].value == 0);
+    press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.draft_index == 0);
+    assert(panel_rotate(&s.panel, 50) == 0);
+    press(&s, PANEL_KEY_RIGHT);
+    press(&s, PANEL_KEY_LEFT);
+    assert(s.panel.draft_index == 0 && s.panel.apparent_mva == 0);
+    assert(panel_rotate(&s.panel, 9) == 0);
+    press(&s, PANEL_KEY_ENCODER);
+    healthy_poll(&s);
+    assert(s.panel.apparent_mva == 9000);
+    assert(panel_rotate(&s.panel, 8) == 0);
+    press(&s, PANEL_KEY_LEFT);
+    press(&s, PANEL_KEY_RIGHT);
+    snapshot(&s, &value);
+    assert(s.panel.draft_index == 9 && s.panel.apparent_mva == 9000 && !value.editing);
+    assert(value.values[VIEW_POWER_CHOICE].value == 9000 && starts == 0);
+}
+static void power_bounds(void)
+{
+    struct service s = ready();
+    output_page(&s);
+    press(&s, PANEL_KEY_UP);
+    assert(s.panel.field == PANEL_POWER);
+    assert(panel_rotate(&s.panel, INT32_MAX) == 0 && s.panel.draft_index == 50);
+    assert(panel_rotate(&s.panel, 1) == 0 && s.panel.draft_index == 50);
+    press(&s, PANEL_KEY_OK);
+    healthy_poll(&s);
+    struct view_snapshot value;
+    snapshot(&s, &value);
+    assert(s.panel.apparent_mva == 50000 && value.values[VIEW_POWER_CHOICE].value == 50000);
+    assert(panel_rotate(&s.panel, INT32_MIN) == 0 && s.panel.draft_index == 0);
+    assert(panel_rotate(&s.panel, -1) == 0 && s.panel.draft_index == 0);
+    press(&s, PANEL_KEY_ENCODER);
+    healthy_poll(&s);
+    snapshot(&s, &value);
+    assert(s.panel.apparent_mva == 0 && value.values[VIEW_POWER_CHOICE].value == 0 && !value.editing);
+    stopped_view(&s);
+    assert(starts == 0);
 }
 static void stop_navigation(enum panel_key navigation)
 {
@@ -399,11 +479,14 @@ int main(int argc, char **argv)
     assert(argc == 2);
     const char *name = argv[1];
     if (!strcmp(name, "startup")) startup();
-    else if (!strcmp(name, "three_fields")) three_fields();
+    else if (!strcmp(name, "four_fields")) four_fields();
     else if (!strcmp(name, "start_parameters")) start_parameters();
     else if (!strcmp(name, "stop_confirm")) stop_confirm();
     else if (!strcmp(name, "range_confirm")) request_confirm(false);
     else if (!strcmp(name, "frequency_confirm")) request_confirm(true);
+    else if (!strcmp(name, "power_confirm")) power_confirm();
+    else if (!strcmp(name, "power_cancel")) power_cancel();
+    else if (!strcmp(name, "power_bounds")) power_bounds();
     else if (!strcmp(name, "stop_navigation_right")) stop_navigation(PANEL_KEY_RIGHT);
     else if (!strcmp(name, "stop_navigation_left")) stop_navigation(PANEL_KEY_LEFT);
     else if (!strncmp(name, "permission_", 11)) revoke_permission(name + 11);

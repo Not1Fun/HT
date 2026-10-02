@@ -4,6 +4,16 @@
 
 #include <errno.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/kernel.h>
+
+#if defined(CONFIG_HT_OUTPUT)
+static K_MUTEX_DEFINE(lock);
+static void enter(void) { k_mutex_lock(&lock, K_FOREVER); }
+static void leave(void) { k_mutex_unlock(&lock); }
+#else
+static void enter(void) { }
+static void leave(void) { }
+#endif
 
 static const struct i2c_dt_spec bus = I2C_DT_SPEC_GET(DT_NODELABEL(relay_io));
 
@@ -28,7 +38,7 @@ static struct tca9539 relay = {
 	.write_reg = write_reg,
 };
 
-int relay_io_init(void)
+static int reset_output(void)
 {
 	relay.ready = false;
 	if (!i2c_is_ready_dt(&bus)) {
@@ -37,20 +47,50 @@ int relay_io_init(void)
 	return tca9539_init(&relay);
 }
 
+int relay_io_init(void)
+{
+	enter();
+	int rc = reset_output();
+	leave();
+	return rc;
+}
+
 int relay_io_check(void)
 {
+#if defined(CONFIG_HT_OUTPUT)
+	enter();
+	int rc = tca9539_verify_output(&relay);
+	leave();
+	return rc;
+#else
 	return tca9539_verify_off(&relay);
+#endif
 }
 
 int relay_io_read_panel(uint8_t *state)
 {
-	return tca9539_read_panel(&relay, state);
+	enter();
+	int rc = tca9539_read_panel(&relay, state);
+	leave();
+	return rc;
 }
+
+#if defined(CONFIG_HT_OUTPUT)
+int relay_io_select(uint8_t output)
+{
+	enter();
+	int rc = tca9539_set_output(&relay, output);
+	leave();
+	return rc;
+}
+#endif
 
 int relay_io_stop(void)
 {
-	int rc = relay_io_init();
+	enter();
+	int rc = reset_output();
 
 	relay.ready = false;
+	leave();
 	return rc;
 }

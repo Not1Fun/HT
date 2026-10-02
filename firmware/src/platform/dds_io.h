@@ -26,6 +26,10 @@ struct dds_snapshot {
 int dds_io_init(void);
 int dds_io_configure(uint32_t frequency_hz, uint16_t amplitude);
 int dds_io_start(void);
+#if defined(CONFIG_HT_OUTPUT)
+/* 只更新DMA已释放半区；完成两半区后才发布实际幅度。 */
+int dds_io_set_amplitude(uint16_t amplitude);
+#endif
 /* 正常停机保留已启用DAC的2048中点；返回成功不等于模拟输出已稳定。 */
 int dds_io_stop(void);
 int dds_io_check(void);

@@ -1,0 +1,18 @@
+/* @brief 屏幕只提交整机启停请求；后台负责继电器、测量与恒VA控制。 */
+#ifndef HT_OUTPUT_H
+#define HT_OUTPUT_H
+#include "platform/signal_io.h"
+struct output_snapshot {
+    bool ready, available, running, switching, fault;
+    int error;
+    uint8_t range;
+    uint32_t frequency, elapsed_seconds, target_mva;
+    struct signal_snapshot signal;
+};
+int output_init(void);
+void output_inputs(uint8_t raw, bool connected, bool io_ok);
+int output_start(uint8_t range, uint32_t frequency, uint32_t target_mva);
+void output_stop(void);
+void output_snapshot(struct output_snapshot *value);
+void output_shutdown(void);
+#endif

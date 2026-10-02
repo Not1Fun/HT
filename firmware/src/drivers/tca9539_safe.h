@@ -21,11 +21,15 @@ struct tca9539 {
     int (*read_reg)(void *ctx, uint8_t addr, uint8_t reg, uint8_t *value);
     int (*write_reg)(void *ctx, uint8_t addr, uint8_t reg, uint8_t value);
     bool ready; /* 仅驱动修改；任何失败后必须重新 init。 */
+    uint8_t output;
 };
 
 int tca9539_init(struct tca9539 *dev);
 /* 检查输出锁存器和方向寄存器，不代表继电器触点已断开。 */
 int tca9539_verify_off(struct tca9539 *dev);
+int tca9539_verify_output(struct tca9539 *dev);
+/* 仅切档状态机调用：抽头至多一位，禁止跨抽头或带抽头切变压器。 */
+int tca9539_set_output(struct tca9539 *dev, uint8_t output);
 /* 返回 Port1 原始电平；失败不修改调用者的 value。 */
 int tca9539_read_panel(struct tca9539 *dev, uint8_t *value);
 

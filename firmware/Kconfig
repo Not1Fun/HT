@@ -20,7 +20,7 @@ config HT_SCREEN_BRINGUP
 
 config HT_SCREEN_TEMPERATURE
 	bool "Sample three NTC channels during panel bring-up"
-	depends on HT_SCREEN_PANEL
+	depends on HT_SCREEN_PANEL && !HT_OUTPUT
 	help
 	  Requires powered AVDD and the board's 22 kohm NTC pull-ups.
 	  Owns ADC1 exclusively; the measurement acquisition path stays disabled.
@@ -32,5 +32,12 @@ config HT_DDS_BENCH
 	  Requires the amplifier to be disconnected or unpowered. Explicit panel
 	  or serial requests produce at most 100 mVpp for 60 seconds, with relays off.
 	  No automatic start, output current control, or measurement acquisition.
+
+config HT_OUTPUT
+	bool "Complete VA-controlled output from the front panel"
+	depends on HT_SCREEN_PANEL
+	help
+	  Owns ADC12, DAC1, TIM6 and relay sequencing; requires the sensor board,
+	  power supply and physical safety interlocks. Never starts automatically.
 
 source "Kconfig.zephyr"

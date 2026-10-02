@@ -11,7 +11,7 @@ static void reset(void)
     memset(handlers, 0, sizeof(handlers)); memset(irq_enabled, 0, sizeof(irq_enabled));
     owned = configured = running = false; fault = DDS_FAULT_NONE;
     frequency = amplitude = timer_arr = 0; lock = 0; primask = 0;
-    settle = dac_ready = vref_ready = true; dma_stuck = false; wait_hook = NULL;
+    settle = dac_ready = vref_ready = true; dma_stuck = false; wait_hook = barrier_hook = NULL;
     SystemCoreClock = 170000000u; ahb_prescaler = apb_prescaler = pin_pull = 0;
     pin_mode = LL_GPIO_MODE_ANALOG; vref_scale = LL_VREFBUF_VOLTAGE_SCALE2;
     vref.CSR = VREFBUF_CSR_ENVR;
@@ -260,6 +260,51 @@ static void adc_unchanged(void)
     assert(vref.CSR == VREFBUF_CSR_ENVR && vref_scale == LL_VREFBUF_VOLTAGE_SCALE2);
 }
 
+#if defined(CONFIG_HT_OUTPUT)
+static void dynamic_amplitude(void)
+{
+    assert(dds_io_set_amplitude(1) == -EACCES);
+    assert(dds_io_init() == 0 && dds_io_configure(2000, 0) == 0 && dds_io_start() == 0);
+    assert(dds_io_set_amplitude(2048) == -EINVAL);
+    assert(dds_io_set_amplitude(500) == 0 && snapshot().amplitude == 0);
+    channel.CNDTR = 840; hw_dma.ISR = 4;
+    handlers[DMA1_Channel1_IRQn](NULL);
+    assert(snapshot().running && snapshot().amplitude == 0);
+    for (size_t i = 850; i < 1700; ++i) assert(samples[i] == DDS_MIDPOINT);
+    uint16_t expected[850]; assert(dds_wave(expected, 850, 500) == 0);
+    assert(memcmp(samples, expected, sizeof(expected)) == 0);
+    channel.CNDTR = 1690; hw_dma.ISR = 2;
+    handlers[DMA1_Channel1_IRQn](NULL);
+    assert(snapshot().amplitude == 500 && memcmp(samples + 850, expected, sizeof(expected)) == 0);
+    assert(dds_io_set_amplitude(0) == 0);
+    channel.CNDTR = 840; hw_dma.ISR = 4; handlers[0](NULL);
+    channel.CNDTR = 1690; hw_dma.ISR = 2; handlers[0](NULL);
+    assert(snapshot().amplitude == 0);
+    for (size_t i = 0; i < 1700; ++i) assert(samples[i] == DDS_MIDPOINT);
+    assert(dds_io_stop() == 0 && !(channel.CCR & (DMA_CCR_HTIE | DMA_CCR_TCIE)));
+    assert(dds_io_set_amplitude(100) == -EACCES);
+}
+
+static void cross_half(void) { channel.CNDTR = 1600; hw_dma.ISR |= 2; }
+static void dynamic_deadline(void)
+{
+    start(); hw_dma.ISR = 6; handlers[0](NULL); assert_latched(DDS_FAULT_DMA);
+    reset(); start(); hw_dma.ISR = 4; channel.CNDTR = 1600;
+    handlers[0](NULL); assert_latched(DDS_FAULT_DMA);
+    reset(); start(); assert(dds_io_set_amplitude(100) == 0);
+    hw_dma.ISR = 4; channel.CNDTR = 800; barrier_hook = cross_half;
+    handlers[0](NULL); assert_latched(DDS_FAULT_DMA);
+}
+
+static void dynamic_fault(void)
+{
+    start(); assert(dds_io_set_amplitude(100) == 0);
+    hw_dma.ISR = 4; channel.CNDTR = 800; barrier_hook = dds_io_fault_stop;
+    handlers[0](NULL); assert_latched(DDS_FAULT_EXTERNAL);
+    assert(dds_io_set_amplitude(200) == -EIO);
+}
+#endif
+
 int main(int argc, char **argv)
 {
     assert(argc == 2); reset();
@@ -268,5 +313,8 @@ int main(int argc, char **argv)
     RUN(start_stop) RUN(frequency_restart) RUN(dma_fault) RUN(dac_fault)
     RUN(startup_error) RUN(stop_timeout) RUN(resource_loss) RUN(clock_loss)
     RUN(external_fault) RUN(startup_cancel) RUN(adc_unchanged)
+#if defined(CONFIG_HT_OUTPUT)
+    RUN(dynamic_amplitude) RUN(dynamic_deadline) RUN(dynamic_fault)
+#endif
     assert(!"unknown test"); return 1;
 }

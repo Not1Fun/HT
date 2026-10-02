@@ -29,7 +29,8 @@ enum panel_page {
 enum panel_field {
     PANEL_RANGE = 0,
     PANEL_FREQUENCY = 1,
-    PANEL_OUTPUT = 2
+    PANEL_POWER = 2,
+    PANEL_OUTPUT = 3
 };
 
 /* 与 TCA9539 Port1 的 bit0..5 对应；bit6/7 为独立使能和门监视。 */
@@ -47,7 +48,8 @@ enum panel_action {
     PANEL_ACTION_RANGE = 1,
     PANEL_ACTION_FREQUENCY = 2,
     PANEL_ACTION_OUTPUT_START = 3,
-    PANEL_ACTION_OUTPUT_STOP = 4
+    PANEL_ACTION_OUTPUT_STOP = 4,
+    PANEL_ACTION_POWER = 5
 };
 
 enum panel_request {
@@ -87,7 +89,7 @@ int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
  * LEFT/RIGHT 按状态、设置、日志三页循环；离开设置时丢弃草稿。
- * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择三项（到头停）。
+ * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择四项（到头停）。
  * 设置页 OK/ENCODER 提交请求并留页，确认阻抗同时置手动量程。
  * 日志页其余键不修改模型，由应用层处理浏览。
  */

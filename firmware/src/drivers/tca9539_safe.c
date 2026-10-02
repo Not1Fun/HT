@@ -1,4 +1,4 @@
-/* @brief 只允许清零继电器输出，失败即撤销就绪状态。 */
+/* @brief 校验继电器寄存器和单抽头互斥，失败即撤销就绪状态。 */
 #include "tca9539_safe.h"
 
 #include <stddef.h>
@@ -82,6 +82,7 @@ int tca9539_init(struct tca9539 *dev)
             return result;
         }
     }
+    dev->output = 0;
     dev->ready = true;
     return TCA9539_OK;
 }
@@ -120,4 +121,34 @@ int tca9539_read_panel(struct tca9539 *dev, uint8_t *value)
     }
     *value = input;
     return TCA9539_OK;
+}
+
+int tca9539_verify_output(struct tca9539 *dev)
+{
+    int rc = check_ready(dev);
+    if (rc == 0) rc = read_expected(dev, OUTPUT0, dev->output);
+    if (rc == 0) rc = read_expected(dev, CONFIG0, 0);
+    if (rc == 0) rc = read_expected(dev, CONFIG1, 0xff);
+    if (rc == 0) rc = read_expected(dev, POLARITY1, 0);
+    return rc;
+}
+
+int tca9539_set_output(struct tca9539 *dev, uint8_t output)
+{
+    int rc = check_ready(dev);
+    if (rc != 0) return rc;
+    uint8_t taps = output & 0xfeu;
+    uint8_t previous = dev->output & 0xfeu;
+    if ((taps & (taps - 1u)) != 0 ||
+        (previous && taps && previous != taps) ||
+        (output != 0 && (previous || taps) && ((output ^ dev->output) & 1u))) {
+        return fail(dev, TCA9539_ERR_ARG);
+    }
+    rc = tca9539_verify_output(dev);
+    if (rc != 0) return rc;
+    if (dev->write_reg(dev->ctx, dev->addr, OUTPUT0, output) != 0)
+        return fail(dev, TCA9539_ERR_IO);
+    rc = read_expected(dev, OUTPUT0, output);
+    if (rc == 0) dev->output = output;
+    return rc;
 }

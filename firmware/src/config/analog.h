@@ -16,4 +16,7 @@
 #define HT_NTC_PULLUP_MV    3300U /* 3V3_AVDD标称值；须实测/标定，不能由VREFINT替代。 */
 #define HT_VREF_MV          2900U
 
+/* 首版输出保护阈值，待实机按探头安装位置核对。 */
+#define HT_OUTPUT_TEMP_LIMIT_DC 800
+
 #endif
