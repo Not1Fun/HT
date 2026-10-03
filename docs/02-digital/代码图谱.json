@@ -309,7 +309,7 @@
       "path": "firmware/src/platform/signal_io.c",
       "module": "platform",
       "brief": "双ADC同触发DMA采集；暂停规则组后读取NTC，恢复后丢弃首半区。",
-      "sha256": "e07b7bd7826a3b6959b2d73d61d4647a60163c4ec24dfa669e53f97bee202d20",
+      "sha256": "89dd0b2f1cd92bd3fe82b49241d672941853ba9da5b176609e62b9aeaaad9e1b",
       "includes": [
         "platform/signal_io.h",
         "platform/dds_io.h",
@@ -7518,7 +7518,19 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:60:resources_ready",
+      "name": "__LL_ADC_CHANNEL_TO_DECIMAL_NB",
+      "line": 66,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/signal_io.c:60:resources_ready",
       "name": "LL_ADC_REG_GetSequencerRanks",
+      "line": 67,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/signal_io.c:60:resources_ready",
+      "name": "__LL_ADC_CHANNEL_TO_DECIMAL_NB",
       "line": 67,
       "kind": "external_or_unknown"
     },

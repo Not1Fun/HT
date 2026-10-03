@@ -63,8 +63,8 @@ static bool resources_ready(void)
     if (ADC1->CFGR != adc_config[0] || ADC2->CFGR != adc_config[1] ||
         ADC12_COMMON->CCR != common_config || ADC1->DIFSEL != BIT(6) || ADC2->DIFSEL != BIT(3) ||
         !(ADC1->CR & ADC_CR_ADEN) || !(ADC2->CR & ADC_CR_ADEN) ||
-        LL_ADC_REG_GetSequencerRanks(ADC1, LL_ADC_REG_RANK_1) != LL_ADC_CHANNEL_6 ||
-        LL_ADC_REG_GetSequencerRanks(ADC2, LL_ADC_REG_RANK_1) != LL_ADC_CHANNEL_3 ||
+        __LL_ADC_CHANNEL_TO_DECIMAL_NB(LL_ADC_REG_GetSequencerRanks(ADC1, LL_ADC_REG_RANK_1)) != 6 ||
+        __LL_ADC_CHANNEL_TO_DECIMAL_NB(LL_ADC_REG_GetSequencerRanks(ADC2, LL_ADC_REG_RANK_1)) != 3 ||
         DMA1_Channel2->CPAR != (uint32_t)(uintptr_t)&ADC12_COMMON->CDR ||
         DMA1_Channel2->CMAR != (uint32_t)(uintptr_t)buffer ||
         DMAMUX1_Channel1->CCR != LL_DMAMUX_REQ_ADC1) return false;
