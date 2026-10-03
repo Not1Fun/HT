@@ -4,28 +4,35 @@
 #include <string.h>
 static uint32_t digital = BIT(BOARD_SENSOR)|BIT(BOARD_COIL)|BIT(BOARD_DC)|BIT(BOARD_AC);
 static struct signal_snapshot measured;
-static bool signal_failed, signal_active, relay_failure, fault_during_select, cancelled_select;
+static bool signal_failed, signal_active, sampling, relay_failure, fault_during_select, cancelled_select;
+static bool sample_invalid;
 static uint8_t stop_at;
 static int observed_stops;
-static int signal_error, starts;
+static int signal_error, board_error, starts;
+static int sample_delay;
+static int64_t sample_age, reading_after;
 static uint8_t relay_value;
 static uint16_t amplitude;
-int board_io_read(uint32_t *value) {*value=digital;return 0;}
-int signal_io_init(void) {return 0;}
-int signal_io_stop(void) {signal_active=false;amplitude=0;return 0;}
+int board_io_read(uint32_t *value) {if(board_error)return -EIO;*value=digital;return 0;}
+int signal_io_init(void) {sampling=true;return 0;}
+int signal_io_stop(void) {signal_active=false;sampling=!signal_failed;amplitude=0;return 0;}
 void signal_io_fault(void) {signal_failed=true;(void)signal_io_stop();}
 bool signal_io_failed(void) {return signal_failed;}
-int signal_io_start(uint32_t hz) {assert(hz==2000);if(signal_failed)return -EIO;starts++;signal_active=true;return 0;}
+int signal_io_start(uint32_t hz) {
+    assert(hz==2000);if(signal_failed)return -EIO;
+    starts++;signal_active=true;reading_after=clock_time+sample_delay;return 0;
+}
 int signal_io_poll(struct signal_snapshot *s) {
+    if(signal_error || signal_failed)return -EIO;
     static const uint32_t nominal[]={7070,12250,22360,38730,70700,122500,223600};
     uint32_t mv=nominal[control.range]*amplitude/2047;
     measured.reading.voltage_mv=mv;measured.reading.current_ma=mv/30;
     measured.reading.apparent_mva=(uint32_t)((uint64_t)mv*(mv/30)/1000);
-    measured.reading.time_ms=clock_time;
+    measured.reading.time_ms=clock_time-sample_age;
     if(clock_time%50==0 || !measured.reading.sequence)measured.reading.sequence++;
-    measured.reading.valid=signal_active;
+    measured.reading.valid=sampling && !sample_invalid && clock_time>=reading_after;
     measured.temperature_ms=clock_time;*s=measured;
-    return signal_error || signal_failed ? -EIO:0;
+    return 0;
 }
 int dds_io_set_amplitude(uint16_t value) {if(signal_failed)return -EIO;amplitude=value;return 0;}
 int relay_io_select(uint8_t value) {
@@ -69,6 +76,47 @@ static void stale_ui(void) {
 static void sample_fault(void) {
     setup();start_output();signal_error=1;advance(1);
     assert(published.fault && !signal_active && amplitude==0 && relay_value==0 && published.range==POWER_RANGE_AUTO);
+    assert(!published.signal.reading.valid);
+}
+static void standby_sampling(void) {
+    setup();advance(100);
+    assert(sampling && !signal_active && !published.running && starts==0 && relay_value==0);
+    assert(published.signal.reading.valid && published.signal.reading.sequence>1);
+}
+static void standby_board_fault(void) {
+    setup();advance(100);assert(published.signal.reading.valid);
+    board_error=1;advance(1);
+    assert(published.fault && !published.signal.reading.valid && !signal_active && relay_value==0);
+}
+static void init_failure(void) {
+    watchdog_error=-EIO;
+    assert(output_init()==-EIO);
+    assert(signal_failed && !sampling && !signal_active && !published.ready && published.fault);
+    assert(published.error==-EIO && wake==0);
+}
+static void sample_permission(void) {
+    setup();sample_invalid=true;advance(100);
+    assert(!published.available && !published.fault && sampling && !signal_active && relay_value==0);
+    assert(output_start(2000,1000)==-EACCES && published.signal.temperature_ms>0);
+    sample_invalid=false;sample_age=150;advance(1);
+    assert(!published.available && output_start(2000,1000)==-EACCES);
+    sample_age=-1;advance(1);
+    assert(!published.available && output_start(2000,1000)==-EACCES);
+    sample_age=149;advance(1);assert(published.available);
+    sample_age=0;advance(1);assert(published.available && starts==0 && relay_value==0);
+}
+static void pending_sample_invalid(void) {
+    setup();assert(output_start(2000,1000)==0);
+    sample_invalid=true;advance(1);
+    assert(control.state==POWER_IDLE && !published.fault && !published.available);
+    assert(starts==0 && relay_value==0 && !request.pending);
+    sample_invalid=false;advance(100);
+    assert(published.available && control.state==POWER_IDLE && starts==0);
+}
+static void first_window_grace(void) {
+    setup();sample_delay=60;
+    start_output();
+    assert(!published.fault && published.running && published.signal.reading.valid);
 }
 static void protection_race(void) {
     setup();fault_during_select=true;assert(output_start(2000,1000)==0);advance(200);
@@ -105,6 +153,8 @@ int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
     RUN(stop_priority) RUN(interlocks) RUN(stale_ui) RUN(sample_fault)
+    RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)
+    RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)
     RUN(protection_race) RUN(stop_in_flight) RUN(relay_fault) RUN(shutdown_output)
     return 1;
 }

@@ -196,7 +196,7 @@ static void test_auto_range(void)
     refresh(&v,&c,&s,DGUS_CRC_NONE);
     CHECK(c.frames[0].words[0]==VIEW_SWITCHING);
     text_is(&c,VIEW_RANGE,"1000"); text_is(&c,VIEW_FREQUENCY,"2");
-    text_is(&c,VIEW_CURRENT,"--"); text_is(&c,VIEW_VOLTAGE,"--");
+    text_is(&c,VIEW_CURRENT,"2.240"); text_is(&c,VIEW_VOLTAGE,"22.360");
     text_is(&c,VIEW_FREQUENCY_CHOICE,"10"); text_is(&c,VIEW_POWER_CHOICE,"5");
     for(size_t i=0;i<c.count;++i) CHECK(c.frames[i].vp!=0x1150);
     s.state=VIEW_RUNNING; s.values[VIEW_RANGE].value=30;
@@ -329,8 +329,8 @@ static void test_invalid_readings(void)
     for(int state=VIEW_STANDBY;state<=VIEW_OFFLINE;++state) {
         s.state=(enum view_state)state;
         refresh(&v,&c,&s,DGUS_CRC_NONE);
-        text_is(&c,VIEW_CURRENT,state>=VIEW_SWITCHING?"--":"2.240");
-        text_is(&c,VIEW_VOLTAGE,state>=VIEW_SWITCHING?"--":"22.360");
+        text_is(&c,VIEW_CURRENT,state>=VIEW_FAULT?"--":"2.240");
+        text_is(&c,VIEW_VOLTAGE,state>=VIEW_FAULT?"--":"22.360");
         text_is(&c,VIEW_ELAPSED,state==VIEW_OFFLINE?"--":"01:02:03");
         CHECK(c.frames[0].words[1]==(state==VIEW_OFFLINE?VIEW_POWER_UNKNOWN:VIEW_POWER_NORMAL));
     }

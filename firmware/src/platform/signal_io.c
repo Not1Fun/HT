@@ -1,4 +1,4 @@
-/* @brief 双ADC同触发DMA采集；暂停规则组后读取NTC，恢复后丢弃首半区。 */
+/* @brief 双ADC持续采集，待机仅开采样时钟；NTC维护后丢弃首半区。 */
 #include "platform/signal_io.h"
 #include "platform/dds_io.h"
 #include "platform/board_io.h"
@@ -14,18 +14,22 @@
 #include <stm32_ll_system.h>
 #include <zephyr/irq.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/atomic.h>
 #include <zephyr/sys/util.h>
 
 #define HALF 850u
+#define IDLE_FREQUENCY 2000u
 #define ADC_DMA (DMA_CCR_CIRC | DMA_CCR_MINC | DMA_CCR_PSIZE_1 | DMA_CCR_MSIZE_1 | DMA_CCR_PL_1)
 struct block { uint32_t number; uint32_t samples[HALF]; };
-K_MSGQ_DEFINE(blocks, sizeof(struct block), 3, 4);
+K_MSGQ_DEFINE(blocks, sizeof(uint8_t), 3, 4);
 static uint32_t buffer[HALF * 2] __aligned(4);
-static struct block delivery, consumed;
+/* 三块排队，一块供线程处理；队列临界区只复制槽号。 */
+static struct block pool[4];
+static atomic_t busy;
 static struct rms accumulator;
 static struct signal_snapshot value;
 static bool ready, discard;
-static volatile bool active;
+static volatile bool active, output;
 static volatile bool failed;
 static uint32_t number, expected, windows;
 static int64_t next_temperature;
@@ -47,6 +51,7 @@ static int wait_bits(volatile const uint32_t *reg, uint32_t bits, uint32_t want)
 void signal_io_fault(void)
 {
     failed = true;
+    active = output = false;
     dds_io_fault_stop();
     if (ready) {
         ADC1->IER = 0;
@@ -91,13 +96,19 @@ static void dma_interrupt(const void *ctx)
     if (half) LL_DMA_ClearFlag_HT2(DMA1); else LL_DMA_ClearFlag_TC2(DMA1);
     uint32_t remaining = DMA1_Channel2->CNDTR;
     if (remaining == 0 || (half ? remaining > HALF : remaining <= HALF)) { signal_io_fault(); return; }
-    delivery.number = ++number;
-    memcpy(delivery.samples, buffer + (half ? 0 : HALF), sizeof(delivery.samples));
+    uint8_t slot = number % ARRAY_SIZE(pool);
+    if (atomic_test_and_set_bit(&busy, slot)) { signal_io_fault(); return; }
+    struct block *item = &pool[slot];
+    item->number = ++number;
+    memcpy(item->samples, buffer + (half ? 0 : HALF), sizeof(item->samples));
     __DMB();
     remaining = DMA1_Channel2->CNDTR;
-    if (remaining == 0 || (half ? remaining > HALF : remaining <= HALF) ||
+    if (failed || remaining == 0 || (half ? remaining > HALF : remaining <= HALF) ||
         LL_DMA_IsActiveFlag_HT2(DMA1) || LL_DMA_IsActiveFlag_TC2(DMA1) ||
-        k_msgq_put(&blocks, &delivery, K_NO_WAIT) != 0) signal_io_fault();
+        k_msgq_put(&blocks, &slot, K_NO_WAIT) != 0) {
+        atomic_clear_bit(&busy, slot);
+        signal_io_fault();
+    }
 }
 
 static void adc_interrupt(const void *ctx)
@@ -118,6 +129,7 @@ static int pause_adc(void)
     if (rc == 0) rc = wait_bits(&DMA1_Channel2->CCR, DMA_CCR_EN, 0);
     DMA1->IFCR = DMA_IFCR_CGIF2;
     k_msgq_purge(&blocks);
+    atomic_clear(&busy);
     rms_reset(&accumulator);
     expected = number;
     discard = true;
@@ -144,6 +156,27 @@ static int arm_adc(void)
     return failed ? -EIO : 0;
 }
 
+static int stop(void)
+{
+    int rc = dds_io_stop();
+    if (ready) {
+        int next = pause_adc();
+        if (rc == 0) rc = next;
+    }
+    active = output = false;
+    value.reading.valid = false;
+    return rc;
+}
+
+static int sample(void)
+{
+    active = true;
+    int rc = arm_adc();
+    if (rc == 0) rc = dds_io_sample_start(IDLE_FREQUENCY);
+    if (rc != 0) signal_io_fault();
+    return rc;
+}
+
 static int configure_adc(ADC_TypeDef *adc, uint32_t channel)
 {
     LL_ADC_DisableDeepPowerDown(adc);
@@ -156,6 +189,8 @@ static int configure_adc(ADC_TypeDef *adc, uint32_t channel)
     LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
     LL_ADC_REG_SetSequencerRanks(adc, LL_ADC_REG_RANK_1, channel);
     LL_ADC_REG_SetContinuousMode(adc, LL_ADC_REG_CONV_SINGLE);
+    /* ES0430 2.7.6：双ADC共用DMA时关闭DR FIFO，保留OVR中断报错。 */
+    LL_ADC_REG_SetOverrun(adc, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
     LL_ADC_StartCalibration(adc, LL_ADC_SINGLE_ENDED);
     int rc = wait_bits(&adc->CR, ADC_CR_ADCAL, 0);
     if (rc == 0) {
@@ -214,32 +249,32 @@ int signal_io_init(void)
     irq_enable(ADC1_2_IRQn);
     ready = true;
     if (!resources_ready()) { signal_io_fault(); return -EIO; }
-    return 0;
+    rc = pause_adc();
+    if (rc == 0) rc = sample();
+    if (rc != 0) signal_io_fault();
+    return rc;
 }
 
 int signal_io_start(uint32_t frequency)
 {
-    if (!ready || failed || active) return -EACCES;
-    int rc = dds_io_configure(frequency, 0);
-    if (rc == 0) rc = pause_adc();
-    if (rc != 0) return rc;
-    value.reading.valid = false;
+    if (!ready || failed || output) return -EACCES;
+    int rc = stop();
+    if (rc == 0) rc = dds_io_configure(frequency, 0);
+    if (rc != 0) { signal_io_fault(); return rc; }
     active = true;
     rc = arm_adc();
     if (rc == 0) rc = dds_io_start();
     if (rc != 0) { signal_io_fault(); return rc; }
+    output = true;
+    if (failed) { output = false; return -EIO; }
     return 0;
 }
 
 int signal_io_stop(void)
 {
-    int rc = dds_io_stop();
-    if (ready) {
-        int next = pause_adc();
-        if (rc == 0) rc = next;
-    }
-    active = false;
-    value.reading.valid = false;
+    int rc = stop();
+    if (rc != 0) signal_io_fault();
+    if (rc == 0 && ready && !failed) rc = sample();
     return rc;
 }
 
@@ -276,15 +311,25 @@ int signal_io_poll(struct signal_snapshot *out)
 {
     if (!out || !ready || failed) return -EIO;
     if (dds_io_check() != 0 || !resources_ready()) { signal_io_fault(); return -EIO; }
-    for (unsigned int n = 0; n < 3 && k_msgq_get(&blocks, &consumed, K_NO_WAIT) == 0; ++n) {
-        if (consumed.number != ++expected) { signal_io_fault(); return -EIO; }
-        if (discard) { discard = false; continue; }
-        if (rms_add(&accumulator, consumed.samples, HALF) != 0) { signal_io_fault(); return -ERANGE; }
-        if (accumulator.count == 8500) {
-            if (rms_result(&accumulator, &value.reading) != 0) { signal_io_fault(); return -ERANGE; }
-            value.reading.sequence = ++windows;
-            value.reading.time_ms = k_uptime_get();
+    uint8_t slot;
+    for (unsigned int n = 0; n < 3 && k_msgq_get(&blocks, &slot, K_NO_WAIT) == 0; ++n) {
+        if (slot >= ARRAY_SIZE(pool) || !atomic_test_bit(&busy, slot) ||
+            pool[slot].number != ++expected) { signal_io_fault(); return -EIO; }
+        if (discard) { discard = false; atomic_clear_bit(&busy, slot); continue; }
+        int rc = rms_add(&accumulator, pool[slot].samples, HALF);
+        atomic_clear_bit(&busy, slot);
+        if (rc == 0 && accumulator.count == 8500) {
+            rc = rms_result(&accumulator, &value.reading);
+            if (rc == 0) {
+                value.reading.sequence = ++windows;
+                value.reading.time_ms = k_uptime_get();
+            }
             rms_reset(&accumulator);
+        }
+        if (rc != 0) {
+            value.reading.valid = false;
+            rms_reset(&accumulator);
+            if (output) { signal_io_fault(); return -ERANGE; }
         }
     }
     if (k_uptime_get() >= next_temperature) {

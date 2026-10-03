@@ -688,10 +688,11 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 	if (value.running) {
 		out->values[VIEW_FREQUENCY] = (struct view_value){value.frequency, true};
 		out->values[VIEW_ELAPSED] = (struct view_value){value.elapsed_seconds, true};
-		bool valid = value.signal.reading.valid && k_uptime_get() - value.signal.reading.time_ms < 150;
-		out->values[VIEW_CURRENT] = (struct view_value){value.signal.reading.current_ma, valid};
-		out->values[VIEW_VOLTAGE] = (struct view_value){value.signal.reading.voltage_mv, valid};
 	}
+	int64_t age = k_uptime_get() - value.signal.reading.time_ms;
+	bool valid = value.signal.reading.valid && age >= 0 && age < 150;
+	out->values[VIEW_CURRENT] = (struct view_value){value.signal.reading.current_ma, valid};
+	out->values[VIEW_VOLTAGE] = (struct view_value){value.signal.reading.voltage_mv, valid};
 	for (size_t i = 0; i < 3; ++i) out->values[VIEW_NTC1 + i] = (struct view_value){
 		value.signal.temperature.samples[i].decicelsius,
 		value.ready && k_uptime_get() - value.signal.temperature_ms < 1000 &&

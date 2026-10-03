@@ -46,6 +46,7 @@ static inline void irq_enable(int irq) { irq_enabled[irq] = true; }
 #define TIM_CR1_CEN 1u
 #define TIM_CR1_ARPE 0x80u
 #define TIM_EGR_UG 1u
+#define LL_TIM_TRGO_ENABLE 0x10u
 #define LL_TIM_TRGO_UPDATE 0x20u
 #define LL_DAC_TRIG_EXT_TIM6_TRGO 0x38u
 #define LL_DAC_HIGH_FREQ_MODE_ABOVE_160MHZ 0x8000u
@@ -91,8 +92,17 @@ static DMA_Channel_TypeDef *mock_channel(void)
     if (dma_stuck) { channel.CCR |= DMA_CCR_EN; }
     return &channel;
 }
+static unsigned int software_triggers;
+static TIM_TypeDef *mock_timer(void)
+{
+    if (hw_timer.EGR & TIM_EGR_UG) {
+        if (hw_timer.CR2 == 0 || hw_timer.CR2 == LL_TIM_TRGO_UPDATE) software_triggers++;
+        hw_timer.EGR = 0;
+    }
+    return &hw_timer;
+}
 #define DAC1 mock_dac()
-#define TIM6 (&hw_timer)
+#define TIM6 mock_timer()
 #define DMA1 (&hw_dma)
 #define DMA1_Channel1 mock_channel()
 #define DMAMUX1_Channel0 (&mux)

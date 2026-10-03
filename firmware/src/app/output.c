@@ -77,6 +77,7 @@ int output_init(void)
         rc = watchdog_channel < 0 ? watchdog_channel : wdt_setup(watchdog, WDT_OPT_PAUSE_HALTED_BY_DBG);
     }
     if (rc != 0) {
+        signal_io_fault();
         (void)signal_io_stop();
         published.fault = true;
         published.error = rc;
@@ -173,15 +174,22 @@ static void run(void *a, void *b, void *c)
             signal.temperature.samples[i].status == NTC_OK &&
             signal.temperature.samples[i].decicelsius < HT_OUTPUT_TEMP_LIMIT_DC;
         if (signal_io_failed()) rc = -EIO;
-        if (rc != 0) power_fail(&control, POWER_ERROR_SAMPLE);
+        if (rc != 0) {
+            signal.reading.valid = false;
+            power_fail(&control, POWER_ERROR_SAMPLE);
+        }
+        /* 仅限制启动准入，输出起始的首窗等待仍由POWER_ZERO管理。 */
+        bool sample_ready = signal.reading.valid && now >= signal.reading.time_ms &&
+            now - signal.reading.time_ms < 150;
         if (stop) power_stop(&control, now);
-        else if (start && permitted) (void)power_start(&control, POWER_RANGE_AUTO, frequency, target, now);
+        else if (start && permitted && sample_ready)
+            (void)power_start(&control, POWER_RANGE_AUTO, frequency, target, now);
         power_poll(&control, permitted, &signal.reading, k_uptime_get());
         uint8_t applied = POWER_RANGE_AUTO;
         if (control.state != POWER_FAULT)
             for (uint8_t i = 0; i < 7; ++i) if (control.output & BIT(i + 1)) applied = i;
         struct output_snapshot next = {
-            .ready = true, .available = permitted && control.state != POWER_FAULT,
+            .ready = true, .available = permitted && sample_ready && control.state != POWER_FAULT,
             .active = control.state != POWER_IDLE && control.state != POWER_FAULT &&
                       control.state != POWER_STOPPING && control.state != POWER_RELEASE,
             .matching = control.matching && control.state != POWER_IDLE && control.state != POWER_FAULT &&

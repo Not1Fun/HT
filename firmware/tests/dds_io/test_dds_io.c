@@ -9,7 +9,8 @@ static void reset(void)
     memset(&channel, 0, sizeof(channel)); memset(&hw_dma, 0, sizeof(hw_dma));
     memset(&rcc, 0, sizeof(rcc)); memset(&mux, 0, sizeof(mux));
     memset(handlers, 0, sizeof(handlers)); memset(irq_enabled, 0, sizeof(irq_enabled));
-    owned = configured = running = false; fault = DDS_FAULT_NONE;
+    owned = configured = running = sampling = false; fault = DDS_FAULT_NONE;
+    software_triggers = 0;
     frequency = amplitude = timer_arr = 0; lock = 0; primask = 0;
     settle = dac_ready = vref_ready = true; dma_stuck = false; wait_hook = barrier_hook = NULL;
     SystemCoreClock = 170000000u; ahb_prescaler = apb_prescaler = pin_pull = 0;
@@ -261,6 +262,86 @@ static void adc_unchanged(void)
 }
 
 #if defined(CONFIG_HT_OUTPUT)
+static void sample_only(void)
+{
+    const uint32_t hz[] = {2000, 5000, 8000, 10000};
+    assert(dds_io_sample_start(2000) == -EACCES);
+    assert(dds_io_init() == 0);
+    assert(dds_io_sample_start(2001) == -EINVAL && !sampling);
+    for (size_t i = 0; i < sizeof(hz) / sizeof(hz[0]); ++i) {
+        unsigned int before = software_triggers;
+        primask = 1;
+        assert(dds_io_sample_start(hz[i]) == 0 && primask == 1);
+        assert(sampling && !snapshot().running && snapshot().ready);
+        assert(software_triggers == before);
+        assert(hw_timer.CR1 == (TIM_CR1_ARPE | TIM_CR1_CEN));
+        assert(hw_timer.CR2 == LL_TIM_TRGO_UPDATE);
+        assert((hw_timer.ARR + 1u) * DDS_CYCLE_SAMPLES * hz[i] == SystemCoreClock);
+        assert(!(hw_dac.CR & (DAC_CR_EN1 | DAC_CR_TEN1 | DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1)));
+        assert(!(channel.CCR & (DMA_CCR_EN | DMA_IRQS)));
+        assert(dds_io_check() == 0);
+        assert(dds_io_sample_start(hz[i]) == -EBUSY);
+        assert(dds_io_configure(2000, 70) == -EBUSY && dds_io_start() == -EBUSY);
+        assert(dds_io_set_amplitude(70) == -EACCES);
+        assert(dds_io_stop() == 0 && !sampling && primask == 1);
+        assert_quiet(DDS_FAULT_NONE);
+        assert(dds_io_check() == 0);
+    }
+}
+
+static void sample_restart(void)
+{
+    start();
+    assert(dds_io_sample_start(5000) == -EBUSY && snapshot().running);
+    assert(dds_io_stop() == 0);
+    unsigned int before = software_triggers;
+    assert(dds_io_sample_start(5000) == 0);
+    assert(software_triggers == before && !snapshot().running && sampling);
+    assert((hw_dac.CR & DAC_CR_EN1) && hw_dac.DOR1 == DDS_MIDPOINT);
+    assert(!(hw_dac.CR & (DAC_CR_TEN1 | DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1)));
+    assert(!(channel.CCR & (DMA_CCR_EN | DMA_IRQS)));
+    assert(dds_io_check() == 0 && dds_io_stop() == 0);
+    assert(dds_io_start() == -EACCES);
+    assert(dds_io_configure(10000, 90) == 0 && dds_io_start() == 0);
+    assert(!sampling && snapshot().running && snapshot().frequency_hz == 10000);
+    assert((hw_timer.ARR + 1u) * DDS_CYCLE_SAMPLES * 10000u == SystemCoreClock);
+    assert(dds_io_check() == 0);
+}
+
+static void sample_fault(void)
+{
+    for (unsigned int i = 0; i < 3; ++i) {
+        reset(); assert(dds_io_init() == 0 && dds_io_sample_start(2000) == 0);
+        enum dds_fault expected;
+        if (i == 0) { dds_io_fault_stop(); expected = DDS_FAULT_EXTERNAL; }
+        else if (i == 1) { hw_dma.ISR |= 8; handlers[0](NULL); expected = DDS_FAULT_DMA; }
+        else { hw_dac.SR |= 0x2000u; handlers[1](NULL); expected = DDS_FAULT_DAC; }
+        assert(!sampling);
+        assert_latched(expected);
+        assert(dds_io_sample_start(2000) == -EIO);
+    }
+}
+
+static void sample_resource(void)
+{
+    for (unsigned int i = 0; i < 8; ++i) {
+        reset(); assert(dds_io_init() == 0 && dds_io_sample_start(2000) == 0);
+        switch (i) {
+        case 0: hw_dac.CR |= DAC_CR_TEN1; break;
+        case 1: hw_dac.CR |= DAC_CR_DMAEN1; break;
+        case 2: channel.CCR |= DMA_CCR_EN; break;
+        case 3: hw_timer.CR1 &= ~TIM_CR1_CEN; break;
+        case 4: hw_timer.CR2 = LL_TIM_TRGO_ENABLE; break;
+        case 5: hw_timer.ARR++; break;
+        case 6: vref_ready = false; break;
+        case 7: rcc.AHB1ENR &= ~LL_AHB1_GRP1_PERIPH_DMAMUX1; break;
+        }
+        assert(dds_io_check() == -EIO && !sampling);
+        assert_latched(DDS_FAULT_RESOURCE);
+        assert(dds_io_sample_start(2000) == -EIO);
+    }
+}
+
 static void dynamic_amplitude(void)
 {
     assert(dds_io_set_amplitude(1) == -EACCES);
@@ -315,6 +396,7 @@ int main(int argc, char **argv)
     RUN(external_fault) RUN(startup_cancel) RUN(adc_unchanged)
 #if defined(CONFIG_HT_OUTPUT)
     RUN(dynamic_amplitude) RUN(dynamic_deadline) RUN(dynamic_fault)
+    RUN(sample_only) RUN(sample_restart) RUN(sample_fault) RUN(sample_resource)
 #endif
     assert(!"unknown test"); return 1;
 }

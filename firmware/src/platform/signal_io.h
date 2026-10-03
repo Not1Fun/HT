@@ -8,8 +8,10 @@ struct signal_snapshot {
     struct temperature_snapshot temperature;
     int64_t temperature_ms;
 };
+/* 初始化后持续测量；待机仅启用TIM6采样触发。 */
 int signal_io_init(void);
 int signal_io_start(uint32_t frequency);
+/* 停止波形并恢复待机采样；故障锁存时不恢复。 */
 int signal_io_stop(void);
 int signal_io_poll(struct signal_snapshot *snapshot);
 /* 可从ISR调用，不执行I2C或等待，锁存至复位。 */

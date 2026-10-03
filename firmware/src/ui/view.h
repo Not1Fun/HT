@@ -39,7 +39,8 @@ struct view_value { int64_t value; bool valid; };
 
 /* 状态页挡位来自控制器已生效状态，不能用面板候选值冒充。
  * elapsed由运行状态拥有者提供，切页不计时、不重置。
- * fresh=false隐藏状态页数据并显示电池未知；故障/切档隐藏电流和电压。
+ * fresh=false隐藏状态页数据并显示电池未知；故障隐藏电流和电压。
+ * 待机和匹配期间可显示有效测量，不以输出运行状态替代测量有效性。
  * 设置页候选值只受各自valid控制，editing表示尚未确认的修改。
  */
 struct view_snapshot {

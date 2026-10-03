@@ -21,3 +21,16 @@ foreach(case IN ITEMS startup three_fields start_parameters stop_confirm frequen
     permission_temperature_stale display_error configure_failure false_running expiry)
   add_test(NAME screen_panel_${case} COMMAND screen_panel_tests ${case})
 endforeach()
+
+add_executable(screen_output_tests test_screen_output.c
+    ../../src/ui/panel.c ../../src/ui/encoder.c ../../src/ui/dgus.c
+    ../../src/ui/view.c ../../src/core/event_log.c)
+target_include_directories(screen_output_tests PRIVATE stubs ../../src)
+target_compile_definitions(screen_output_tests PRIVATE CONFIG_HT_OUTPUT=1)
+set_target_properties(screen_output_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(screen_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
+endif()
+foreach(case IN ITEMS standby measurement_age output_states)
+  add_test(NAME screen_output_${case} COMMAND screen_output_tests ${case})
+endforeach()

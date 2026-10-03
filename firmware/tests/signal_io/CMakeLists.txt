@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.20)
+if(DEFINED ENV{HOST_CC} AND NOT DEFINED CMAKE_C_COMPILER)
+  set(CMAKE_C_COMPILER "$ENV{HOST_CC}" CACHE FILEPATH "Host C compiler")
+endif()
+project(signal_io_tests LANGUAGES C)
+enable_testing()
+foreach(header IN ITEMS soc.h stm32_ll_adc.h stm32_ll_bus.h stm32_ll_dma.h
+    stm32_ll_gpio.h stm32_ll_system.h zephyr/irq.h zephyr/kernel.h zephyr/sys/atomic.h zephyr/sys/util.h)
+  file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/stubs/${header}" CONTENT "#include \"mock.h\"\n")
+endforeach()
+add_executable(signal_io_tests test_signal_io.c ../../src/core/rms.c ../../src/core/ntc.c)
+target_compile_definitions(signal_io_tests PRIVATE CONFIG_HT_OUTPUT=1)
+target_include_directories(signal_io_tests PRIVATE . ../../src "${CMAKE_CURRENT_BINARY_DIR}/stubs")
+set_target_properties(signal_io_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(signal_io_tests PRIVATE -Wall -Wextra -Werror -pedantic)
+  target_link_libraries(signal_io_tests PRIVATE m)
+endif()
+foreach(case IN ITEMS idle_reading output_transition temperature_resume sample_fault
+    stop_fault stale_window dma_fault start_fault resource_loss adc_overrun idle_invalid
+    block_ownership queue_overflow temperature_purge dma_copy_overlap copy_fault)
+  add_test(NAME signal_io_${case} COMMAND signal_io_tests ${case})
+endforeach()

@@ -127,8 +127,7 @@ static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
         bool valid = snapshot->values[field].valid &&
                      (setting || (snapshot->fresh && snapshot->state != VIEW_OFFLINE));
         int result;
-        if (field <= VIEW_VOLTAGE &&
-            (snapshot->state == VIEW_FAULT || snapshot->state == VIEW_SWITCHING)) {
+        if (field <= VIEW_VOLTAGE && snapshot->state == VIEW_FAULT) {
             valid = false;
         }
         format_value(text, (enum view_field)field, snapshot->values[field].value, valid);

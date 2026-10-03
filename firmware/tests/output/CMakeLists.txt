@@ -11,6 +11,8 @@ set_target_properties(output_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
-foreach(case IN ITEMS stop_priority interlocks stale_ui sample_fault protection_race stop_in_flight relay_fault shutdown_output)
+foreach(case IN ITEMS stop_priority interlocks stale_ui sample_fault standby_sampling standby_board_fault init_failure
+    sample_permission pending_sample_invalid first_window_grace
+    protection_race stop_in_flight relay_fault shutdown_output)
   add_test(NAME output_${case} COMMAND output_tests ${case})
 endforeach()

@@ -41,6 +41,7 @@ static K_MUTEX_DEFINE(lock);
 static bool owned;
 static bool configured;
 static volatile bool running;
+static volatile bool sampling;
 static volatile enum dds_fault fault;
 static uint32_t frequency;
 static volatile uint16_t amplitude;
@@ -69,6 +70,7 @@ static bool reference_ready(void)
 static bool quiet(void)
 {
 	running = false;
+	sampling = false;
 	if (!owned) {
 		return true;
 	}
@@ -189,6 +191,9 @@ static int check(void)
 		dma |= DMA_CCR_EN | DMA_IRQS;
 		timer |= TIM_CR1_CEN;
 	}
+	if (sampling) {
+		timer |= TIM_CR1_CEN;
+	}
 	if (!clocks_ready() || !reference_ready() ||
 	    LL_AHB2_GRP1_IsEnabledClock(LL_AHB2_GRP1_PERIPH_DAC3) ||
 	    DAC1->CR != dac || DAC1->MCR != LL_DAC_HIGH_FREQ_MODE_ABOVE_160MHZ ||
@@ -285,7 +290,7 @@ int dds_io_configure(uint32_t frequency_hz, uint16_t requested_amplitude)
 	}
 	k_mutex_lock(&lock, K_FOREVER);
 	rc = check();
-	if (rc == 0 && running) {
+	if (rc == 0 && (running || sampling)) {
 		rc = -EBUSY;
 	}
 	if (rc == 0) {
@@ -317,8 +322,8 @@ int dds_io_start(void)
 
 	k_mutex_lock(&lock, K_FOREVER);
 	rc = check();
-	if (rc == 0 && (!configured || running)) {
-		rc = running ? -EBUSY : -EACCES;
+	if (rc == 0 && (!configured || running || sampling)) {
+		rc = running || sampling ? -EBUSY : -EACCES;
 	}
 	if (rc != 0) {
 		goto done;
@@ -379,6 +384,36 @@ int dds_io_stop(void)
 }
 
 #if defined(CONFIG_HT_OUTPUT)
+int dds_io_sample_start(uint32_t frequency_hz)
+{
+	uint16_t arr;
+	if (dds_timer(frequency_hz, &arr) != 0) return -EINVAL;
+	k_mutex_lock(&lock, K_FOREVER);
+	int rc = check();
+	if (rc == 0 && (running || sampling)) rc = -EBUSY;
+	uint32_t key = __get_PRIMASK();
+	__disable_irq();
+	if (rc == 0 && fault == DDS_FAULT_NONE) {
+		configured = false;
+		/* RESET模式会将UG送到TRGO；CEN=0时用ENABLE模式屏蔽重装触发。 */
+		TIM6->CR2 = LL_TIM_TRGO_ENABLE;
+		timer_arr = arr;
+		TIM6->ARR = arr;
+		TIM6->CNT = 0;
+		TIM6->EGR = TIM_EGR_UG;
+		TIM6->SR = 0;
+		TIM6->CR2 = LL_TIM_TRGO_UPDATE;
+		sampling = true;
+		TIM6->CR1 |= TIM_CR1_CEN;
+	} else if (rc == 0) {
+		rc = -EIO;
+	}
+	__set_PRIMASK(key);
+	if (fault != DDS_FAULT_NONE) rc = -EIO;
+	k_mutex_unlock(&lock);
+	return rc;
+}
+
 int dds_io_set_amplitude(uint16_t next)
 {
 	if (next > DDS_AMPLITUDE_MAX) return -EINVAL;

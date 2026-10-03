@@ -28,7 +28,7 @@ struct wdt_timeout_cfg { struct { unsigned int min, max; } window; unsigned int 
 struct k_spinlock { bool locked; };
 typedef int k_spinlock_key_t;
 static int64_t clock_time;
-static int feeds, steps;
+static int feeds, steps, watchdog_error;
 static jmp_buf done;
 static void (*between_steps)(void);
 static inline int64_t k_uptime_get(void) { return clock_time; }
@@ -51,6 +51,6 @@ static inline int gpio_pin_configure_dt(const struct gpio_dt_spec *p,int flags) 
 static inline int gpio_pin_set_dt(const struct gpio_dt_spec *p,bool value) {(void)p;(void)value;return 0;}
 static inline int wdt_install_timeout(const struct device *d,const struct wdt_timeout_cfg *cfg)
     {(void)d;assert(cfg->window.max==1000);return 0;}
-static inline int wdt_setup(const struct device *d,int flags) {(void)d;(void)flags;return 0;}
+static inline int wdt_setup(const struct device *d,int flags) {(void)d;(void)flags;return watchdog_error;}
 static inline int wdt_feed(const struct device *d,int channel) {(void)d;(void)channel;feeds++;return 0;}
 #endif
