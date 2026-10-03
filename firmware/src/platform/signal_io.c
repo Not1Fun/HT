@@ -177,7 +177,7 @@ static int sample(void)
     return rc;
 }
 
-static int configure_adc(ADC_TypeDef *adc, uint32_t channel)
+static int configure_adc(ADC_TypeDef *adc, uint32_t channel, uint32_t negative)
 {
     LL_ADC_DisableDeepPowerDown(adc);
     LL_ADC_EnableInternalRegulator(adc);
@@ -186,6 +186,7 @@ static int configure_adc(ADC_TypeDef *adc, uint32_t channel)
     LL_ADC_SetDataAlignment(adc, LL_ADC_DATA_ALIGN_RIGHT);
     LL_ADC_SetChannelSingleDiff(adc, channel, LL_ADC_DIFFERENTIAL_ENDED);
     LL_ADC_SetChannelSamplingTime(adc, channel, LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(adc, negative, LL_ADC_SAMPLINGTIME_24CYCLES_5);
     LL_ADC_REG_SetSequencerLength(adc, LL_ADC_REG_SEQ_SCAN_DISABLE);
     LL_ADC_REG_SetSequencerRanks(adc, LL_ADC_REG_RANK_1, channel);
     LL_ADC_REG_SetContinuousMode(adc, LL_ADC_REG_CONV_SINGLE);
@@ -234,8 +235,8 @@ int signal_io_init(void)
     for (size_t i = 0; i < 3; ++i)
         LL_ADC_SetChannelSamplingTime(ADC1, channels[i], LL_ADC_SAMPLINGTIME_640CYCLES_5);
     ADC1->CFGR |= ADC_CFGR_JQDIS;
-    rc = configure_adc(ADC1, LL_ADC_CHANNEL_6);
-    if (rc == 0) rc = configure_adc(ADC2, LL_ADC_CHANNEL_3);
+    rc = configure_adc(ADC1, LL_ADC_CHANNEL_6, LL_ADC_CHANNEL_7);
+    if (rc == 0) rc = configure_adc(ADC2, LL_ADC_CHANNEL_3, LL_ADC_CHANNEL_4);
     if (rc != 0) { signal_io_fault(); return rc; }
     DMA1_Channel2->CCR = ADC_DMA;
     DMA1_Channel2->CPAR = (uint32_t)(uintptr_t)&ADC12_COMMON->CDR;

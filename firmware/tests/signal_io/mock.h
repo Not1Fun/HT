@@ -86,7 +86,9 @@ static inline void NVIC_ClearPendingIRQ(int n) { (void)n; }
 #define LL_ADC_CHANNEL_1 1u
 #define LL_ADC_CHANNEL_2 2u
 #define LL_ADC_CHANNEL_3 3u
+#define LL_ADC_CHANNEL_4 4u
 #define LL_ADC_CHANNEL_6 6u
+#define LL_ADC_CHANNEL_7 7u
 #define LL_ADC_CHANNEL_9 9u
 #define __LL_ADC_CHANNEL_TO_DECIMAL_NB(c) (c)
 #define LL_ADC_DELAY_INTERNAL_REGUL_STAB_US 20u
@@ -113,7 +115,7 @@ static inline void NVIC_ClearPendingIRQ(int n) { (void)n; }
 #define LL_GPIO_PULL_NO 0u
 #define GPIOA ((GPIO_TypeDef *)0)
 #define GPIOC ((GPIO_TypeDef *)1)
-typedef struct { uint32_t CR, CFGR, DIFSEL, IER, ISR, JSQR, channel; } ADC_TypeDef;
+typedef struct { uint32_t CR, CFGR, DIFSEL, IER, ISR, JSQR, channel, sampling[19]; } ADC_TypeDef;
 typedef int GPIO_TypeDef;
 static ADC_TypeDef adc[2];
 static struct { uint32_t CCR, CDR; } common;
@@ -156,7 +158,8 @@ static inline void LL_ADC_Enable(ADC_TypeDef *a) { a->CR |= ADC_CR_ADEN; a->ISR 
 static inline void LL_ADC_DisableDeepPowerDown(ADC_TypeDef *a) { (void)a; }
 static inline void LL_ADC_EnableInternalRegulator(ADC_TypeDef *a) { (void)a; }
 static inline void LL_ADC_StartCalibration(ADC_TypeDef *a, uint32_t m) { (void)a; (void)m; }
-static inline void LL_ADC_SetChannelSamplingTime(ADC_TypeDef *a, uint32_t c, uint32_t t) { (void)a; (void)c; (void)t; }
+static inline void LL_ADC_SetChannelSamplingTime(ADC_TypeDef *a, uint32_t c, uint32_t t)
+{ assert(c < ARRAY_SIZE(a->sampling)); a->sampling[c] = t; }
 static inline void LL_ADC_INJ_SetSequencerRanks(ADC_TypeDef *a, uint32_t n, uint32_t c) { (void)n; a->JSQR = c; }
 static inline void LL_ADC_INJ_StartConversion(ADC_TypeDef *a) { a->ISR |= ADC_ISR_JEOS; }
 static inline uint16_t LL_ADC_INJ_ReadConversionData12(ADC_TypeDef *a, uint32_t n) { (void)a; (void)n; return 1400; }

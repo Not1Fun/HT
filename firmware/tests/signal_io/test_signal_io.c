@@ -42,6 +42,13 @@ static void init(void)
     assert(sample_starts == 1 && wave_starts == 0 && !failed);
     assert((adc[0].CFGR & ADC_CFGR_OVRMOD) && (adc[1].CFGR & ADC_CFGR_OVRMOD));
     assert(adc[0].IER == ADC_IER_OVRIE && adc[1].IER == ADC_IER_OVRIE);
+    assert(adc[0].sampling[6] == LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    assert(adc[0].sampling[7] == LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    assert(adc[1].sampling[3] == LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    assert(adc[1].sampling[4] == LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    assert(adc[0].sampling[9] == LL_ADC_SAMPLINGTIME_640CYCLES_5);
+    assert(adc[0].sampling[2] == LL_ADC_SAMPLINGTIME_640CYCLES_5);
+    assert(adc[0].sampling[1] == LL_ADC_SAMPLINGTIME_640CYCLES_5);
     assert(signal_io_poll(&current) == 0);
     assert(!current.reading.valid);
 }
