@@ -73,7 +73,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=auto6"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=clean6"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }

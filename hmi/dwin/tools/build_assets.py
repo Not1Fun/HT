@@ -47,8 +47,6 @@ class Art:
 
 
 def header(art, page):
-    art.text((24, 18), "HT", 28, COLORS["accent"], True)
-    art.text((78, 25), "音频信号源", 18, COLORS["ink"])
     for index, title in enumerate(["状态", "设置", "日志"]):
         x = 300 + 102 * index
         selected = index == page
@@ -87,9 +85,6 @@ def status_page():
 def settings_page():
     art = Art(800, 480, COLORS["bg"])
     header(art, 1)
-    art.text((24, 88), "恒 VA 输出 · 目标大于 0，确认后开启", 18, COLORS["accent"], True)
-    art.text((24, 118), "阻抗自动匹配 · 启动后自动选择合适挡位", 16, COLORS["muted"])
-    art.text((24, 424), "离页取消预选；正在运行的输出保持原状态", 14, COLORS["muted"])
     footer(art, "← / → 切页    ↑ / ↓ 选项    旋钮预选    OK / 下压确认或停止")
     return art
 
