@@ -10,8 +10,10 @@
   `-ScreenMode Panel -Output -Bootloader`，不加`-InternalClock`：HSE8 → M2/N85/R2 → 170MHz。
   产物位于`firmware/build-screen-panel-output-boot/firmware/zephyr/zephyr.signed.bin`；
   `-InternalClock`仍保留为HSI回退版本。启动检查新增PLL源与源就绪核对，HSE版本要求无源晶振模式。
-  HSE/HSI完整构建均通过；本次仅计划更新应用，保留板上已安装的HSI MCUboot。
-  ST-Link只读检查后失去连接，降至100kHz重连失败；尚未烧录HSE应用，起振与实机切换仍待验证。
+  HSE/HSI完整构建均通过；复位下连接恢复后已整片备份并仅更新应用，77580字节独立读回一致，HSI MCUboot保持不变。
+  实机HSERDY=1、PLL源HSE、M2/N85/R2、VTOR=0x08010200；屏在线同步、UART错误0、待机ADC/三路温度有效，DAC关闭且选档输出0。
+  H3断开时PB9引脚4秒内读到80次翻转；用户插回H3并重新上电后，约30秒连续观察读到598次翻转，uptime持续增长且无复位。
+  H3现已接上并正常待机；后续SWD烧录/断点暂停前须拔下。此次未做停喂故障注入试验。
   详见软件计划§15.13；下方HSI记录为此前部署状态。
 
 - 用户确认：**RS1=20 mΩ、测量分压下臂=806 Ω、NTC=10 kΩ**；覆盖 ADR-010 和历史采购说明的 15 mΩ。
