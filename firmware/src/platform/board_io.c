@@ -42,6 +42,17 @@ static int setup_pin(const struct gpio_dt_spec *pin, gpio_flags_t flags)
 
 static int check_clock(void)
 {
+#if DT_SAME_NODE(DT_CLOCKS_CTLR(DT_NODELABEL(pll)), DT_NODELABEL(clk_hse))
+	if (LL_RCC_PLL_GetMainSource() != LL_RCC_PLLSOURCE_HSE ||
+	    !LL_RCC_HSE_IsReady() || (RCC->CR & RCC_CR_HSEBYP) != 0U) {
+		return -EIO;
+	}
+#else
+	if (LL_RCC_PLL_GetMainSource() != LL_RCC_PLLSOURCE_HSI ||
+	    !LL_RCC_HSI_IsReady()) {
+		return -EIO;
+	}
+#endif
 	if (SystemCoreClock != 170000000U ||
 	    LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL ||
 	    !LL_PWR_IsEnabledRange1BoostMode() ||

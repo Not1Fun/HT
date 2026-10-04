@@ -69,6 +69,11 @@ try {
 
     Invoke-Checked $python @('firmware/tools/code_graph.py')
     $buildDir = if ($InternalClock) { 'firmware/build-hsi' } else { 'firmware/build' }
+    if ($InternalClock) {
+        Write-Host 'Clock: internal HSI 16 MHz -> PLL -> 170 MHz (fallback build)'
+    } else {
+        Write-Host 'Clock: external HSE 8 MHz crystal -> PLL -> 170 MHz'
+    }
     $overlays = @()
     if ($InternalClock) { $overlays += 'boards/ht_main_hsi.overlay' }
     $conf = ''

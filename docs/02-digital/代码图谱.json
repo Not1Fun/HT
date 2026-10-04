@@ -242,7 +242,7 @@
       "path": "firmware/src/platform/board_io.c",
       "module": "platform",
       "brief": "Initialize HT safe pins and check the clock and internal reference.",
-      "sha256": "9ed264a654c00acfed0c7cbe37fdff1468a91bb98de276791eec9f09907c0c3d",
+      "sha256": "5f77cdc43a361770aa64cfac651f0701846daed80fa4d941006e96ea7275523b",
       "includes": [
         "platform/board_io.h",
         "config/analog.h"
@@ -1283,55 +1283,55 @@
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:54:start_vref",
+      "id": "firmware/src/platform/board_io.c:65:start_vref",
       "name": "start_vref",
       "path": "firmware/src/platform/board_io.c",
-      "line": 54,
+      "line": 65,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:76:init_board",
+      "id": "firmware/src/platform/board_io.c:87:init_board",
       "name": "init_board",
       "path": "firmware/src/platform/board_io.c",
-      "line": 76,
+      "line": 87,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:114:board_io_init",
+      "id": "firmware/src/platform/board_io.c:125:board_io_init",
       "name": "board_io_init",
       "path": "firmware/src/platform/board_io.c",
-      "line": 114,
+      "line": 125,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:120:board_io_start_reference",
+      "id": "firmware/src/platform/board_io.c:131:board_io_start_reference",
       "name": "board_io_start_reference",
       "path": "firmware/src/platform/board_io.c",
-      "line": 120,
+      "line": 131,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:127:board_io_init_digital",
+      "id": "firmware/src/platform/board_io.c:138:board_io_init_digital",
       "name": "board_io_init_digital",
       "path": "firmware/src/platform/board_io.c",
-      "line": 127,
+      "line": 138,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:133:board_io_read",
+      "id": "firmware/src/platform/board_io.c:144:board_io_read",
       "name": "board_io_read",
       "path": "firmware/src/platform/board_io.c",
-      "line": 133,
+      "line": 144,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
@@ -2599,7 +2599,7 @@
     },
     {
       "caller": "firmware/bootloader/src/safe.c:49:mcuboot_status_change",
-      "callee": "firmware/src/platform/board_io.c:127:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:138:board_io_init_digital",
       "line": 52
     },
     {
@@ -2874,7 +2874,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:145:run",
-      "callee": "firmware/src/platform/board_io.c:133:board_io_read",
+      "callee": "firmware/src/platform/board_io.c:144:board_io_read",
       "line": 154
     },
     {
@@ -3209,7 +3209,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:460:update_inputs",
-      "callee": "firmware/src/platform/board_io.c:133:board_io_read",
+      "callee": "firmware/src/platform/board_io.c:144:board_io_read",
       "line": 480
     },
     {
@@ -3879,7 +3879,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:127:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:138:board_io_init_digital",
       "line": 19
     },
     {
@@ -3904,7 +3904,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:114:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:125:board_io_init",
       "line": 39
     },
     {
@@ -3924,7 +3924,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:133:board_io_read",
+      "callee": "firmware/src/platform/board_io.c:144:board_io_read",
       "line": 64
     },
     {
@@ -3933,49 +3933,49 @@
       "line": 67
     },
     {
-      "caller": "firmware/src/platform/board_io.c:114:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:76:init_board",
-      "line": 116
+      "caller": "firmware/src/platform/board_io.c:125:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:87:init_board",
+      "line": 127
     },
     {
-      "caller": "firmware/src/platform/board_io.c:120:board_io_start_reference",
-      "callee": "firmware/src/platform/board_io.c:54:start_vref",
-      "line": 122
+      "caller": "firmware/src/platform/board_io.c:131:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:65:start_vref",
+      "line": 133
     },
     {
-      "caller": "firmware/src/platform/board_io.c:127:board_io_init_digital",
-      "callee": "firmware/src/platform/board_io.c:76:init_board",
-      "line": 129
+      "caller": "firmware/src/platform/board_io.c:138:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:87:init_board",
+      "line": 140
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 84
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 90
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
       "callee": "firmware/src/platform/board_io.c:35:setup_pin",
       "line": 95
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
       "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 100
+      "line": 101
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 106
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
+      "line": 111
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
       "callee": "firmware/src/platform/board_io.c:43:check_clock",
-      "line": 105
+      "line": 116
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
-      "callee": "firmware/src/platform/board_io.c:54:start_vref",
-      "line": 109
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "callee": "firmware/src/platform/board_io.c:65:start_vref",
+      "line": 120
     },
     {
       "caller": "firmware/src/platform/dds_io.c:117:fail",
@@ -4339,7 +4339,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:211:signal_io_init",
-      "callee": "firmware/src/platform/board_io.c:120:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:131:board_io_start_reference",
       "line": 218
     },
     {
@@ -4614,7 +4614,7 @@
     },
     {
       "caller": "firmware/src/platform/temperature_io.c:96:temperature_io_init",
-      "callee": "firmware/src/platform/board_io.c:120:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:131:board_io_start_reference",
       "line": 115
     },
     {
@@ -6282,21 +6282,21 @@
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:133:board_io_read",
+      "caller": "firmware/src/platform/board_io.c:144:board_io_read",
       "name": "ARRAY_SIZE",
-      "line": 143,
+      "line": 154,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:133:board_io_read",
+      "caller": "firmware/src/platform/board_io.c:144:board_io_read",
       "name": "gpio_pin_get_dt",
-      "line": 144,
+      "line": 155,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:133:board_io_read",
+      "caller": "firmware/src/platform/board_io.c:144:board_io_read",
       "name": "BIT",
-      "line": 151,
+      "line": 162,
       "kind": "external_or_unknown"
     },
     {
@@ -6313,104 +6313,128 @@
     },
     {
       "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_GetSysClkSource",
+      "name": "LL_RCC_PLL_GetMainSource",
       "line": 46,
       "kind": "external_or_unknown"
     },
     {
       "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_PWR_IsEnabledRange1BoostMode",
+      "name": "LL_RCC_HSE_IsReady",
       "line": 47,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_APB2_GRP1_EnableClock",
-      "line": 56,
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_RCC_PLL_GetMainSource",
+      "line": 51,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_Disable",
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_RCC_HSI_IsReady",
+      "line": 52,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_RCC_GetSysClkSource",
       "line": 57,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_SetVoltageScaling",
+      "caller": "firmware/src/platform/board_io.c:43:check_clock",
+      "name": "LL_PWR_IsEnabledRange1BoostMode",
       "line": 58,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_DisableHIZ",
-      "line": 59,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_Enable",
-      "line": 60,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "k_uptime_get",
-      "line": 63,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_IsVREFReady",
-      "line": 65,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "k_uptime_get",
-      "line": 66,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_Disable",
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_APB2_GRP1_EnableClock",
       "line": 67,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "LL_VREFBUF_EnableHIZ",
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_VREFBUF_Disable",
       "line": 68,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:54:start_vref",
-      "name": "k_msleep",
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_VREFBUF_SetVoltageScaling",
+      "line": 69,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_VREFBUF_DisableHIZ",
+      "line": 70,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_VREFBUF_Enable",
       "line": 71,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
-      "name": "LL_APB2_GRP1_EnableClock",
-      "line": 80,
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "k_uptime_get",
+      "line": 74,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "LL_VREFBUF_IsVREFReady",
+      "line": 76,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "k_uptime_get",
+      "line": 77,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
       "name": "LL_VREFBUF_Disable",
-      "line": 81,
+      "line": 78,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
       "name": "LL_VREFBUF_EnableHIZ",
+      "line": 79,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "name": "k_msleep",
       "line": 82,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:76:init_board",
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "name": "LL_APB2_GRP1_EnableClock",
+      "line": 91,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "name": "LL_VREFBUF_Disable",
+      "line": 92,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
+      "name": "LL_VREFBUF_EnableHIZ",
+      "line": 93,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:87:init_board",
       "name": "ARRAY_SIZE",
-      "line": 99,
+      "line": 110,
       "kind": "external_or_unknown"
     },
     {
