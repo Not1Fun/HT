@@ -8,6 +8,11 @@
 
 #define EVENT_LOG_CAPACITY 32u
 
+enum event_boot_mode {
+    EVENT_BOOT_NORMAL = 0,
+    EVENT_BOOT_BENCH
+};
+
 enum event_kind {
     EVENT_NONE = 0,
     EVENT_BOOT,
@@ -55,7 +60,7 @@ struct event_log {
 /* 清空并就绪；NULL 无动作。 */
 void event_log_init(struct event_log *log);
 /* 满时覆盖最旧；seconds 原样保存，按追加顺序而非时间数值排序。
- * value: RANGE 为 ohm，FREQUENCY 为 Hz，TEMP_READY/INVALID 为通道 1..3；
+ * value: BOOT 为 event_boot_mode，RANGE 为 ohm，FREQUENCY 为 Hz，TEMP_READY/INVALID 为通道 1..3；
  * INIT_FAILED/IO_ERROR 为错误码，其余由调用者约定。
  */
 int event_log_add(struct event_log *log, uint32_t seconds, enum event_kind kind, int32_t value);

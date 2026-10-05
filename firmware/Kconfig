@@ -40,4 +40,13 @@ config HT_OUTPUT
 	  Owns ADC12, DAC1, TIM6 and relay sequencing; requires the sensor board,
 	  power supply and physical safety interlocks. Never starts automatically.
 
+config HT_OUTPUT_BENCH
+	bool "Output bench operation without enclosure interlocks"
+	default n
+	depends on HT_OUTPUT
+	help
+	  Temporarily bypasses only the door monitor on P1.7 and BOARD_COIL.
+	  Keeps the independent enable, OC/OV, sensor, supply, temperature,
+	  acquisition, watchdog and stop protections active.
+
 source "Kconfig.zephyr"

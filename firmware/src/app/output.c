@@ -149,6 +149,12 @@ static void run(void *a, void *b, void *c)
     struct signal_snapshot signal = {0};
     int64_t next_feed = 0;
     bool pin = false;
+    uint8_t panel_mask = BIT(6);
+    uint32_t required = BIT(BOARD_SENSOR) | BIT(BOARD_DC);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+    panel_mask |= BIT(7);
+    required |= BIT(BOARD_COIL);
+#endif
     for (;;) {
         uint32_t digital = 0;
         int rc = board_io_read(&digital);
@@ -156,7 +162,7 @@ static void run(void *a, void *b, void *c)
         int64_t now = k_uptime_get();
         k_spinlock_key_t key = k_spin_lock(&guard);
         bool alive = inputs.okay && now - inputs.time < 100 && !shut_down;
-        bool permitted = alive && inputs.connected && (inputs.raw & 0xc0) == 0;
+        bool permitted = alive && inputs.connected && (inputs.raw & panel_mask) == 0;
         bool stop = request.stop;
         bool start = request.pending;
         if (start) active_epoch = request.epoch;
@@ -164,7 +170,6 @@ static void run(void *a, void *b, void *c)
         request.pending = false;
         request.stop = false;
         k_spin_unlock(&guard, key);
-        const uint32_t required = BIT(BOARD_SENSOR) | BIT(BOARD_COIL) | BIT(BOARD_DC);
         permitted = permitted && rc == 0 && (digital & required) == required &&
             !(digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) &&
             ((digital & BIT(BOARD_AC)) || (digital & BIT(BOARD_BAT))) &&

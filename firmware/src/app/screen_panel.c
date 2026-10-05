@@ -744,7 +744,11 @@ int screen_panel_run(void)
 		rc = start_encoder();
 	}
 	if (rc == 0) {
-		record_event(&service, EVENT_BOOT, 0);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+		record_event(&service, EVENT_BOOT, EVENT_BOOT_BENCH);
+#else
+		record_event(&service, EVENT_BOOT, EVENT_BOOT_NORMAL);
+#endif
 #if defined(CONFIG_HT_OUTPUT)
 		int output_rc = output_init();
 		if (output_rc != 0) {

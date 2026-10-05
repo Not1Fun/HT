@@ -143,6 +143,11 @@ static void format_log_value(char text[VIEW_TEXT_BYTES], const struct event_entr
 {
     memset(text, 0, VIEW_TEXT_BYTES);
     switch (entry->kind) {
+    case EVENT_BOOT:
+        if (entry->value == EVENT_BOOT_BENCH) {
+            memcpy(text, "BENCH", 5);
+        }
+        break;
     case EVENT_RANGE:
         format_value(text, VIEW_RANGE, entry->value, true);
         if (text[0] != '-') {

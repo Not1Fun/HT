@@ -259,6 +259,15 @@ static void test_logs(void)
         vp_text_is(&c,0x1270,""); vp_text_is(&c,0x1280,"02-05/06");
         CHECK(c.frames[FRAME_COUNT-1].vp==0x0084 && c.frames[FRAME_COUNT-1].words[1]==2);
     }
+    for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
+        s.logs[0]=(struct event_entry){0,EVENT_BOOT,EVENT_BOOT_BENCH};
+        refresh(&v,&c,&s,(enum dgus_crc)crc);
+        CHECK(c.frames[VIEW_FIELD_COUNT+1].words[0]==EVENT_BOOT);
+        vp_text_is(&c,0x1200,"00:00:00"); vp_text_is(&c,0x1210,"BENCH");
+        s.logs[0].value=EVENT_BOOT_NORMAL;
+        refresh(&v,&c,&s,(enum dgus_crc)crc);
+        vp_text_is(&c,0x1210,"");
+    }
     s.logs[0]=(struct event_entry){UINT32_MAX,EVENT_RANGE,INT32_MAX};
     s.logs[1]=(struct event_entry){3599999,EVENT_FREQUENCY,2101};
     s.logs[2]=(struct event_entry){0,EVENT_TEMP_INVALID,4};

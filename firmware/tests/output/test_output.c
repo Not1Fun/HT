@@ -12,6 +12,7 @@ static int signal_error, board_error, starts;
 static int sample_delay;
 static int64_t sample_age, reading_after;
 static uint8_t relay_value;
+static uint8_t panel_raw = 0x3f;
 static uint16_t amplitude;
 int board_io_read(uint32_t *value) {if(board_error)return -EIO;*value=digital;return 0;}
 int signal_io_init(void) {sampling=true;return 0;}
@@ -42,9 +43,13 @@ int relay_io_select(uint8_t value) {
     if(value && value == stop_at) {stop_at=0;cancelled_select=true;output_stop();}
     return 0;
 }
-static void heartbeat(void) {output_inputs(0x3f,true,true);}
+static void heartbeat(void) {output_inputs(panel_raw,true,true);}
 static void advance(int ms) {steps=ms;if(setjmp(done)==0)run(NULL,NULL,NULL);}
 static void setup(void) {
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    digital &= ~BIT(BOARD_COIL);
+    panel_raw |= BIT(7);
+#endif
     assert(output_init()==0);heartbeat();between_steps=heartbeat;advance(1);
     assert(published.available && !published.running);
 }
@@ -56,15 +61,26 @@ static void stop_priority(void) {
     start_output();output_stop();advance(100);assert(!published.running && relay_value==0);
 }
 static void interlocks(void) {
-    setup();const uint32_t required[]={BIT(BOARD_SENSOR),BIT(BOARD_COIL),BIT(BOARD_DC)};
-    for(size_t i=0;i<3;i++) {digital^=required[i];advance(1);assert(!published.available);digital^=required[i];}
+    setup();const uint32_t required[]={BIT(BOARD_SENSOR),BIT(BOARD_DC)
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+        ,BIT(BOARD_COIL)
+#endif
+    };
+    for(size_t i=0;i<sizeof(required)/sizeof(required[0]);i++) {digital^=required[i];advance(1);assert(!published.available);digital^=required[i];}
+    const uint32_t faults[]={BIT(BOARD_OC),BIT(BOARD_OV)};
+    for(size_t i=0;i<2;i++) {digital|=faults[i];advance(1);assert(!published.available);digital&=~faults[i];}
     digital &= ~BIT(BOARD_AC);advance(1);assert(!published.available);
     digital |= BIT(BOARD_BAT);advance(1);assert(published.available);
     for(int i=0;i<3;i++) {measured.temperature.samples[i].status=NTC_SATURATED;advance(1);assert(!published.available);measured.temperature.samples[i].status=NTC_OK;}
     measured.temperature.samples[0].decicelsius=800;advance(1);assert(!published.available);
     measured.temperature.samples[0].decicelsius=799;advance(1);assert(published.available);
     output_inputs(0x7f,true,true);advance(1);assert(!published.available);
-    output_inputs(0xbf,true,true);advance(1);assert(!published.available);
+    output_inputs(0xbf,true,true);advance(1);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(published.available);
+#else
+    assert(!published.available);
+#endif
     output_inputs(0x3f,false,true);advance(1);assert(!published.available);
 }
 static void stale_ui(void) {
@@ -149,6 +165,30 @@ static void shutdown_output(void) {
     setup();start_output();output_shutdown();advance(1);
     assert(signal_failed && published.fault && relay_value==0 && output_start(2000,1000)==-EACCES);
 }
+static void enclosure_interlocks(void) {
+    setup();start_output();
+    digital &= ~BIT(BOARD_COIL);panel_raw |= BIT(7);heartbeat();advance(1);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(published.running && !published.fault && signal_active);
+    output_stop();advance(200);assert(!published.running && !signal_active && relay_value==0);
+    advance(200);assert(!published.running);
+#else
+    assert(published.fault && !signal_active && relay_value==0);
+#endif
+}
+static void assert_tripped(void) {
+    advance(1);
+    assert(published.fault && !published.available && !signal_active && amplitude==0 && relay_value==0);
+    assert(control.fault_stopped && output_start(2000,1000)==-EACCES);
+    int before=feeds;advance(100);assert(feeds>before);
+}
+static void running_oc(void) {setup();start_output();digital|=BIT(BOARD_OC);assert_tripped();}
+static void running_ov(void) {setup();start_output();digital|=BIT(BOARD_OV);assert_tripped();}
+static void running_sensor_loss(void) {setup();start_output();digital&=~BIT(BOARD_SENSOR);assert_tripped();}
+static void running_temperature(void) {setup();start_output();measured.temperature.samples[0].decicelsius=800;assert_tripped();}
+static void running_ntc_failure(void) {setup();start_output();measured.temperature.samples[2].status=NTC_SATURATED;assert_tripped();}
+static void running_enable_release(void) {setup();start_output();panel_raw|=BIT(6);heartbeat();assert_tripped();}
+static void protection_irq(void) {setup();start_output();protection(NULL,NULL,0);assert(signal_failed && !signal_active && amplitude==0);assert_tripped();}
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
@@ -156,5 +196,7 @@ int main(int argc,char **argv) {
     RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)
     RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)
     RUN(protection_race) RUN(stop_in_flight) RUN(relay_fault) RUN(shutdown_output)
+    RUN(enclosure_interlocks) RUN(running_oc) RUN(running_ov) RUN(running_sensor_loss)
+    RUN(running_temperature) RUN(running_ntc_failure) RUN(running_enable_release) RUN(protection_irq)
     return 1;
 }
