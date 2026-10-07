@@ -36,3 +36,5 @@ target_sources_ifdef(CONFIG_HT_DDS_BENCH app PRIVATE
 target_sources_ifdef(CONFIG_HT_OUTPUT app PRIVATE
   src/core/dds.c src/platform/dds_io.c src/core/ntc.c src/core/rms.c src/core/power.c
   src/platform/signal_io.c src/app/output.c)
+
+target_sources_ifdef(CONFIG_HT_OUTPUT_BENCH app PRIVATE src/core/bench.c)

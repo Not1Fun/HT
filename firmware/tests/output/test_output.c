@@ -189,9 +189,40 @@ static void running_temperature(void) {setup();start_output();measured.temperatu
 static void running_ntc_failure(void) {setup();start_output();measured.temperature.samples[2].status=NTC_SATURATED;assert_tripped();}
 static void running_enable_release(void) {setup();start_output();panel_raw|=BIT(6);heartbeat();assert_tripped();}
 static void protection_irq(void) {setup();start_output();protection(NULL,NULL,0);assert(signal_failed && !signal_active && amplitude==0);assert_tripped();}
+
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+static void debug_cycle(void) {
+    setup();assert(output_debug(2,2000,25,false)==0);advance(200);
+    assert(published.debug.busy && relay_value==2 && !signal_active);
+    assert(output_start(2000,1000)==-EBUSY);
+    assert(output_debug(2,2000,25,true)==0);advance(500);
+    assert(published.debug.wave && amplitude==17 && signal_active && !published.running);
+    advance(10100);assert(!published.debug.busy && relay_value==0 && amplitude==0);
+    assert(output_debug(8,2000,25,true)==0);advance(50);
+    assert(published.debug.trial && !published.debug.wave);
+    output_stop();advance(500);
+    assert(!published.debug.busy && relay_value==0 && !signal_active);
+    start_output();assert(output_debug(2,2000,25,true)==-EBUSY);
+}
+static void debug_fault(void) {
+    setup();assert(output_debug(2,2000,25,true)==0);advance(500);
+    protection(NULL,NULL,0);advance(1);
+    assert(published.fault && !published.debug.wave && relay_value==0 && !signal_active);
+    assert(output_debug(2,2000,25,true)==-EACCES);
+}
+static void debug_disconnect(void) {
+    setup();assert(output_debug(8,2000,25,true)==0);advance(500);
+    output_inputs(panel_raw,false,true);advance(100);
+    assert(!published.debug.busy && !signal_active && relay_value==0);
+    advance(500);assert(!published.debug.busy);
+}
+#endif
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
+#endif
     RUN(stop_priority) RUN(interlocks) RUN(stale_ui) RUN(sample_fault)
     RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)
     RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)

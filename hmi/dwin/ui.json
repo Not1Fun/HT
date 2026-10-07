@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "name": "HT",
   "width": 800,
   "height": 480,
@@ -36,6 +36,11 @@
       "id": 2,
       "name": "logs",
       "image": "assets/pages/002.png"
+    },
+    {
+      "id": 3,
+      "name": "debug",
+      "image": "assets/pages/003.png"
     }
   ],
   "fields": [
@@ -456,6 +461,182 @@
       "pages": [
         1
       ]
+    },
+    {
+      "name": "debug_relay",
+      "label": "继电器预选",
+      "unit": "",
+      "vp": 4864,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 278,
+      "y": 112,
+      "width": 168,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_frequency",
+      "label": "试波频率预选",
+      "unit": "kHz",
+      "vp": 4880,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 278,
+      "y": 176,
+      "width": 112,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 8,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_amplitude",
+      "label": "DAC幅度预选",
+      "unit": "mVpp",
+      "vp": 4896,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 278,
+      "y": 240,
+      "width": 112,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 8,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_wave",
+      "label": "试波开关",
+      "unit": "",
+      "vp": 4912,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 278,
+      "y": 304,
+      "width": 168,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_coils",
+      "label": "线圈命令K8到K1",
+      "unit": "",
+      "vp": 4928,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 516,
+      "y": 136,
+      "width": 240,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_seconds",
+      "label": "剩余时间",
+      "unit": "s",
+      "vp": 4944,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 600,
+      "y": 212,
+      "width": 140,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_voltage",
+      "label": "当前电压",
+      "unit": "V",
+      "vp": 4960,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 516,
+      "y": 282,
+      "width": 216,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_current",
+      "label": "当前电流",
+      "unit": "A",
+      "vp": 4976,
+      "words": 16,
+      "encoding": "ascii",
+      "display_encoding": "gbk",
+      "input_scale": 1,
+      "decimals": 0,
+      "x": 516,
+      "y": 352,
+      "width": 216,
+      "height": 32,
+      "font_width": 14,
+      "font_height": 28,
+      "max_chars": 9,
+      "color": "#303133",
+      "pages": [
+        3
+      ]
     }
   ],
   "icons": [
@@ -698,6 +879,47 @@
       ],
       "pages": [
         2
+      ]
+    },
+    {
+      "name": "debug_focus",
+      "vp": 4128,
+      "x": 24,
+      "y": 100,
+      "width": 452,
+      "height": 256,
+      "first": 40,
+      "last": 43,
+      "initial": 0,
+      "values": [
+        "relay",
+        "frequency",
+        "amplitude",
+        "wave"
+      ],
+      "pages": [
+        3
+      ]
+    },
+    {
+      "name": "debug_state",
+      "vp": 4129,
+      "x": 24,
+      "y": 380,
+      "width": 752,
+      "height": 36,
+      "first": 44,
+      "last": 48,
+      "initial": 3,
+      "values": [
+        "idle",
+        "relay",
+        "wave",
+        "blocked",
+        "fault"
+      ],
+      "pages": [
+        3
       ]
     }
   ],

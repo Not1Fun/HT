@@ -1,5 +1,9 @@
 /* @brief 独立输出线程执行控制；STOP取消待启动，硬件保护ISR直接静音。 */
 #include "app/output.h"
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+#include "core/bench.h"
+static struct bench debug;
+#endif
 #include "platform/board_io.h"
 #include "platform/dds_io.h"
 #include "platform/relay_io.h"
@@ -21,7 +25,15 @@ static K_SEM_DEFINE(wake, 0, 1);
 static struct power control;
 static struct output_snapshot published;
 static struct { uint8_t raw; bool connected, okay; int64_t time; } inputs;
-static struct { bool pending, stop; uint32_t frequency, target, epoch; } request;
+static struct {
+    bool pending, stop;
+    uint32_t frequency, target, epoch;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    bool debug, wave;
+    uint8_t relay;
+    uint16_t millivolts_pp;
+#endif
+} request;
 static uint32_t stop_epoch, active_epoch;
 static bool initialized, shut_down;
 static int watchdog_channel;
@@ -60,6 +72,9 @@ int output_init(void)
     struct power_ops ops = {.mute=mute, .select=select_range, .start=start_signal,
                             .level=level, .now=now_ms, .cancelled=cancelled};
     int rc = power_init(&control, &ops);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    if (rc == 0) rc = bench_init(&debug, &ops);
+#endif
     if (rc == 0) rc = signal_io_init();
     if (rc == 0) {
         gpio_init_callback(&oc_callback, protection, BIT(oc.pin));
@@ -108,12 +123,35 @@ int output_start(uint32_t frequency, uint32_t target)
     if (!published.ready || !published.available || shut_down) rc = -EACCES;
     else if (published.running || published.switching || request.pending || request.stop) rc = -EBUSY;
     else {
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        if (published.debug.busy) { k_spin_unlock(&guard, key); return -EBUSY; }
+        request.debug = false;
+#endif
         request.pending = true; request.frequency = frequency;
         request.target = target; request.epoch = stop_epoch;
     }
     k_spin_unlock(&guard, key);
     return rc;
 }
+
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+int output_debug(uint8_t relay, uint32_t frequency, uint16_t millivolts_pp, bool wave)
+{
+    if (relay > 8 || (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000) ||
+        (millivolts_pp != 10 && millivolts_pp != 25 && millivolts_pp != 50 && millivolts_pp != 100)) return -EINVAL;
+    k_spinlock_key_t key = k_spin_lock(&guard);
+    int rc = 0;
+    if (!published.ready || !published.available || shut_down || published.fault) rc = -EACCES;
+    else if (published.active || published.switching || request.pending || request.stop) rc = -EBUSY;
+    else {
+        request.pending = request.debug = true;
+        request.relay = relay; request.frequency = frequency;
+        request.millivolts_pp = millivolts_pp; request.wave = wave; request.epoch = stop_epoch;
+    }
+    k_spin_unlock(&guard, key);
+    return rc;
+}
+#endif
 
 void output_stop(void)
 {
@@ -167,6 +205,13 @@ static void run(void *a, void *b, void *c)
         bool start = request.pending;
         if (start) active_epoch = request.epoch;
         uint32_t frequency = request.frequency, target = request.target;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        bool debug_start = start && request.debug;
+        if (debug_start) start = false;
+        uint8_t relay = request.relay;
+        uint16_t millivolts_pp = request.millivolts_pp;
+        bool wave = request.wave;
+#endif
         request.pending = false;
         request.stop = false;
         k_spin_unlock(&guard, key);
@@ -181,11 +226,21 @@ static void run(void *a, void *b, void *c)
         if (signal_io_failed()) rc = -EIO;
         if (rc != 0) {
             signal.reading.valid = false;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+            if (debug.state != BENCH_IDLE) bench_fail(&debug, POWER_ERROR_SAMPLE);
+#endif
             power_fail(&control, POWER_ERROR_SAMPLE);
         }
         /* 仅限制启动准入，输出起始的首窗等待仍由POWER_ZERO管理。 */
         bool sample_ready = signal.reading.valid && now >= signal.reading.time_ms &&
             now - signal.reading.time_ms < 150;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        if (stop) bench_stop(&debug, now);
+        else if (debug_start && permitted && sample_ready && control.state == POWER_IDLE)
+            (void)bench_start(&debug, relay, frequency, millivolts_pp, wave, now);
+        if (debug.state != BENCH_IDLE) start = false;
+        bench_poll(&debug, permitted, &signal.reading, k_uptime_get());
+#endif
         if (stop) power_stop(&control, now);
         else if (start && permitted && sample_ready)
             (void)power_start(&control, POWER_RANGE_AUTO, frequency, target, now);
@@ -209,10 +264,25 @@ static void run(void *a, void *b, void *c)
             .elapsed_seconds = control.state == POWER_RUNNING ? (uint32_t)((now-control.session_ms)/1000) : 0,
             .signal = signal
         };
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        next.debug.busy = debug.state != BENCH_IDLE && debug.state != BENCH_FAULT;
+        next.debug.wave = debug.wave && debug.state == BENCH_ON;
+        next.debug.trial = debug.wave && next.debug.busy &&
+            debug.state != BENCH_STOP && debug.state != BENCH_RELEASE;
+        next.debug.coils = debug.output;
+        next.debug.seconds = next.debug.busy && debug.expires > now ?
+            (uint32_t)((debug.expires - now + 999) / 1000) : 0;
+        if (debug.state == BENCH_FAULT) {
+            next.fault = true; next.error = debug.error; next.available = false;
+        }
+        bool debug_safe = debug.state != BENCH_FAULT || debug.fault_stopped;
+#else
+        bool debug_safe = true;
+#endif
         key = k_spin_lock(&guard);
         published = next;
         k_spin_unlock(&guard, key);
-        if (alive && (control.state != POWER_FAULT || control.fault_stopped) && now >= next_feed) {
+        if (alive && debug_safe && (control.state != POWER_FAULT || control.fault_stopped) && now >= next_feed) {
             (void)wdt_feed(watchdog, watchdog_channel);
             pin = !pin;
             (void)gpio_pin_set_dt(&wdi, pin);

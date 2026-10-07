@@ -103,6 +103,41 @@ def logs_page():
     return art
 
 
+def debug_page():
+    art = Art(800, 480, COLORS["bg"])
+    header(art, 3)
+    art.text((24, 25), "BENCH 调试", 20, COLORS["accent"], True)
+    art.text((24, 76), "旋钮预选，确认执行；切换前自动静音", 16, COLORS["muted"])
+    for x, y, label in [(516, 104, "线圈命令  K8 → K1"), (516, 190, "剩余时间"),
+                         (516, 256, "当前电压"), (516, 326, "当前电流")]:
+        art.text((x, y), label, 16, COLORS["muted"])
+    art.text((744, 217), "s", 20, COLORS["muted"], mono=True)
+    art.text((744, 286), "V", 20, COLORS["muted"], mono=True)
+    art.text((744, 356), "A", 20, COLORS["muted"], mono=True)
+    art.text((24, 428), "DAC 幅度为标称峰峰值；线圈命令不代表触点反馈", 14, COLORS["muted"])
+    footer(art, "← / → 离页停止    ↑ / ↓ 选项    旋钮预选    OK / 下压执行")
+    return art
+
+
+def debug_focus(selected):
+    art = Art(452, 256, COLORS["bg"])
+    for index, (label, unit) in enumerate([("继电器", ""), ("试波频率", "kHz"),
+                                           ("DAC 幅度", "mVpp"), ("试波开关", "")]):
+        top = index * 64
+        focused = index == selected
+        art.rect((0, top, 451, top + 55), COLORS["pale"] if focused else COLORS["bg"],
+                 4, COLORS["accent"] if focused else COLORS["line"])
+        art.text((18, top + 17), label, 20, COLORS["accent"] if focused else COLORS["ink"], focused)
+        if unit: art.text((374, top + 20), unit, 16, COLORS["muted"], mono=True)
+    return art
+
+
+def debug_status(label, color):
+    art = Art(752, 36, COLORS["bg"])
+    art.text((0, 8), label, 18, color, True)
+    return art
+
+
 def state_icon(label, color, background):
     art = Art(136, 32, COLORS["bg"])
     art.rect((0, 0, 135, 31), background, 4)
@@ -177,7 +212,7 @@ def text_field(name, label, vp, page, x, y, width, height, size, unit="", decima
 
 
 def build():
-    for index, page in enumerate([status_page(), settings_page(), logs_page()]):
+    for index, page in enumerate([status_page(), settings_page(), logs_page(), debug_page()]):
         page.save(ROOT / f"assets/pages/{index:03d}.png")
     icons = [state_icon(label, color, background) for label, color, background in [
         ("待机", COLORS["muted"], "#F4F4F5"),
@@ -197,6 +232,14 @@ def build():
         ("关闭", COLORS["muted"]), ("准备开启 · 待确认", COLORS["amber"]),
         ("已开启 · 确认停止", COLORS["accent"]), ("未满足启动条件", COLORS["muted"]),
         ("故障 · 输出已停止", COLORS["red"]), ("输出未启用", COLORS["muted"]),
+    ]]
+    icons += [debug_focus(index) for index in range(4)]
+    icons += [debug_status(label, color) for label, color in [
+        ("待机 · 继电器最多保持 30 秒，试波最多 10 秒", COLORS["muted"]),
+        ("继电器测试 / 切换中 · 离页立即停止", COLORS["amber"]),
+        ("正在试波 · 试波开关确认可停止", COLORS["accent"]),
+        ("条件未满足 · 检查使能、供电、采样与温度", COLORS["muted"]),
+        ("保护已停止 · 详情见日志", COLORS["red"]),
     ]]
     for index, icon in enumerate(icons):
         icon.save(ROOT / f"assets/icons/{index:03d}.png")
@@ -226,6 +269,20 @@ def build():
                                  2, 626, y, 126, 32, 28))
     fields.append(text_field("log_position", "日志位置", 0x1280, 2, 626, 402, 126, 32, 28))
     fields.append(text_field("power_choice", "目标视在功率", 0x11a0, 1, 458, 242, 216, 36, 32, "VA", 0, 1000))
+    debug_fields = [
+        ("debug_relay", "继电器预选", 278, 112, 168, ""),
+        ("debug_frequency", "试波频率预选", 278, 176, 112, "kHz"),
+        ("debug_amplitude", "DAC幅度预选", 278, 240, 112, "mVpp"),
+        ("debug_wave", "试波开关", 278, 304, 168, ""),
+        ("debug_coils", "线圈命令K8到K1", 516, 136, 240, ""),
+        ("debug_seconds", "剩余时间", 600, 212, 140, "s"),
+        ("debug_voltage", "当前电压", 516, 282, 216, "V"),
+        ("debug_current", "当前电流", 516, 352, 216, "A"),
+    ]
+    for index, (name, label, x, y, width, unit) in enumerate(debug_fields):
+        item = text_field(name, label, 0x1300 + index * 0x10, 3, x, y, width, 32, 28, unit)
+        item["max_chars"] = min(9, width // 14)
+        fields.append(item)
     variable_icons = [
         dict(name="state", vp=0x1000, x=640, y=20, width=136, height=32, first=0, last=4,
              initial=4, values=["standby", "running", "switching", "fault", "offline"], pages=[0, 1, 2]),
@@ -242,14 +299,20 @@ def build():
         variable_icons.append(dict(name=f"log_event_{index}", vp=0x1010 + index,
                                    x=208, y=146 + index * 60, width=380, height=50,
                                    first=12, last=30, initial=0, values=EVENTS, pages=[2]))
-    spec = dict(version=6, name="HT", width=800, height=480, touch=False, colors=COLORS,
+    variable_icons += [
+        dict(name="debug_focus", vp=0x1020, x=24, y=100, width=452, height=256,
+             first=40, last=43, initial=0, values=["relay", "frequency", "amplitude", "wave"], pages=[3]),
+        dict(name="debug_state", vp=0x1021, x=24, y=380, width=752, height=36,
+             first=44, last=48, initial=3, values=["idle", "relay", "wave", "blocked", "fault"], pages=[3]),
+    ]
+    spec = dict(version=7, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
-                       for index, name in enumerate(["status", "settings", "logs"])],
+                       for index, name in enumerate(["status", "settings", "logs", "debug"])],
                 fields=fields, icons=variable_icons, animations=[],
                 limits=dict(text_bytes=32, text_max_chars=9, render_rate_hz=5))
     (ROOT / "ui.json").write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Generated 3 pages, {len(icons)} icons and ui.json")
+    print(f"Generated 4 pages, {len(icons)} icons and ui.json")
 
 
 if __name__ == "__main__":

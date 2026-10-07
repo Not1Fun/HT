@@ -7,7 +7,14 @@
 const struct device mock_gpio = {0};
 static int64_t clock_ms = 1000;
 static struct output_snapshot measured;
-static unsigned int starts;
+static unsigned int starts, stops;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+static unsigned int debug_starts;
+static uint8_t debug_relay;
+static bool debug_wave;
+int output_debug(uint8_t relay, uint32_t frequency, uint16_t mvpp, bool wave)
+{ assert(frequency==2000 && mvpp==25); ++debug_starts; debug_relay=relay; debug_wave=wave; return 0; }
+#endif
 static char current[VIEW_TEXT_BYTES], voltage[VIEW_TEXT_BYTES];
 
 int64_t k_uptime_get(void) { return clock_ms; }
@@ -43,7 +50,7 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
 { (void)raw; (void)connected; (void)io_ok; }
 int output_start(uint32_t frequency, uint32_t target_mva)
 { (void)frequency; (void)target_mva; ++starts; return 0; }
-void output_stop(void) { }
+void output_stop(void) { ++stops; }
 void output_snapshot(struct output_snapshot *value) { *value = measured; }
 void output_shutdown(void) { }
 
@@ -141,12 +148,46 @@ static void output_states(void)
     (void)render(&s, "--", "--");
 }
 
+
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+static void press(struct service *s, enum panel_key key)
+{
+    assert(update_keys(s,0x3f,clock_ms)==0); clock_ms+=30;
+    assert(update_keys(s,0x3f,clock_ms)==0); clock_ms+=30;
+    uint8_t raw=(uint8_t)(0x3f & ~BIT(key));
+    assert(update_keys(s,raw,clock_ms)==0); clock_ms+=30;
+    assert(update_keys(s,raw,clock_ms)==0); clock_ms+=30;
+}
+static void debug_keys(void)
+{
+    struct service s=setup(); s.panel.debug_enabled=true;
+    press(&s,PANEL_KEY_LEFT); assert(s.panel.page==PANEL_PAGE_DEBUG && stops==1);
+    assert(panel_rotate(&s.panel,2)==0); press(&s,PANEL_KEY_ENCODER);
+    assert(debug_starts==1 && debug_relay==2 && !debug_wave && starts==0);
+    for(unsigned i=0;i<3;++i) press(&s,PANEL_KEY_DOWN);
+    assert(panel_rotate(&s.panel,1)==0); press(&s,PANEL_KEY_OK);
+    assert(debug_starts==2 && debug_wave);
+    measured.debug.trial=true; measured.debug.busy=true;
+    update_output(&s,true); assert(s.panel.debug.wave);
+    measured.debug.wave=true; measured.debug.coils=2;
+    measured.debug.seconds=9; measured.available=true; update_output(&s,true);
+    struct view_snapshot v; snapshot(&s,&v);
+    assert(v.debug.state==2 && v.debug.coils==2 && v.debug.seconds==9);
+    press(&s,PANEL_KEY_OK); assert(stops==2 && debug_starts==2);
+    press(&s,PANEL_KEY_RIGHT); assert(stops==3 && s.panel.page==PANEL_PAGE_STATUS);
+    assert(s.panel.debug.choice[0]==0);
+}
+#endif
+
 int main(int argc, char **argv)
 {
     assert(argc == 2);
     if (!strcmp(argv[1], "standby")) standby();
     else if (!strcmp(argv[1], "measurement_age")) measurement_age();
     else if (!strcmp(argv[1], "output_states")) output_states();
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    else if (!strcmp(argv[1], "debug_keys")) debug_keys();
+#endif
     else assert(!"Unknown test");
     printf("PASS %s\n", argv[1]);
     return 0;

@@ -23,7 +23,8 @@ enum panel_mode {
 enum panel_page {
     PANEL_PAGE_STATUS = 0,
     PANEL_PAGE_SETTINGS = 1,
-    PANEL_PAGE_LOG = 2
+    PANEL_PAGE_LOG = 2,
+    PANEL_PAGE_DEBUG = 3
 };
 
 enum panel_field {
@@ -47,7 +48,8 @@ enum panel_action {
     PANEL_ACTION_FREQUENCY = 2,
     PANEL_ACTION_OUTPUT_START = 3,
     PANEL_ACTION_OUTPUT_STOP = 4,
-    PANEL_ACTION_POWER = 5
+    PANEL_ACTION_POWER = 5,
+    PANEL_ACTION_DEBUG_RELAY, PANEL_ACTION_DEBUG_WAVE, PANEL_ACTION_DEBUG_PARAMS
 };
 
 enum panel_request {
@@ -78,13 +80,16 @@ struct panel {
     bool ready;
     bool output_running;
     bool output_available;
+    bool debug_enabled;
+    struct { uint8_t field, draft, choice[4]; bool busy, wave; } debug;
 };
 
 /* 默认状态页、2 kHz 请求、目标为 0；参数错误撤销 ready。 */
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
- * LEFT/RIGHT 按状态、设置、日志三页循环；离开设置时丢弃草稿。
+ * LEFT/RIGHT 按状态、设置、日志循环；Bench可启用第4调试页。
+ * 进出调试页发STOP；离开设置丢弃草稿。
  * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择频率、VA和输出（到头停）。
  * 设置页 OK/ENCODER 提交请求并留页。
  * 日志页其余键不修改模型，由应用层处理浏览。
@@ -97,6 +102,7 @@ bool panel_draft_changed(const struct panel *panel);
 int panel_set_output_state(struct panel *panel, bool running, bool available);
 /* 表项单位为 ohm/Hz，索引越界返回 0。 */
 uint32_t panel_range_ohm(uint8_t index);
+uint16_t panel_debug_mvpp(uint8_t index);
 uint32_t panel_frequency_hz(uint8_t index);
 /* 只做低有效掩码转换，不消抖，不将使能/门监视当作导航键。 */
 uint8_t panel_pressed_keys(uint8_t raw_port1);

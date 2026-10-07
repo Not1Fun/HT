@@ -565,13 +565,38 @@ static void test_invalid_inputs(void)
     CHECK(!panel_draft_changed(&panel));
 }
 
+
+static void test_debug_page(void)
+{
+    struct panel p = initialize(false, false);
+    CHECK(panel_key(&p, PANEL_KEY_LEFT) == PANEL_ACTION_NONE && p.page == PANEL_PAGE_LOG);
+    p.page=PANEL_PAGE_STATUS; p.debug_enabled=true;
+    CHECK(panel_key(&p, PANEL_KEY_LEFT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_DEBUG);
+    CHECK(panel_rotate(&p,-1)==PANEL_OK && p.debug.draft==8);
+    CHECK(panel_key(&p,PANEL_KEY_ENCODER)==PANEL_ACTION_DEBUG_RELAY && p.debug.choice[0]==8);
+    CHECK(panel_rotate(&p,1)==PANEL_OK && p.debug.draft==0);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_OUTPUT_STOP);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE);
+    CHECK(panel_rotate(&p,-1)==PANEL_OK && p.debug.draft==3);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS && p.debug.choice[1]==3);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE);
+    CHECK(panel_debug_mvpp(p.debug.draft)==25);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE);
+    CHECK(panel_rotate(&p,1)==PANEL_OK);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_WAVE);
+    p.debug.wave=true;
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_OUTPUT_STOP);
+    CHECK(panel_key(&p,PANEL_KEY_RIGHT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_STATUS);
+    CHECK(p.debug.choice[0]==0 && p.debug.draft==0);
+}
+
 int main(int argc, char **argv)
 {
     static const struct {
         const char *name;
         void (*run)(void);
     } cases[] = {
-        {"defaults", test_defaults}, {"tables", test_tables}, {"key_mapping", test_key_mapping},
+        {"debug_page", test_debug_page}, {"defaults", test_defaults}, {"tables", test_tables}, {"key_mapping", test_key_mapping},
         {"status_navigation", test_status_navigation}, {"draft_confirmation", test_draft_confirmation},
         {"cancel", test_cancel}, {"field_selection", test_field_selection},
         {"page_navigation", test_page_navigation}, {"log_controls", test_log_controls},

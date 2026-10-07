@@ -396,11 +396,29 @@ static void test_invalid_args(void)
     s=sample(); s.logs[0].kind=EVENT_COUNT; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     CHECK(c.attempts==0);
 }
+
+static void test_debug(void)
+{
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    s.page=PANEL_PAGE_DEBUG; s.debug.field=2; s.debug.relay=8; s.debug.coils=0x81;
+    s.debug.frequency=2000; s.debug.millivolts_pp=25; s.debug.seconds=10; s.debug.state=2;
+    refresh(&v,&c,&s,DGUS_CRC_NONE);
+    vp_text_is(&c,0x1300,"K8 1000R"); vp_text_is(&c,0x1310,"2");
+    vp_text_is(&c,0x1320,"25"); vp_text_is(&c,0x1330,"ON");
+    vp_text_is(&c,0x1340,"10000001"); vp_text_is(&c,0x1350,"10");
+    vp_text_is(&c,0x1360,"22.360"); vp_text_is(&c,0x1370,"2.240");
+    s.debug.state=0; s.debug.coils=0; s.debug.pending=true;
+    refresh(&v,&c,&s,DGUS_CRC_MODBUS);
+    vp_text_is(&c,0x1330,"START?"); vp_text_is(&c,0x1340,"00000000");
+    s.debug.starting=true;
+    refresh(&v,&c,&s,DGUS_CRC_NONE); vp_text_is(&c,0x1330,"WAIT");
+    s.debug.relay=9; CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
+}
 int main(int argc,char **argv)
 {
     CHECK(argc==2);
     struct { const char *name; void (*run)(void); } cases[]={
-        {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
+        {"debug",test_debug}, {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
         {"power_choice",test_power_choice},{"auto_range",test_auto_range},
         {"temperature",test_temperature},{"logs",test_logs},
         {"output_states",test_output_states},{"output_stale",test_output_stale},{"dds_logs",test_dds_logs},

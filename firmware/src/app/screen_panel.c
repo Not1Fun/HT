@@ -161,6 +161,12 @@ static void update_output(struct service *service, bool io_ok)
 		service->matched_range = value.range;
 		service->match_seen = true;
 	}
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    if (service->panel.debug.wave != value.debug.trial && service->panel.debug.field == 3)
+        service->panel.debug.draft = value.debug.trial ? 1 : 0;
+    service->panel.debug.busy = value.debug.busy;
+    service->panel.debug.wave = value.debug.trial;
+#endif
 	(void)panel_set_output_state(&service->panel, value.running || value.switching,
 		value.available && service->panel.apparent_mva > 0);
 }
@@ -432,6 +438,15 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			if (action < 0) {
 				return action;
 			}
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+            if (action == PANEL_ACTION_DEBUG_PARAMS) { request_stop(); stopping = true; }
+            if (!stopping && (action == PANEL_ACTION_DEBUG_RELAY || action == PANEL_ACTION_DEBUG_WAVE)) {
+                struct panel *p = &service->panel;
+                int rc = output_debug(p->debug.choice[0], panel_frequency_hz(p->debug.choice[1]),
+                    panel_debug_mvpp(p->debug.choice[2]), action == PANEL_ACTION_DEBUG_WAVE);
+                if (rc != 0) { p->debug.draft = 0; LOG_WRN("Debug request rejected: %d", rc); }
+            }
+#endif
 			if (action == PANEL_ACTION_FREQUENCY) {
 				request_stop();
 				stopping = true;
@@ -689,6 +704,17 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		out->values[VIEW_FREQUENCY] = (struct view_value){value.frequency, true};
 		out->values[VIEW_ELAPSED] = (struct view_value){value.elapsed_seconds, true};
 	}
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    out->debug.field = panel->debug.field;
+    out->debug.relay = panel->debug.field == 0 ? panel->debug.draft : panel->debug.choice[0];
+    out->debug.frequency = panel_frequency_hz(panel->debug.field == 1 ? panel->debug.draft : panel->debug.choice[1]);
+    out->debug.millivolts_pp = panel_debug_mvpp(panel->debug.field == 2 ? panel->debug.draft : panel->debug.choice[2]);
+    out->debug.coils = value.debug.coils;
+    out->debug.seconds = value.debug.seconds;
+    out->debug.state = value.fault ? 4 : !value.available ? 3 : value.debug.wave ? 2 : value.debug.busy ? 1 : 0;
+    out->debug.starting = value.debug.trial && !value.debug.wave;
+    out->debug.pending = panel->debug.field == 3 && panel->debug.draft && !value.debug.trial;
+#endif
 	int64_t age = k_uptime_get() - value.signal.reading.time_ms;
 	bool valid = value.signal.reading.valid && age >= 0 && age < 150;
 	out->values[VIEW_CURRENT] = (struct view_value){value.signal.reading.current_ma, valid};
@@ -732,6 +758,9 @@ int screen_panel_run(void)
 	struct service service = {.link.crc = DGUS_CRC_NONE};
 	const struct panel_config limits = {.current_max_ma = 7070, .apparent_max_mva = 50000};
 	int rc = panel_init(&service.panel, &limits, PANEL_VA, true, false);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    service.panel.debug_enabled = true;
+#endif
 	event_log_init(&service.log);
 
 	if (rc == 0) {

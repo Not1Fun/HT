@@ -19,6 +19,7 @@ add_subdirectory(signal_io)
 add_subdirectory(dds_bench)
 add_subdirectory(screen_panel)
 add_subdirectory(power)
+add_subdirectory(bench)
 add_subdirectory(output)
 add_subdirectory(bootloader)
 

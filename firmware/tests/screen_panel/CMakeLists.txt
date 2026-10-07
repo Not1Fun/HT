@@ -34,3 +34,12 @@ endif()
 foreach(case IN ITEMS standby measurement_age output_states)
   add_test(NAME screen_output_${case} COMMAND screen_output_tests ${case})
 endforeach()
+
+add_executable(screen_debug_tests test_screen_output.c
+    ../../src/ui/panel.c ../../src/ui/encoder.c ../../src/ui/dgus.c
+    ../../src/ui/view.c ../../src/core/event_log.c)
+target_include_directories(screen_debug_tests PRIVATE stubs ../../src)
+target_compile_definitions(screen_debug_tests PRIVATE CONFIG_HT_OUTPUT=1 CONFIG_HT_OUTPUT_BENCH=1)
+set_target_properties(screen_debug_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_compile_options(screen_debug_tests PRIVATE -Wall -Wextra -Werror -pedantic)
+add_test(NAME screen_debug_keys COMMAND screen_debug_tests debug_keys)

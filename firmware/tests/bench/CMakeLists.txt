@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(bench_tests C)
+enable_testing()
+add_executable(bench_tests test_bench.c ../../src/core/bench.c)
+target_include_directories(bench_tests PRIVATE ../../src)
+set_target_properties(bench_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES)
+target_compile_options(bench_tests PRIVATE -Wall -Wextra -Werror)
+add_test(NAME bench_sequence_and_trips COMMAND bench_tests)

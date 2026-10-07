@@ -19,3 +19,5 @@ foreach(case IN ITEMS mapping numbers time choices power_choice auto_range tempe
         invalid_readings transitions send_failure invalid_args)
     add_test(NAME view_${case} COMMAND view_tests ${case})
 endforeach()
+
+add_test(NAME view_debug COMMAND view_tests debug)

@@ -49,6 +49,12 @@ struct view_snapshot {
     enum view_power battery;
     enum panel_field selected;
     enum view_output output;
+    struct {
+        uint8_t field, relay, coils, state;
+        uint32_t frequency, seconds;
+        uint16_t millivolts_pp;
+        bool pending, starting;
+    } debug;
     bool editing;
     bool fresh;
     struct view_value values[VIEW_FIELD_COUNT];
@@ -63,7 +69,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v6：自动匹配阻抗，三项设置，VP11A0目标VA、VP1004输出状态及事件日志。
+/* ui.json v7：自动匹配阻抗，三项设置，VP11A0目标VA、VP1004输出状态及事件日志。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,

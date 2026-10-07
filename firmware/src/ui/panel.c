@@ -6,6 +6,17 @@
 static const uint32_t ranges[PANEL_RANGE_COUNT] = {1, 3, 10, 30, 100, 300, 1000};
 static const uint32_t frequencies[PANEL_FREQUENCY_COUNT] = {2000, 5000, 8000, 10000};
 
+uint16_t panel_debug_mvpp(uint8_t index)
+{
+    static const uint16_t values[] = {10, 25, 50, 100};
+    return index < 4 ? values[index] : 0;
+}
+
+static uint8_t debug_index(const struct panel *panel)
+{
+    return panel->debug.field == 3 ? panel->debug.wave : panel->debug.choice[panel->debug.field];
+}
+
 static bool valid_mode(enum panel_mode mode)
 {
     return mode == PANEL_CC || mode == PANEL_VA;
@@ -74,6 +85,7 @@ int panel_init(struct panel *panel, const struct panel_config *config,
     panel->fault = fault;
     panel->armed = !enabled && !fault;
     panel->ready = true;
+    panel->debug.choice[2] = 1;
     return PANEL_OK;
 }
 
@@ -89,12 +101,18 @@ int panel_key(struct panel *panel, enum panel_key key)
         return PANEL_ERR_ARG;
     }
     if (key == PANEL_KEY_LEFT || key == PANEL_KEY_RIGHT) {
+        enum panel_page before = panel->page;
+        enum panel_page last = panel->debug_enabled ? PANEL_PAGE_DEBUG : PANEL_PAGE_LOG;
         if (key == PANEL_KEY_LEFT) {
-            panel->page = panel->page == PANEL_PAGE_STATUS ? PANEL_PAGE_LOG : panel->page - 1;
+            panel->page = panel->page == PANEL_PAGE_STATUS ? last : panel->page - 1;
         } else {
-            panel->page = panel->page == PANEL_PAGE_LOG ? PANEL_PAGE_STATUS : panel->page + 1;
+            panel->page = panel->page == last ? PANEL_PAGE_STATUS : panel->page + 1;
         }
         panel->draft_index = selected_index(panel);
+        if (before == PANEL_PAGE_DEBUG || panel->page == PANEL_PAGE_DEBUG) {
+            panel->debug.field = panel->debug.draft = panel->debug.choice[0] = 0;
+            return PANEL_ACTION_OUTPUT_STOP;
+        }
         return PANEL_ACTION_NONE;
     }
     if (panel->page == PANEL_PAGE_STATUS) {
@@ -104,6 +122,21 @@ int panel_key(struct panel *panel, enum panel_key key)
         if (key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
             panel->draft_index = selected_index(panel);
             panel->page = PANEL_PAGE_SETTINGS;
+        }
+        return PANEL_ACTION_NONE;
+    }
+    if (panel->page == PANEL_PAGE_DEBUG && panel->debug_enabled) {
+        if (key == PANEL_KEY_UP || key == PANEL_KEY_DOWN) {
+            if (key == PANEL_KEY_UP && panel->debug.field > 0) --panel->debug.field;
+            if (key == PANEL_KEY_DOWN && panel->debug.field < 3) ++panel->debug.field;
+            panel->debug.draft = debug_index(panel);
+        } else if (key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
+            unsigned int index = panel->debug.field;
+            panel->debug.choice[index] = panel->debug.draft;
+            if (index == 0) return panel->debug.draft ? PANEL_ACTION_DEBUG_RELAY : PANEL_ACTION_OUTPUT_STOP;
+            if (index == 3) return panel->debug.wave || !panel->debug.draft ?
+                PANEL_ACTION_OUTPUT_STOP : PANEL_ACTION_DEBUG_WAVE;
+            return PANEL_ACTION_DEBUG_PARAMS;
         }
         return PANEL_ACTION_NONE;
     }
@@ -152,6 +185,14 @@ int panel_rotate(struct panel *panel, int32_t detents)
 
     if (result != PANEL_OK) {
         return result;
+    }
+    if (panel->page == PANEL_PAGE_DEBUG && panel->debug_enabled) {
+        unsigned int field = panel->debug.field;
+        count = field == 0 ? 9 : field == 3 ? 2 : 4;
+        next = (int64_t)panel->debug.draft + detents;
+        if (field == 3) panel->debug.draft = next <= 0 ? 0 : 1;
+        else panel->debug.draft = (uint8_t)((next % count + count) % count);
+        return PANEL_OK;
     }
     if (panel->page != PANEL_PAGE_SETTINGS) {
         return PANEL_OK;

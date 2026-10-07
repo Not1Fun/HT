@@ -220,6 +220,35 @@ static int send_logs(const struct view_snapshot *snapshot, enum dgus_crc crc,
     return result;
 }
 
+static int send_debug(const struct view_snapshot *s, enum dgus_crc crc, view_send_fn send, void *ctx)
+{
+    static const char *const relays[] = {"OFF", "K1", "K2 1R", "K3 3R", "K4 10R",
+        "K5 30R", "K6 100R", "K7 300R", "K8 1000R"};
+    uint16_t icons[] = {s->debug.field, s->debug.state};
+    int rc = send_words(crc, send, ctx, 0x1020, icons, 2);
+    for (unsigned int i = 0; i < 8 && rc == VIEW_OK; ++i) {
+        char text[VIEW_TEXT_BYTES] = {0};
+        switch (i) {
+        case 0: strcpy(text, relays[s->debug.relay]); break;
+        case 1: format_number(text, s->debug.frequency / 1000u, 0); break;
+        case 2: format_number(text, s->debug.millivolts_pp, 0); break;
+        case 3: strcpy(text, s->debug.state == 2 ? "ON" : s->debug.starting ? "WAIT" : s->debug.pending ? "START?" : "OFF"); break;
+        case 4:
+            for (unsigned int bit = 0; bit < 8; ++bit) text[bit] = '0' + ((s->debug.coils >> (7u-bit)) & 1u);
+            break;
+        case 5: format_number(text, s->debug.seconds, 0); break;
+        case 6: case 7: {
+            enum view_field field = i == 6 ? VIEW_VOLTAGE : VIEW_CURRENT;
+            format_value(text, field, s->values[field].value,
+                s->fresh && s->state != VIEW_FAULT && s->values[field].valid);
+            break;
+        }
+        }
+        rc = send_text(crc, send, ctx, (uint16_t)(0x1300u + i * 0x10u), text);
+    }
+    return rc;
+}
+
 void view_reset(struct view *view)
 {
     if (view != NULL) {
@@ -235,11 +264,12 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     bool online;
     int result;
     if (view == NULL || snapshot == NULL || send == NULL ||
-        (unsigned int)snapshot->page > PANEL_PAGE_LOG ||
+        (unsigned int)snapshot->page > PANEL_PAGE_DEBUG ||
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
         (unsigned int)snapshot->selected > PANEL_OUTPUT ||
         (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED ||
+        snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 4 ||
         snapshot->log_count > EVENT_LOG_CAPACITY ||
         snapshot->log_offset > (snapshot->log_count > VIEW_LOG_ROWS ?
                                snapshot->log_count - VIEW_LOG_ROWS : 0u)) {
@@ -266,6 +296,9 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     }
     if (result == VIEW_OK && snapshot->page == PANEL_PAGE_LOG) {
         result = send_logs(snapshot, crc, send, ctx);
+    }
+    if (result == VIEW_OK && snapshot->page == PANEL_PAGE_DEBUG) {
+        result = send_debug(snapshot, crc, send, ctx);
     }
     if (result == VIEW_OK && (!view->synced || view->page != snapshot->page)) {
         page[0] = 0x5a01;

@@ -12,9 +12,15 @@
     overcurrent:8,overcurrentClear:9,overvoltage:10,overvoltageClear:11,
     temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15,
     outputStart:16,outputStop:17,outputFault:18};
-  const names = ["状态页","输出设置页","设备日志页"];
+  const names = ["状态页","输出设置页","设备日志页","BENCH 调试页"];
   const state = {page:0,field:0,draft:0,range:0,frequency:0,power:0,scene:"idle",started:0,matchAt:0,
     output:false,matching:false,benchDisabled:false,batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
+  const debug = {field:0,draft:0,choice:[0,0,1,0],coils:0,wave:false,until:0};
+  const amplitudes=[10,25,50,100];
+  const relayNames=["OFF","K1","K2 1R","K3 3R","K4 10R","K5 30R","K6 100R","K7 300R","K8 1000R"];
+  function stopDebug() {debug.coils=0;debug.wave=false;debug.until=0;if(debug.field===3)debug.draft=0;}
+  function debugSelected() {return debug.field===3?Number(debug.wave):debug.choice[debug.field];}
+  function debugAllowed() {return state.scene==="idle"&&!state.temperatureInvalid&&!state.benchDisabled;}
   const scenes = {idle:0,fault:3,offline:4};
   const bootTime = performance.now();
   function selected() { return state.field===0 ? state.frequency : state.field===1 ? state.power : Number(state.output); }
@@ -73,7 +79,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=clean6"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=bench7"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -98,6 +104,8 @@
     const online=state.scene!=="offline";
     const values={state:state.matching?2:state.output?1:scenes[state.scene],battery:online?(state.batteryAlarm?1:0):2,
       focus:state.field,edit:dirty()?1:0,output:outputState()};
+    values.debug_focus=debug.field;
+    values.debug_state=state.scene==="fault"?4:!debugAllowed()?3:debug.wave?2:debug.until?1:0;
     const choiceFrequency=state.field===0?state.draft:state.frequency;
     const running=state.output&&!state.matching;
     const texts={current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",
@@ -107,6 +115,15 @@
       frequency_choice:String(frequencies[choiceFrequency]/1000),
       ntc1:temperatureText(250,online),ntc2:temperatureText(314,online&&!state.temperatureInvalid),
       ntc3:temperatureText(-52,online)};
+    Object.assign(texts,{
+      debug_relay:relayNames[debug.field===0?debug.draft:debug.choice[0]],
+      debug_frequency:String(frequencies[debug.field===1?debug.draft:debug.choice[1]]/1000),
+      debug_amplitude:String(amplitudes[debug.field===2?debug.draft:debug.choice[2]]),
+      debug_wave:debug.wave?"ON":debug.field===3&&debug.draft?"START?":"OFF",
+      debug_coils:debug.coils.toString(2).padStart(8,"0"),
+      debug_seconds:String(Math.max(0,Math.ceil((debug.until-performance.now())/1000))),
+      debug_voltage:"--",debug_current:"--"
+    });
     for(let row=0;row<4;row++) {
       const entry=state.logs[state.logOffset+row];
       values["log_event_"+row]=entry?entry.kind:0;
@@ -133,8 +150,12 @@
   function key(key) {
     if(key==="left" || key==="right") {
       const abandoned=dirty();
+      const before=state.page;
       state.page=(state.page+(key==="right"?1:names.length-1))%names.length;
       state.draft=selected();
+      if(before===3 || state.page===3) {
+        stopOutput("进入调试已停止恒 VA 演示。");stopDebug();debug.field=0;debug.draft=0;debug.choice[0]=0;
+      }
       if(state.page===2) state.logOffset=0;
       announce((abandoned?"未确认修改已取消。":"")+"已切到"+names[state.page]+"。");
     } else if(state.page===0) {
@@ -142,6 +163,22 @@
         state.page=1; state.draft=selected(); announce("上下选择频率、目标 VA 或输出，旋钮预选后按下确认；阻抗会自动匹配。");
       }
       if(key==="down" && !stopOutput("已立即停止演示输出。")) announce("输出当前已关闭。");
+    } else if(state.page===3) {
+      if(key==="up" || key==="down") {
+        debug.field=Math.max(0,Math.min(3,debug.field+(key==="down"?1:-1)));debug.draft=debugSelected();
+      } else if(key==="ok" || key==="press") {
+        const choice=debug.draft;
+        debug.choice[debug.field]=choice;
+        if(debug.field===1 || debug.field===2) {stopDebug();debug.draft=choice;}
+        else if(debug.field===3 && (debug.wave || !choice) || debug.field===0 && !choice) stopDebug();
+        else if(debugAllowed()) {
+          debug.wave=debug.field===3;
+          const relay=debug.choice[0];
+          debug.coils=relay<2?relay:(1<<(relay-1))|(relay>=6?1:0);
+          debug.until=performance.now()+(debug.wave?10000:30000);
+        }
+      }
+      announce("仅演示控制命令；实机 DAC/继电器动作以烧录后的设备为准。");
     } else if(state.page===2) {
       if(key==="up" || key==="down") moveLog(key==="down"?1:-1);
       else if(key==="ok" || key==="press") {state.logOffset=0;announce("演示日志已返回最新记录。");}
@@ -169,7 +206,11 @@
   }
   function turn(delta) {
     if(state.page===0) {announce("在设置页旋转选择挡位，在日志页旋转翻看记录。");return;}
-    if(state.page===2) moveLog(delta);
+    if(state.page===3) {
+      const count=debug.field===0?9:debug.field===3?2:4;
+      debug.draft=debug.field===3?Math.max(0,Math.min(1,debug.draft+delta)):(debug.draft+delta+count)%count;
+      announce("待确认；按 OK / 下压执行，左右切页停止。");
+    } else if(state.page===2) moveLog(delta);
     else {
       if(state.field===2) state.draft=Math.max(0,Math.min(1,state.draft+delta));
       else if(state.field===1) state.draft=Math.max(0,Math.min(50,state.draft+delta));
@@ -187,6 +228,7 @@
   document.querySelectorAll("[data-scene]").forEach(button=>button.addEventListener("click",()=>{
     const next=button.dataset.scene;
     if(next===state.scene) return;
+    if(next!=="idle") stopDebug();
     if(next!=="idle") stopOutput("演示状态变化，输出已停止。",next==="fault");
     if(state.scene==="offline") addEvent(events.online);
     if(state.scene==="fault") addEvent(events.overcurrentClear);
@@ -201,12 +243,14 @@
   });
   $("#temperature-invalid").addEventListener("change",event=>{
     state.temperatureInvalid=event.target.checked;
+    if(state.temperatureInvalid) stopDebug();
     if(state.temperatureInvalid) stopOutput("温度数据无效，演示输出已停止。",true);
     addEvent(state.temperatureInvalid?events.temperatureInvalid:events.temperatureReady,2);
     announce("已切换 NTC2 演示状态，并添加一条模拟日志。");render();
   });
   $("#bench-disabled").addEventListener("change",event=>{
     state.benchDisabled=event.target.checked;
+    if(state.benchDisabled) stopDebug();
     if(state.benchDisabled) stopOutput("输出功能未启用，输出已停止。");
     state.draft=selected();
     announce(state.benchDisabled?"模拟普通固件：未启用输出功能，不能启动输出。":"模拟输出功能已启用：仍默认关闭，需要重新预选并确认。");render();
@@ -219,6 +263,10 @@
   render();resize();
   setInterval(()=>{
     if(updateMatch()) render();
+    if(debug.until) {
+      if(performance.now()>=debug.until) stopDebug();
+      render();
+    }
     const field=screen.querySelector('[data-field="elapsed"] text');
     if(field && state.output && !state.matching) {
       field.textContent=timeText(elapsedSeconds());

@@ -25,3 +25,5 @@ foreach(case IN ITEMS defaults tables key_mapping status_navigation draft_confir
         fault_rearm mode_change_stop stop_priority invalid_config invalid_inputs)
     add_test(NAME panel_${case} COMMAND panel_tests ${case})
 endforeach()
+
+add_test(NAME panel_debug_page COMMAND panel_tests debug_page)

@@ -49,7 +49,7 @@ function field(index) {
 function start() { field(2); click('cw'); click('ok'); output(true); matching(true); assert.equal(icon('state'), 2); }
 
 (async () => {
-  assert.equal(ui.version, 6);
+  assert.equal(ui.version, 7);
   assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['frequency', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), false);
   for (const [name, vp] of Object.entries({current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
@@ -68,7 +68,7 @@ function start() { field(2); click('cw'); click('ok'); output(true); matching(tr
   advance(800); assert.equal(text('range'), '1'); matching(true);
   click('right'); click('right'); page(2); advance(800); output(true); matching(true); assert.equal(icon('state'), 2);
   assert.equal(icon('log_event_0'), 16);
-  click('right'); page(0); assert.equal(text('range'), '30'); advance(800);
+  click('left'); click('left'); page(0); assert.equal(text('range'), '30'); advance(800);
   matching(false); output(true); assert.equal(icon('state'), 1); assert.equal(text('range'), '30');
   assert.equal(text('current'), '1.291'); assert.equal(text('voltage'), '38.730');
   advance(65000); assert.equal(text('elapsed'), '00:01:07'); output(true);
@@ -86,5 +86,13 @@ function start() { field(2); click('cw'); click('ok'); output(true); matching(tr
   start(); click('left'); click('down'); output(false); advance(5000); output(false); matching(false);
   click('right');
   for (const item of ui.fields.filter(item => item.pages.includes(1))) assert.notEqual(text(item.name), undefined);
-  console.log('PASS: v6 VP contract, three fields, frequency wrap, VA bounds/draft, explicit start, matching transitions, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  click('right'); click('right'); page(3); assert.equal(text('debug_coils'), '00000000');
+  click('ccw'); assert.equal(text('debug_relay'),'K8 1000R'); click('press');
+  assert.equal(text('debug_coils'),'10000001'); advance(30001); assert.equal(text('debug_coils'),'00000000');
+  click('cw'); click('cw'); click('cw'); assert.equal(text('debug_relay'),'K2 1R'); click('press');
+  for(let i=0;i<3;i++) click('down'); click('cw'); click('press');
+  assert.equal(text('debug_wave'),'ON'); advance(10001); assert.equal(text('debug_wave'),'OFF');
+  click('cw'); click('press'); assert.equal(text('debug_wave'),'ON'); click('right');page(0);
+  click('left');page(3);assert.equal(text('debug_coils'),'00000000'); assert.equal(text('debug_wave'),'OFF');
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v7 VP contract, three fields, frequency wrap, VA bounds/draft, explicit start, matching transitions, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
