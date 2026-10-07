@@ -36,7 +36,9 @@ static inline void irq_enable(int irq) { irq_enabled[irq] = true; }
 #define DMA_CCR_CIRC 0x20u
 #define DMA_CCR_MINC 0x80u
 #define DMA_CCR_PSIZE_0 0x100u
+#define DMA_CCR_PSIZE_1 0x200u
 #define DMA_CCR_MSIZE_0 0x400u
+#define DMA_CCR_MSIZE_1 0x800u
 #define DMA_CCR_PL_1 0x2000u
 #define DMA_IFCR_CGIF1 1u
 #define DAC_CR_EN1 1u
@@ -146,4 +148,69 @@ static inline bool LL_DAC_IsReady(DAC_TypeDef *reg, uint32_t ch) { (void)reg; as
 #define LL_DMA_ClearFlag_TC1(reg) ((reg)->ISR &= ~2u)
 #define LL_DAC_IsActiveFlag_DMAUDR1(reg) (((reg)->SR & 0x2000u) != 0)
 #define LL_DAC_ClearFlag_DMAUDR1(reg) ((reg)->SR &= ~0x2000u)
+
+static struct {
+    const uint8_t *memory;
+    size_t size, offset, reads;
+    uint32_t count;
+    bool bounds_error;
+} dma_transfer;
+
+static void mock_dma_bind(const void *memory, size_t size)
+{
+    memset(&dma_transfer, 0, sizeof(dma_transfer));
+    dma_transfer.memory = memory;
+    dma_transfer.size = size;
+    dma_transfer.count = channel.CNDTR;
+}
+
+static bool mock_dma_error(void)
+{
+    hw_dma.ISR |= 8u;
+    channel.CCR &= ~DMA_CCR_EN;
+    if ((channel.CCR & DMA_CCR_TEIE) && irq_enabled[DMA1_Channel1_IRQn]) {
+        handlers[DMA1_Channel1_IRQn](NULL);
+    }
+    return false;
+}
+
+static bool mock_dac_trigger(void)
+{
+    uint32_t enabled = DAC_CR_EN1 | DAC_CR_TEN1 | DAC_CR_DMAEN1;
+    if (!(hw_timer.CR1 & TIM_CR1_CEN) || hw_timer.CR2 != LL_TIM_TRGO_UPDATE ||
+        (hw_dac.CR & enabled) != enabled || !(channel.CCR & DMA_CCR_EN)) return false;
+    hw_dac.DOR1 = hw_dac.DHR12R1 & 0xfffu;
+    size_t peripheral_size = 1u << ((channel.CCR >> 8) & 3u);
+    size_t memory_size = 1u << ((channel.CCR >> 10) & 3u);
+    /* G4 DAC 数据寄存器只接受 32 位总线写；DMA 按 MSIZE 独立递增源地址。 */
+    if (peripheral_size != sizeof(uint32_t) || memory_size > sizeof(uint32_t) ||
+        !(channel.CCR & DMA_CCR_DIR) || channel.CNDTR == 0 ||
+        channel.CPAR != (uint32_t)(uintptr_t)&hw_dac.DHR12R1 ||
+        channel.CMAR != (uint32_t)(uintptr_t)dma_transfer.memory) return mock_dma_error();
+    if (dma_transfer.offset > dma_transfer.size ||
+        memory_size > dma_transfer.size - dma_transfer.offset) {
+        dma_transfer.bounds_error = true;
+        return mock_dma_error();
+    }
+    uint32_t value = 0;
+    memcpy(&value, dma_transfer.memory + dma_transfer.offset, memory_size);
+    hw_dac.DHR12R1 = value;
+    dma_transfer.reads++;
+    if (channel.CCR & DMA_CCR_MINC) dma_transfer.offset += memory_size;
+    channel.CNDTR--;
+    uint32_t event = 0;
+    if (channel.CNDTR == dma_transfer.count / 2u) event = DMA_CCR_HTIE;
+    if (channel.CNDTR == 0) {
+        event = DMA_CCR_TCIE;
+        if (channel.CCR & DMA_CCR_CIRC) {
+            channel.CNDTR = dma_transfer.count;
+            dma_transfer.offset = 0;
+        } else channel.CCR &= ~DMA_CCR_EN;
+    }
+    hw_dma.ISR |= event;
+    if ((channel.CCR & event) && irq_enabled[DMA1_Channel1_IRQn]) {
+        handlers[DMA1_Channel1_IRQn](NULL);
+    }
+    return true;
+}
 #endif

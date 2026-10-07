@@ -19,7 +19,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(dds_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 foreach(case IN ITEMS dynamic_amplitude dynamic_deadline dynamic_fault start_stop startup_cancel
-    sample_only sample_restart sample_fault sample_resource)
+    sample_only sample_restart sample_fault sample_resource dma_stream dma_width_fault)
   add_test(NAME dds_output_${case} COMMAND dds_output_tests ${case})
 endforeach()
 add_executable(dds_io_tests test_dds_io.c ../../src/core/dds.c)
@@ -29,7 +29,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(dds_io_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 foreach(case IN ITEMS init_idle input_guards resource_conflicts reference_guards
-    start_stop frequency_restart dma_fault dac_fault startup_error stop_timeout
+    start_stop frequency_restart dma_stream dma_width_fault dma_fault dac_fault startup_error stop_timeout
     resource_loss clock_loss external_fault startup_cancel adc_unchanged)
   add_test(NAME dds_io_${case} COMMAND dds_io_tests ${case})
 endforeach()

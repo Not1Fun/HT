@@ -16,8 +16,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 
+/* G4 DAC寄存器仅支持32位访问；16位波表由DMA零扩展。 */
 #define DMA_SETTINGS (DMA_CCR_DIR | DMA_CCR_CIRC | DMA_CCR_MINC | \
-		      DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 | DMA_CCR_PL_1)
+		      DMA_CCR_PSIZE_1 | DMA_CCR_MSIZE_0 | DMA_CCR_PL_1)
 #define DAC_TRIGGER LL_DAC_TRIG_EXT_TIM6_TRGO
 #define DMA_CLOCKS (LL_AHB1_GRP1_PERIPH_DMA1 | LL_AHB1_GRP1_PERIPH_DMAMUX1)
 #define STOP_POLLS 128u

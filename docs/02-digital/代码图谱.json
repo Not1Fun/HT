@@ -259,7 +259,7 @@
       "path": "firmware/src/platform/dds_io.c",
       "module": "platform",
       "brief": "独占DAC1/TIM6/DMA1通道1；输出模式仅在DMA空闲半区调幅。",
-      "sha256": "b0cc304403e85802222f2bede7f0db19f3fc041b412350ae67be5aecb63e3cde",
+      "sha256": "7eef6194d84c3fa62714b8671dfc072f092839926bc1e05c8f30d0a0a49fc9ec",
       "includes": [
         "platform/dds_io.h",
         "core/dds.h"
@@ -1337,145 +1337,145 @@
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:50:clocks_ready",
+      "id": "firmware/src/platform/dds_io.c:51:clocks_ready",
       "name": "clocks_ready",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 50,
+      "line": 51,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:57:reference_ready",
+      "id": "firmware/src/platform/dds_io.c:58:reference_ready",
       "name": "reference_ready",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 57,
+      "line": 58,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:70:quiet",
+      "id": "firmware/src/platform/dds_io.c:71:quiet",
       "name": "quiet",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 70,
+      "line": 71,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:117:fail",
+      "id": "firmware/src/platform/dds_io.c:118:fail",
       "name": "fail",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 117,
+      "line": 118,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:129:dds_io_fault_stop",
+      "id": "firmware/src/platform/dds_io.c:130:dds_io_fault_stop",
       "name": "dds_io_fault_stop",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 129,
+      "line": 130,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:134:dma_error",
+      "id": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "dma_error",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 134,
+      "line": 135,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:169:dac_error",
+      "id": "firmware/src/platform/dds_io.c:170:dac_error",
       "name": "dac_error",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 169,
+      "line": 170,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:177:check",
+      "id": "firmware/src/platform/dds_io.c:178:check",
       "name": "check",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 177,
+      "line": 178,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "id": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "dds_io_init",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 216,
+      "line": 217,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "id": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "name": "dds_io_configure",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 283,
+      "line": 284,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:319:dds_io_start",
+      "id": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "name": "dds_io_start",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 319,
+      "line": 320,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "id": "firmware/src/platform/dds_io.c:371:dds_io_stop",
       "name": "dds_io_stop",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 370,
+      "line": 371,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
+      "id": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "name": "dds_io_sample_start",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 387,
+      "line": 388,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
+      "id": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
       "name": "dds_io_set_amplitude",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 417,
+      "line": 418,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:432:dds_io_check",
+      "id": "firmware/src/platform/dds_io.c:433:dds_io_check",
       "name": "dds_io_check",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 432,
+      "line": 433,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "id": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "name": "dds_io_snapshot",
       "path": "firmware/src/platform/dds_io.c",
-      "line": 441,
+      "line": 442,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
@@ -2624,22 +2624,22 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:145:stop_output",
-      "callee": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "callee": "firmware/src/platform/dds_io.c:371:dds_io_stop",
       "line": 150
     },
     {
       "caller": "firmware/src/app/dds_bench.c:145:stop_output",
-      "callee": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "callee": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "line": 152
     },
     {
       "caller": "firmware/src/app/dds_bench.c:145:stop_output",
-      "callee": "firmware/src/platform/dds_io.c:129:dds_io_fault_stop",
+      "callee": "firmware/src/platform/dds_io.c:130:dds_io_fault_stop",
       "line": 165
     },
     {
       "caller": "firmware/src/app/dds_bench.c:145:stop_output",
-      "callee": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "callee": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "line": 166
     },
     {
@@ -2649,7 +2649,7 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:198:fail",
-      "callee": "firmware/src/platform/dds_io.c:129:dds_io_fault_stop",
+      "callee": "firmware/src/platform/dds_io.c:130:dds_io_fault_stop",
       "line": 201
     },
     {
@@ -2669,12 +2669,12 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:210:dds_bench_init",
-      "callee": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "callee": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "line": 217
     },
     {
       "caller": "firmware/src/app/dds_bench.c:210:dds_bench_init",
-      "callee": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "callee": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "line": 221
     },
     {
@@ -2719,7 +2719,7 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:247:start_output",
-      "callee": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "callee": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "line": 265
     },
     {
@@ -2729,7 +2729,7 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:247:start_output",
-      "callee": "firmware/src/platform/dds_io.c:319:dds_io_start",
+      "callee": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "line": 271
     },
     {
@@ -2744,7 +2744,7 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:247:start_output",
-      "callee": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "callee": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "line": 281
     },
     {
@@ -2769,12 +2769,12 @@
     },
     {
       "caller": "firmware/src/app/dds_bench.c:300:dds_bench_poll",
-      "callee": "firmware/src/platform/dds_io.c:432:dds_io_check",
+      "callee": "firmware/src/platform/dds_io.c:433:dds_io_check",
       "line": 313
     },
     {
       "caller": "firmware/src/app/dds_bench.c:300:dds_bench_poll",
-      "callee": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "callee": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "line": 317
     },
     {
@@ -2939,7 +2939,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:39:level",
-      "callee": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
+      "callee": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
       "line": 39
     },
     {
@@ -3983,129 +3983,129 @@
       "line": 120
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:117:fail",
-      "callee": "firmware/src/platform/dds_io.c:70:quiet",
-      "line": 125
+      "caller": "firmware/src/platform/dds_io.c:118:fail",
+      "callee": "firmware/src/platform/dds_io.c:71:quiet",
+      "line": 126
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:129:dds_io_fault_stop",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 131
+      "caller": "firmware/src/platform/dds_io.c:130:dds_io_fault_stop",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 132
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 138
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 139
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 145
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 146
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 152
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 153
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "callee": "firmware/src/core/dds.c:17:dds_wave",
-      "line": 156
+      "line": 157
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 163
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 164
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:169:dac_error",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 173
+      "caller": "firmware/src/platform/dds_io.c:170:dac_error",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 174
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
-      "callee": "firmware/src/platform/dds_io.c:50:clocks_ready",
-      "line": 197
+      "caller": "firmware/src/platform/dds_io.c:178:check",
+      "callee": "firmware/src/platform/dds_io.c:51:clocks_ready",
+      "line": 198
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
-      "callee": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "line": 197
+      "caller": "firmware/src/platform/dds_io.c:178:check",
+      "callee": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "line": 198
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 206
+      "caller": "firmware/src/platform/dds_io.c:178:check",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 207
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 210
+      "caller": "firmware/src/platform/dds_io.c:178:check",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 211
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "callee": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "line": 229
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "callee": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "line": 230
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "callee": "firmware/src/core/dds.c:33:dds_timer",
-      "line": 259
+      "line": 260
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "caller": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "callee": "firmware/src/core/dds.c:33:dds_timer",
-      "line": 288
+      "line": 289
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:283:dds_io_configure",
-      "callee": "firmware/src/platform/dds_io.c:177:check",
-      "line": 292
+      "caller": "firmware/src/platform/dds_io.c:284:dds_io_configure",
+      "callee": "firmware/src/platform/dds_io.c:178:check",
+      "line": 293
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "caller": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "callee": "firmware/src/core/dds.c:17:dds_wave",
-      "line": 297
+      "line": 298
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "callee": "firmware/src/platform/dds_io.c:177:check",
-      "line": 324
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "callee": "firmware/src/platform/dds_io.c:178:check",
+      "line": 325
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "callee": "firmware/src/platform/dds_io.c:117:fail",
-      "line": 338
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "callee": "firmware/src/platform/dds_io.c:118:fail",
+      "line": 339
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
-      "callee": "firmware/src/platform/dds_io.c:70:quiet",
-      "line": 376
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
+      "callee": "firmware/src/platform/dds_io.c:71:quiet",
+      "line": 377
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "callee": "firmware/src/core/dds.c:33:dds_timer",
-      "line": 390
+      "line": 391
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
-      "callee": "firmware/src/platform/dds_io.c:177:check",
-      "line": 392
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
+      "callee": "firmware/src/platform/dds_io.c:178:check",
+      "line": 393
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
-      "callee": "firmware/src/platform/dds_io.c:177:check",
-      "line": 421
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
+      "callee": "firmware/src/platform/dds_io.c:178:check",
+      "line": 422
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:432:dds_io_check",
-      "callee": "firmware/src/platform/dds_io.c:177:check",
-      "line": 435
+      "caller": "firmware/src/platform/dds_io.c:433:dds_io_check",
+      "callee": "firmware/src/platform/dds_io.c:178:check",
+      "line": 436
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
-      "callee": "firmware/src/platform/dds_io.c:50:clocks_ready",
-      "line": 77
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
+      "callee": "firmware/src/platform/dds_io.c:51:clocks_ready",
+      "line": 78
     },
     {
       "caller": "firmware/src/platform/relay_io.c:41:reset_output",
@@ -4304,7 +4304,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:159:stop",
-      "callee": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "callee": "firmware/src/platform/dds_io.c:371:dds_io_stop",
       "line": 161
     },
     {
@@ -4319,7 +4319,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:171:sample",
-      "callee": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
+      "callee": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "line": 175
     },
     {
@@ -4349,7 +4349,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:211:signal_io_init",
-      "callee": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "callee": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "line": 219
     },
     {
@@ -4409,7 +4409,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:259:signal_io_start",
-      "callee": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "callee": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "line": 263
     },
     {
@@ -4424,7 +4424,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:259:signal_io_start",
-      "callee": "firmware/src/platform/dds_io.c:319:dds_io_start",
+      "callee": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "line": 267
     },
     {
@@ -4474,7 +4474,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:311:signal_io_poll",
-      "callee": "firmware/src/platform/dds_io.c:432:dds_io_check",
+      "callee": "firmware/src/platform/dds_io.c:433:dds_io_check",
       "line": 314
     },
     {
@@ -4529,7 +4529,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:51:signal_io_fault",
-      "callee": "firmware/src/platform/dds_io.c:129:dds_io_fault_stop",
+      "callee": "firmware/src/platform/dds_io.c:130:dds_io_fault_stop",
       "line": 55
     },
     {
@@ -6455,513 +6455,513 @@
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:117:fail",
+      "caller": "firmware/src/platform/dds_io.c:118:fail",
       "name": "__get_PRIMASK",
-      "line": 119,
+      "line": 120,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:117:fail",
+      "caller": "firmware/src/platform/dds_io.c:118:fail",
       "name": "__disable_irq",
-      "line": 121,
+      "line": 122,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:117:fail",
+      "caller": "firmware/src/platform/dds_io.c:118:fail",
       "name": "__set_PRIMASK",
-      "line": 126,
+      "line": 127,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "LL_DMA_IsActiveFlag_TE1",
-      "line": 137,
+      "line": 138,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "LL_DMA_IsActiveFlag_HT1",
-      "line": 142,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "name": "LL_DMA_IsActiveFlag_TC1",
       "line": 143,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "name": "LL_DMA_ClearFlag_HT1",
-      "line": 148,
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "name": "LL_DMA_IsActiveFlag_TC1",
+      "line": 144,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
-      "name": "LL_DMA_ClearFlag_TC1",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "name": "LL_DMA_ClearFlag_HT1",
       "line": 149,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
+      "name": "LL_DMA_ClearFlag_TC1",
+      "line": 150,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "__DMB",
-      "line": 157,
+      "line": 158,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "LL_DMA_IsActiveFlag_HT1",
-      "line": 162,
+      "line": 163,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:134:dma_error",
+      "caller": "firmware/src/platform/dds_io.c:135:dma_error",
       "name": "LL_DMA_IsActiveFlag_TC1",
-      "line": 162,
+      "line": 163,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:169:dac_error",
+      "caller": "firmware/src/platform/dds_io.c:170:dac_error",
       "name": "LL_DAC_IsActiveFlag_DMAUDR1",
-      "line": 172,
+      "line": 173,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
+      "caller": "firmware/src/platform/dds_io.c:178:check",
       "name": "LL_AHB2_GRP1_IsEnabledClock",
-      "line": 198,
+      "line": 199,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
+      "caller": "firmware/src/platform/dds_io.c:178:check",
       "name": "LL_DAC_IsActiveFlag_DMAUDR1",
-      "line": 209,
+      "line": 210,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
-      "name": "LL_DMA_IsActiveFlag_TE1",
-      "line": 209,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:177:check",
+      "caller": "firmware/src/platform/dds_io.c:178:check",
       "name": "LL_DMA_IsActiveFlag_TE1",
       "line": 210,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:178:check",
+      "name": "LL_DMA_IsActiveFlag_TE1",
+      "line": 211,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "k_mutex_lock",
-      "line": 220,
+      "line": 221,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB2_GRP1_IsEnabledClock",
-      "line": 222,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "LL_AHB2_GRP1_IsEnabledClock",
       "line": 223,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_APB1_GRP1_IsEnabledClock",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB2_GRP1_IsEnabledClock",
       "line": 224,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB2_GRP1_EnableClock",
-      "line": 240,
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_APB1_GRP1_IsEnabledClock",
+      "line": 225,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_APB1_GRP1_EnableClock",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB2_GRP1_EnableClock",
       "line": 241,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB1_GRP1_EnableClock",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_APB1_GRP1_EnableClock",
       "line": 242,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB2_GRP1_DisableClock",
-      "line": 245,
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB1_GRP1_EnableClock",
+      "line": 243,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_APB1_GRP1_DisableClock",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB2_GRP1_DisableClock",
       "line": 246,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB1_GRP1_DisableClock",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_APB1_GRP1_DisableClock",
       "line": 247,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB2_GRP1_ForceReset",
-      "line": 252,
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB1_GRP1_DisableClock",
+      "line": 248,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_AHB2_GRP1_ReleaseReset",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB2_GRP1_ForceReset",
       "line": 253,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_APB1_GRP1_ForceReset",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_AHB2_GRP1_ReleaseReset",
       "line": 254,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "LL_APB1_GRP1_ReleaseReset",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_APB1_GRP1_ForceReset",
       "line": 255,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "IRQ_CONNECT",
-      "line": 272,
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "LL_APB1_GRP1_ReleaseReset",
+      "line": 256,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "IRQ_CONNECT",
       "line": 273,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "NVIC_ClearPendingIRQ",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "IRQ_CONNECT",
       "line": 274,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "NVIC_ClearPendingIRQ",
       "line": 275,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
-      "name": "irq_enable",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "NVIC_ClearPendingIRQ",
       "line": 276,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "irq_enable",
       "line": 277,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:216:dds_io_init",
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
+      "name": "irq_enable",
+      "line": 278,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:217:dds_io_init",
       "name": "k_mutex_unlock",
-      "line": 279,
+      "line": 280,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "caller": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "name": "k_mutex_lock",
-      "line": 291,
+      "line": 292,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:283:dds_io_configure",
+      "caller": "firmware/src/platform/dds_io.c:284:dds_io_configure",
       "name": "k_mutex_unlock",
-      "line": 315,
+      "line": 316,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "name": "k_mutex_lock",
-      "line": 323,
+      "line": 324,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "name": "LL_DAC_Enable",
-      "line": 335,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "k_busy_wait",
       "line": 336,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "LL_DAC_IsReady",
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "k_busy_wait",
       "line": 337,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "LL_DAC_ClearFlag_DMAUDR1",
-      "line": 346,
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "LL_DAC_IsReady",
+      "line": 338,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "__get_PRIMASK",
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "LL_DAC_ClearFlag_DMAUDR1",
       "line": 347,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "__disable_irq",
-      "line": 349,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "__DMB",
-      "line": 353,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "__set_PRIMASK",
-      "line": 361,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:319:dds_io_start",
-      "name": "k_mutex_unlock",
-      "line": 366,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
-      "name": "k_mutex_lock",
-      "line": 372,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
       "name": "__get_PRIMASK",
+      "line": 348,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "__disable_irq",
+      "line": 350,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "__DMB",
+      "line": 354,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "__set_PRIMASK",
+      "line": 362,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:320:dds_io_start",
+      "name": "k_mutex_unlock",
+      "line": 367,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
+      "name": "k_mutex_lock",
       "line": 373,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
+      "name": "__get_PRIMASK",
+      "line": 374,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
       "name": "__disable_irq",
-      "line": 375,
+      "line": 376,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
       "name": "__set_PRIMASK",
-      "line": 381,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:370:dds_io_stop",
-      "name": "k_mutex_unlock",
       "line": 382,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
+      "caller": "firmware/src/platform/dds_io.c:371:dds_io_stop",
+      "name": "k_mutex_unlock",
+      "line": 383,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "name": "k_mutex_lock",
-      "line": 391,
+      "line": 392,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "name": "__get_PRIMASK",
-      "line": 394,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
-      "name": "__disable_irq",
       "line": 395,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
-      "name": "__set_PRIMASK",
-      "line": 411,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:387:dds_io_sample_start",
-      "name": "k_mutex_unlock",
-      "line": 413,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
-      "name": "k_mutex_lock",
-      "line": 420,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
-      "name": "__get_PRIMASK",
-      "line": 422,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
       "name": "__disable_irq",
+      "line": 396,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
+      "name": "__set_PRIMASK",
+      "line": 412,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:388:dds_io_sample_start",
+      "name": "k_mutex_unlock",
+      "line": 414,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
+      "name": "k_mutex_lock",
+      "line": 421,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
+      "name": "__get_PRIMASK",
       "line": 423,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
-      "name": "__set_PRIMASK",
-      "line": 426,
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
+      "name": "__disable_irq",
+      "line": 424,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:417:dds_io_set_amplitude",
-      "name": "k_mutex_unlock",
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
+      "name": "__set_PRIMASK",
       "line": 427,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:432:dds_io_check",
-      "name": "k_mutex_lock",
-      "line": 434,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:432:dds_io_check",
+      "caller": "firmware/src/platform/dds_io.c:418:dds_io_set_amplitude",
       "name": "k_mutex_unlock",
-      "line": 437,
+      "line": 428,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "caller": "firmware/src/platform/dds_io.c:433:dds_io_check",
       "name": "k_mutex_lock",
-      "line": 446,
+      "line": 435,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
-      "name": "__get_PRIMASK",
+      "caller": "firmware/src/platform/dds_io.c:433:dds_io_check",
+      "name": "k_mutex_unlock",
+      "line": 438,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
+      "name": "k_mutex_lock",
       "line": 447,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "caller": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
+      "name": "__get_PRIMASK",
+      "line": 448,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "name": "__disable_irq",
-      "line": 449,
+      "line": 450,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
+      "caller": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
       "name": "__set_PRIMASK",
-      "line": 457,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/dds_io.c:441:dds_io_snapshot",
-      "name": "k_mutex_unlock",
       "line": 458,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:50:clocks_ready",
-      "name": "LL_AHB2_GRP1_IsEnabledClock",
-      "line": 52,
+      "caller": "firmware/src/platform/dds_io.c:442:dds_io_snapshot",
+      "name": "k_mutex_unlock",
+      "line": 459,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:50:clocks_ready",
-      "name": "LL_APB1_GRP1_IsEnabledClock",
+      "caller": "firmware/src/platform/dds_io.c:51:clocks_ready",
+      "name": "LL_AHB2_GRP1_IsEnabledClock",
       "line": 53,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:50:clocks_ready",
-      "name": "LL_AHB1_GRP1_IsEnabledClock",
+      "caller": "firmware/src/platform/dds_io.c:51:clocks_ready",
+      "name": "LL_APB1_GRP1_IsEnabledClock",
       "line": 54,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_RCC_GetAHBPrescaler",
-      "line": 60,
+      "caller": "firmware/src/platform/dds_io.c:51:clocks_ready",
+      "name": "LL_AHB1_GRP1_IsEnabledClock",
+      "line": 55,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_RCC_GetAPB1Prescaler",
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_RCC_GetAHBPrescaler",
       "line": 61,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_VREFBUF_IsVREFReady",
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_RCC_GetAPB1Prescaler",
       "line": 62,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_VREFBUF_GetVoltageScaling",
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_VREFBUF_IsVREFReady",
       "line": 63,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_GPIO_GetPinMode",
-      "line": 65,
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_VREFBUF_GetVoltageScaling",
+      "line": 64,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:57:reference_ready",
-      "name": "LL_GPIO_GetPinPull",
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_GPIO_GetPinMode",
       "line": 66,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
-      "name": "LL_AHB2_GRP1_IsEnabledClock",
-      "line": 78,
+      "caller": "firmware/src/platform/dds_io.c:58:reference_ready",
+      "name": "LL_GPIO_GetPinPull",
+      "line": 67,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
-      "name": "LL_AHB1_GRP1_IsEnabledClock",
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
+      "name": "LL_AHB2_GRP1_IsEnabledClock",
       "line": 79,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
+      "name": "LL_AHB1_GRP1_IsEnabledClock",
+      "line": 80,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
       "name": "LL_APB1_GRP1_IsEnabledClock",
-      "line": 82,
+      "line": 83,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
       "name": "LL_DAC_ClearFlag_DMAUDR1",
-      "line": 108,
+      "line": 109,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/dds_io.c:70:quiet",
+      "caller": "firmware/src/platform/dds_io.c:71:quiet",
       "name": "LL_DAC_Disable",
-      "line": 111,
+      "line": 112,
       "kind": "external_or_unknown"
     },
     {

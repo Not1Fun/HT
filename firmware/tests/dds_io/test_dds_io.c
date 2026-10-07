@@ -158,6 +158,52 @@ static void assert_latched(enum dds_fault expected)
     assert(snapshot().fault == expected);
 }
 
+static void dma_stream(void)
+{
+    const uint32_t hz[] = {2000, 5000, 8000, 10000};
+    for (size_t f = 0; f < sizeof(hz) / sizeof(hz[0]); ++f) {
+        reset();
+        assert(dds_io_init() == 0 && dds_io_configure(hz[f], 70) == 0);
+        /* 非重复诊断序列能发现跳点、错误步长和环回位置。 */
+        for (size_t i = 0; i < DDS_BUFFER_SAMPLES; ++i) samples[i] = (i * 37u + 101u) & 0xfffu;
+        assert(dds_io_start() == 0);
+        mock_dma_bind(samples, sizeof(samples));
+        for (size_t n = 0; n < DDS_BUFFER_SAMPLES * 2u + 2u; ++n) {
+            size_t current = n % DDS_BUFFER_SAMPLES;
+            size_t previous = (current + DDS_BUFFER_SAMPLES - 1u) % DDS_BUFFER_SAMPLES;
+            assert(mock_dac_trigger());
+            assert(hw_dac.DOR1 == samples[previous]);
+            assert(hw_dac.DHR12R1 == samples[current]);
+            assert(channel.CNDTR == DDS_BUFFER_SAMPLES - (n + 1u) % DDS_BUFFER_SAMPLES);
+            assert(dma_transfer.offset == ((n + 1u) % DDS_BUFFER_SAMPLES) * sizeof(samples[0]));
+            assert(dma_transfer.reads == n + 1u && !dma_transfer.bounds_error);
+            assert(dds_io_check() == 0 && snapshot().running);
+        }
+        assert((channel.CCR & (DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_1)) == DMA_CCR_PSIZE_1);
+        assert((channel.CCR & (DMA_CCR_MSIZE_0 | DMA_CCR_MSIZE_1)) == DMA_CCR_MSIZE_0);
+        assert(dds_io_stop() == 0);
+        size_t reads = dma_transfer.reads;
+        assert(!mock_dac_trigger() && dma_transfer.reads == reads);
+    }
+}
+
+static void dma_width_fault(void)
+{
+    start();
+    mock_dma_bind(samples, sizeof(samples));
+    channel.CCR = (channel.CCR & ~(DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_1)) | DMA_CCR_PSIZE_0;
+    assert(!mock_dac_trigger() && dma_transfer.reads == 0);
+    assert_latched(DDS_FAULT_DMA);
+
+    reset(); start();
+    mock_dma_bind(samples, sizeof(samples));
+    channel.CCR = (channel.CCR & ~(DMA_CCR_MSIZE_0 | DMA_CCR_MSIZE_1)) | DMA_CCR_MSIZE_1;
+    for (size_t i = 0; i < sizeof(samples) / sizeof(uint32_t); ++i) assert(mock_dac_trigger());
+    assert(!mock_dac_trigger() && dma_transfer.bounds_error);
+    assert(dma_transfer.reads == sizeof(samples) / sizeof(uint32_t));
+    assert_latched(DDS_FAULT_DMA);
+}
+
 static void dma_fault(void)
 {
     start(); primask = 1; hw_dma.ISR |= 8u;
@@ -391,7 +437,7 @@ int main(int argc, char **argv)
     assert(argc == 2); reset();
 #define RUN(name) if (strcmp(argv[1], #name) == 0) { name(); puts("DDS IO test passed"); return 0; }
     RUN(init_idle) RUN(input_guards) RUN(resource_conflicts) RUN(reference_guards)
-    RUN(start_stop) RUN(frequency_restart) RUN(dma_fault) RUN(dac_fault)
+    RUN(start_stop) RUN(frequency_restart) RUN(dma_stream) RUN(dma_width_fault) RUN(dma_fault) RUN(dac_fault)
     RUN(startup_error) RUN(stop_timeout) RUN(resource_loss) RUN(clock_loss)
     RUN(external_fault) RUN(startup_cancel) RUN(adc_unchanged)
 #if defined(CONFIG_HT_OUTPUT)
