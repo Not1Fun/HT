@@ -14,7 +14,7 @@ set_target_properties(screen_panel_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQ
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(screen_panel_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
-foreach(case IN ITEMS startup three_fields start_parameters stop_confirm frequency_confirm
+foreach(case IN ITEMS startup four_fields start_parameters stop_confirm frequency_confirm
     power_confirm power_cancel power_bounds
     stop_navigation_right stop_navigation_left permission_io permission_inputs permission_oc permission_ov
     permission_screen permission_deadline permission_temperature_inactive permission_temperature_unseen
@@ -31,7 +31,7 @@ set_target_properties(screen_output_tests PROPERTIES C_STANDARD 11 C_STANDARD_RE
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(screen_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
-foreach(case IN ITEMS reasons standby measurement_age output_states)
+foreach(case IN ITEMS manual_selection reasons standby measurement_age output_states)
   add_test(NAME screen_output_${case} COMMAND screen_output_tests ${case})
 endforeach()
 
@@ -47,3 +47,5 @@ add_test(NAME screen_debug_keys COMMAND screen_debug_tests debug_keys)
 add_test(NAME screen_debug_dac_keys COMMAND screen_debug_tests dac_keys)
 
 add_test(NAME screen_debug_reasons COMMAND screen_debug_tests reasons)
+
+add_test(NAME screen_debug_manual_selection COMMAND screen_debug_tests manual_selection)

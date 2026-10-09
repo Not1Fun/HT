@@ -118,6 +118,7 @@ static struct service ready(void)
     struct service s = {.link.crc = DGUS_CRC_NONE};
     const struct panel_config limits = {7070, 50000};
     assert(panel_init(&s.panel, &limits, PANEL_CC, false, false) == 0);
+    s.panel.field = PANEL_FREQUENCY;
     event_log_init(&s.log);
     update_digital(&s, BIT(BOARD_BAT));
     s.link.connected = true;
@@ -209,11 +210,13 @@ static void startup(void)
     }
     assert(saw_icons);
 }
-static void three_fields(void)
+static void four_fields(void)
 {
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
     press(&s, PANEL_KEY_UP);
+    assert(s.panel.field == PANEL_RANGE);
+    press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_FREQUENCY);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_POWER);
@@ -475,7 +478,7 @@ int main(int argc, char **argv)
     assert(argc == 2);
     const char *name = argv[1];
     if (!strcmp(name, "startup")) startup();
-    else if (!strcmp(name, "three_fields")) three_fields();
+    else if (!strcmp(name, "four_fields")) four_fields();
     else if (!strcmp(name, "start_parameters")) start_parameters();
     else if (!strcmp(name, "stop_confirm")) stop_confirm();
     else if (!strcmp(name, "frequency_confirm")) frequency_confirm();

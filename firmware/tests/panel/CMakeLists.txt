@@ -27,3 +27,5 @@ foreach(case IN ITEMS defaults tables key_mapping status_navigation draft_confir
 endforeach()
 
 add_test(NAME panel_debug_page COMMAND panel_tests debug_page)
+
+add_test(NAME panel_manual_range COMMAND panel_tests manual_range)

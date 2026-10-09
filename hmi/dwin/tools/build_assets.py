@@ -11,7 +11,7 @@ COLORS = dict(bg="#FFFFFF", surface="#FFFFFF", ink="#303133", muted="#606266",
               line="#DCDFE6", divider="#EBEEF5", accent="#409EFF", pale="#ECF5FF",
               red="#F56C6C", red_pale="#FEF0F0", amber="#E6A23C", amber_pale="#FDF6EC")
 FONT_DIR = Path("C:/Windows/Fonts")
-EVENTS = ["", "启动完成", "屏幕连接", "屏幕断开", "阻抗匹配", "频率请求确认",
+EVENTS = ["", "启动完成", "屏幕连接", "屏幕断开", "阻抗挡位生效", "频率请求确认",
           "电池正常", "电池低电或异常", "OC 保护输入有效", "OC 保护输入解除", "OV 保护输入有效",
           "OV 保护输入解除", "温度就绪", "温度无效", "温度采样未就绪", "输入输出错误",
           "输出启动", "输出停止", "输出故障"]
@@ -207,6 +207,20 @@ def settings_focus_icon(selected):
     return art
 
 
+def manual_focus_icon(selected):
+    art = Art(752, 276, COLORS["bg"])
+    for index, (label, unit) in enumerate([("阻抗挡位", "Ω"), ("频率挡位", "kHz"),
+                                         ("目标视在功率", "VA"), ("输出控制", "")]):
+        top = index * 70
+        focused = selected == index
+        color = COLORS["accent"] if focused else COLORS["ink"]
+        art.rect((0, top, 751, top + 65), COLORS["pale"] if focused else COLORS["surface"],
+                 4, COLORS["accent"] if focused else COLORS["line"])
+        art.text((24, top + 20), label, 22, color, focused)
+        if unit: art.text((664, top + 22), unit, 20, COLORS["muted"], mono=unit != "Ω")
+    return art
+
+
 def output_icon(label, color):
     art = Art(400, 44, COLORS["bg"])
     art.text((18, 10), label, 20, color, True)
@@ -236,7 +250,7 @@ def build():
     icons = [state_icon(label, color, background) for label, color, background in [
         ("待机", COLORS["muted"], "#F4F4F5"),
         ("运行中", COLORS["accent"], COLORS["pale"]),
-        ("自动匹配", COLORS["amber"], COLORS["amber_pale"]),
+        ("切换中", COLORS["amber"], COLORS["amber_pale"]),
         ("保护", COLORS["red"], COLORS["red_pale"]),
         ("未连接", COLORS["muted"], "#F4F4F5"),
     ]]
@@ -272,6 +286,7 @@ def build():
         art = Art(752, 28, COLORS["bg"])
         if label: art.text((0, 4), label, 17, COLORS["red"], True)
         icons.append(art)
+    icons += [manual_focus_icon(index) for index in range(4)]
     for index, icon in enumerate(icons):
         icon.save(ROOT / f"assets/icons/{index:03d}.png")
 
@@ -282,7 +297,7 @@ def build():
         ("range", "当前阻抗挡位", 0x1120, "ohm", 0, 1, 200, 246, 112, 36, 32, 0),
         ("frequency", "当前频率挡位", 0x1130, "kHz", 0, 1000, 600, 246, 88, 36, 32, 0),
         ("elapsed", "运行时间", 0x1140, "HHH:MM:SS", 0, 1, 146, 407, 144, 32, 28, 0),
-        ("frequency_choice", "预选频率挡位", 0x1160, "kHz", 0, 1000, 458, 162, 216, 36, 32, 1),
+        ("frequency_choice", "预选频率挡位", 0x1160, "kHz", 0, 1000, 458, 186, 216, 36, 32, 1),
     ]
     for name, label, vp, unit, decimals, scale, x, y, width, height, size, page in specs:
         fields.append(text_field(name, label, vp, page, x, y, width, height, size,
@@ -299,7 +314,8 @@ def build():
         fields.append(text_field(f"log_value_{index}", "事件数值", 0x1210 + index * 0x20,
                                  2, 626, y, 126, 32, 28))
     fields.append(text_field("log_position", "日志位置", 0x1280, 2, 626, 402, 126, 32, 28))
-    fields.append(text_field("power_choice", "目标视在功率", 0x11a0, 1, 458, 242, 216, 36, 32, "VA", 0, 1000))
+    fields.append(text_field("power_choice", "目标视在功率", 0x11a0, 1, 458, 256, 216, 36, 32, "VA", 0, 1000))
+    fields.append(text_field("range_choice", "预选阻抗挡位", 0x1150, 1, 458, 116, 216, 36, 32, "ohm"))
     debug_fields = [
         ("debug_relay", "继电器预选", 278, 112, 168, ""),
         ("debug_frequency", "试波频率预选", 278, 176, 112, "kHz"),
@@ -320,11 +336,11 @@ def build():
              initial=4, values=["standby", "running", "switching", "fault", "offline"], pages=[0, 1, 2]),
         dict(name="battery", vp=0x1001, x=568, y=408, width=208, height=28, first=5, last=7,
              initial=2, values=["normal", "low_or_abnormal", "unknown"], pages=[0]),
-        dict(name="focus", vp=0x1002, x=24, y=146, width=752, height=228, first=31, last=33,
-             initial=0, values=["frequency", "power", "output"], pages=[1]),
+        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=94, last=97,
+             initial=0, values=["range", "frequency", "power", "output"], pages=[1]),
         dict(name="edit", vp=0x1003, x=24, y=382, width=752, height=32, first=10, last=11,
              initial=0, values=["confirmed", "pending"], pages=[1]),
-        dict(name="output", vp=0x1004, x=346, y=316, width=400, height=44, first=34, last=39,
+        dict(name="output", vp=0x1004, x=346, y=320, width=400, height=44, first=34, last=39,
              initial=5, values=["off", "pending", "running", "unavailable", "fault", "disabled"], pages=[1]),
     ]
     for index in range(4):
@@ -343,7 +359,7 @@ def build():
     ]
     variable_icons.append(dict(name="reason", vp=0x1005, x=24, y=416, width=752, height=28,
         first=57, last=57 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
-    spec = dict(version=9, name="HT", width=800, height=480, touch=False, colors=COLORS,
+    spec = dict(version=10, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
                        for index, name in enumerate(["status", "settings", "logs", "debug", "dac"])],

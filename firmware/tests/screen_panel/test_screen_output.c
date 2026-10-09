@@ -8,6 +8,7 @@ const struct device mock_gpio = {0};
 static int64_t clock_ms = 1000;
 static struct output_snapshot measured;
 static unsigned int starts, stops;
+static uint8_t requested_range;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
 static unsigned int debug_starts;
 static uint8_t debug_relay;
@@ -50,8 +51,8 @@ void screen_uart_stop(enum screen_uart_port port) { (void)port; }
 int output_init(void) { return 0; }
 void output_inputs(uint8_t raw, bool connected, bool io_ok)
 { (void)raw; (void)connected; (void)io_ok; }
-int output_start(uint32_t frequency, uint32_t target_mva)
-{ (void)frequency; (void)target_mva; ++starts; return 0; }
+int output_start(uint8_t range, uint32_t frequency, uint32_t target_mva)
+{ requested_range=range; (void)frequency; (void)target_mva; ++starts; return 0; }
 void output_stop(void) { ++stops; }
 void output_snapshot(struct output_snapshot *value) { *value = measured; }
 void output_shutdown(void) { }
@@ -151,7 +152,6 @@ static void output_states(void)
 }
 
 
-#if defined(CONFIG_HT_OUTPUT_BENCH)
 static void press(struct service *s, enum panel_key key)
 {
     assert(update_keys(s,0x3f,clock_ms)==0); clock_ms+=30;
@@ -160,6 +160,7 @@ static void press(struct service *s, enum panel_key key)
     assert(update_keys(s,raw,clock_ms)==0); clock_ms+=30;
     assert(update_keys(s,raw,clock_ms)==0); clock_ms+=30;
 }
+#if defined(CONFIG_HT_OUTPUT_BENCH)
 static void debug_keys(void)
 {
     struct service s=setup(); s.panel.debug_enabled=true;
@@ -210,6 +211,25 @@ static void dac_keys(void)
 
 #endif
 
+static void manual_selection(void)
+{
+    struct service s=setup(); measured.available=true;
+    s.panel.apparent_mva=1000; update_output(&s,true);
+    press(&s,PANEL_KEY_RIGHT); assert(s.panel.field==PANEL_RANGE);
+    assert(panel_rotate(&s.panel,2)==0);
+    struct view_snapshot v; snapshot(&s,&v);
+    assert(v.values[VIEW_RANGE_CHOICE].value==10 && !v.values[VIEW_RANGE].valid);
+    press(&s,PANEL_KEY_ENCODER); assert(stops==1 && starts==0 && s.panel.range==2);
+    for(unsigned int i=0;i<3;++i) press(&s,PANEL_KEY_DOWN);
+    assert(s.panel.field==PANEL_OUTPUT && panel_rotate(&s.panel,1)==0);
+    press(&s,PANEL_KEY_OK); assert(starts==1 && requested_range==2);
+    measured.active=measured.running=true; measured.range=2; update_output(&s,true);
+    for(unsigned int i=0;i<3;++i) press(&s,PANEL_KEY_UP);
+    assert(panel_rotate(&s.panel,1)==0); snapshot(&s,&v);
+    assert(v.values[VIEW_RANGE].value==10 && v.values[VIEW_RANGE_CHOICE].value==30);
+    press(&s,PANEL_KEY_OK); assert(stops==2 && starts==1 && s.panel.range==3);
+}
+
 static void reasons(void)
 {
     struct service s = setup(); s.panel.page = PANEL_PAGE_SETTINGS;
@@ -234,6 +254,7 @@ static void reasons(void)
 int main(int argc, char **argv)
 {
     assert(argc == 2);
+    if (!strcmp(argv[1], "manual_selection")) { manual_selection(); return 0; }
     if (!strcmp(argv[1], "reasons")) { reasons(); return 0; }
     if (!strcmp(argv[1], "standby")) standby();
     else if (!strcmp(argv[1], "measurement_age")) measurement_age();

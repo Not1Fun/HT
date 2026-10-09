@@ -46,43 +46,48 @@ function field(index) {
   for (let count = 0; count < index; count++) click('down');
   assert.equal(icon('focus'), index);
 }
-function start() { field(2); click('cw'); click('ok'); output(true); matching(true); assert.equal(icon('state'), 2); }
+function start() { field(3); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
 
 (async () => {
-  assert.equal(ui.version, 9);
-  assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['frequency', 'power', 'output']);
-  assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), false);
-  for (const [name, vp] of Object.entries({current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
+  assert.equal(ui.version, 10);
+  assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'power', 'output']);
+  assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), true);
+  for (const [name, vp] of Object.entries({range_choice: 0x1150, current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
     elapsed: 0x1140, frequency_choice: 0x1160, ntc1: 0x1170, ntc2: 0x1180, ntc3: 0x1190, power_choice: 0x11a0})) {
     assert.equal(ui.fields.find(item => item.name === name).vp, vp);
   }
   await vm.runInNewContext(fs.readFileSync(path.join(root, 'preview/preview.js'), 'utf8'), context);
   output(false); matching(false); page(0); click('right'); page(1); assert.equal(icon('output'), 3);
-  field(2); click('down'); assert.equal(icon('focus'), 2); click('cw'); click('ok'); output(false);
-  field(0); click('ccw'); assert.equal(text('frequency_choice'), '10'); click('cw'); assert.equal(text('frequency_choice'), '2');
-  field(1); assert.equal(text('power_choice'), '0'); click('ccw'); assert.equal(text('power_choice'), '0');
+  field(3); click('down'); assert.equal(icon('focus'), 3); click('cw'); click('ok'); output(false);
+  field(0); click('ccw'); assert.equal(text('range_choice'),'1000'); click('cw'); assert.equal(text('range_choice'),'1');
+  field(1); click('ccw'); assert.equal(text('frequency_choice'), '10'); click('cw'); assert.equal(text('frequency_choice'), '2');
+  field(2); assert.equal(text('power_choice'), '0'); click('ccw'); assert.equal(text('power_choice'), '0');
   for (let count = 0; count < 55; count++) click('cw');
   assert.equal(text('power_choice'), '50'); click('press');
-  field(2); click('cw'); assert.equal(icon('output'), 1); output(false); click('ok'); output(true); matching(true);
-  click('left'); page(0); assert.equal(text('range'), '1'); assert.equal(text('current'), '--');
-  advance(800); assert.equal(text('range'), '1'); matching(true);
-  click('right'); click('right'); page(2); advance(800); output(true); matching(true); assert.equal(icon('state'), 2);
+  field(0); click('cw'); click('cw'); click('cw'); click('ok'); assert.equal(text('range_choice'),'30');
+  field(3); click('cw'); assert.equal(icon('output'), 1); output(false); click('ok'); output(true); matching(false);
+  click('left'); page(0); assert.equal(text('range'), '30'); assert.equal(text('current'), '1.291');
+  advance(800); assert.equal(text('range'), '30'); matching(false);
+  click('right'); click('right'); page(2); advance(800); output(true); matching(false); assert.equal(icon('state'), 1);
   assert.equal(icon('log_event_0'), 16);
   click('left'); click('left'); page(0); assert.equal(text('range'), '30'); advance(800);
   matching(false); output(true); assert.equal(icon('state'), 1); assert.equal(text('range'), '30');
   assert.equal(text('current'), '1.291'); assert.equal(text('voltage'), '38.730');
   advance(65000); assert.equal(text('elapsed'), '00:01:07'); output(true);
-  click('down'); output(false); matching(false); click('right'); field(2); click('press'); output(false);
+  click('down'); output(false); matching(false); click('right'); field(3); click('press'); output(false);
   start(); click('press'); output(false); advance(5000); output(false); matching(false);
   click('cw'); click('left'); click('right'); assert.equal(icon('output'), 0); output(false);
-  start(); field(1); click('ccw'); click('ok'); output(false); matching(false); assert.match(ids.feedback.textContent, /49 VA/);
-  advance(5000); output(false); start(); field(0); click('cw'); click('ok'); output(false); matching(false);
-  start(); advance(2400); matching(false); field(1); click('ok'); output(false);
+  start(); field(0); click('cw'); click('left'); page(0); output(true); assert.equal(text('range'),'30');
+  click('right'); assert.equal(text('range_choice'),'30'); click('cw'); click('ok'); output(false);
+  assert.equal(text('range_choice'),'100'); click('ccw'); click('ok');
+  start(); field(2); click('ccw'); click('ok'); output(false); matching(false); assert.match(ids.feedback.textContent, /49 VA/);
+  advance(5000); output(false); start(); field(1); click('cw'); click('ok'); output(false); matching(false);
+  start(); advance(2400); matching(false); field(2); click('ok'); output(false);
   start(); checked('temperature-invalid', true); output(false); matching(false); assert.equal(icon('output'), 3);
   checked('temperature-invalid', false); start(); scene('fault'); output(false); matching(false); assert.equal(icon('output'), 4);
   scene('idle'); start(); scene('offline'); output(false); assert.equal(icon('output'), 3); scene('idle');
   checked('bench-disabled', true); assert.equal(icon('output'), 5); click('cw'); click('ok'); output(false);
-  checked('bench-disabled', false); field(1); click('ccw'); click('left'); click('right'); assert.equal(text('power_choice'), '49');
+  checked('bench-disabled', false); field(2); click('ccw'); click('left'); click('right'); assert.equal(text('power_choice'), '49');
   start(); click('left'); click('down'); output(false); advance(5000); output(false); matching(false);
   click('right');
   for (const item of ui.fields.filter(item => item.pages.includes(1))) assert.notEqual(text(item.name), undefined);
@@ -101,5 +106,5 @@ function start() { field(2); click('cw'); click('ok'); output(true); matching(tr
   scene('idle'); click('right'); click('right'); page(1);
   assert.equal(icon('reason'),18); checked('temperature-invalid',false);
   assert.equal(icon('reason'),0);
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v9 reason rotation and DAC NTC exemption; VP contract, three fields, frequency wrap, VA bounds/draft, explicit start, matching transitions, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v10 manual range, no automatic matching; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

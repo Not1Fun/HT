@@ -29,9 +29,10 @@ enum panel_page {
 };
 
 enum panel_field {
-    PANEL_FREQUENCY = 0,
-    PANEL_POWER = 1,
-    PANEL_OUTPUT = 2
+    PANEL_RANGE = 0,
+    PANEL_FREQUENCY = 1,
+    PANEL_POWER = 2,
+    PANEL_OUTPUT = 3
 };
 
 /* 与 TCA9539 Port1 的 bit0..5 对应；bit6/7 为独立使能和门监视。 */
@@ -46,6 +47,7 @@ enum panel_key {
 
 enum panel_action {
     PANEL_ACTION_NONE = 0,
+    PANEL_ACTION_RANGE = 1,
     PANEL_ACTION_FREQUENCY = 2,
     PANEL_ACTION_OUTPUT_START = 3,
     PANEL_ACTION_OUTPUT_STOP = 4,
@@ -65,13 +67,14 @@ struct panel_config {
     uint32_t apparent_max_mva;
 };
 
-/* 单调用者串行维护；外部只读。频率和目标VA是请求，阻抗由控制器自动匹配。 */
+/* 单调用者串行维护；外部只读。阻抗、频率和目标VA是请求，确认后交给输出控制器。 */
 struct panel {
     struct panel_config config;
     enum panel_mode mode;
     enum panel_page page;
     enum panel_field field;
     uint8_t draft_index;
+    uint8_t range;
     uint32_t frequency_hz;
     uint32_t current_ma;
     uint32_t apparent_mva;
@@ -85,18 +88,18 @@ struct panel {
     struct { uint8_t field, draft, choice[4]; bool busy, wave; } debug;
 };
 
-/* 默认状态页、2 kHz 请求、目标为 0；参数错误撤销 ready。 */
+/* 默认状态页、1 Ω 和 2 kHz 请求、目标为 0；参数错误撤销 ready。 */
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
  * LEFT/RIGHT 按状态、设置、日志循环；Bench增加调试和独立DAC页。
  * 进出调试页发STOP；离开设置丢弃草稿。
- * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择频率、VA和输出（到头停）。
+ * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择阻抗、频率、VA和输出（到头停）。
  * 设置页 OK/ENCODER 提交请求并留页。
  * 日志页其余键不修改模型，由应用层处理浏览。
  */
 int panel_key(struct panel *panel, enum panel_key key);
-/* 仅设置页有效：频率首尾循环；VA与输出预选钳制，不执行硬件操作。 */
+/* 仅设置页有效：阻抗和频率首尾循环；VA与输出预选钳制，不执行硬件操作。 */
 int panel_rotate(struct panel *panel, int32_t detents);
 bool panel_draft_changed(const struct panel *panel);
 /* 同步输出忙碌状态（含匹配/停机）；状态变化或许可撤销取消输出草稿，重获许可不自动开启。 */

@@ -63,10 +63,10 @@ static void setup(void) {
     assert(output_init()==0);heartbeat();between_steps=heartbeat;advance(1);
     assert(published.available && !published.running);
 }
-static void start_output(void) {assert(output_start(2000,1000)==0);advance(4000);assert(published.running && published.range==3);}
+static void start_output(void) {assert(output_start(3,2000,1000)==0);advance(4000);assert(published.running && published.range==3);}
 static void stop_priority(void) {
-    setup();assert(output_start(2000,1000)==0);output_stop();
-    assert(output_start(2000,1000)==-EBUSY);advance(200);
+    setup();assert(output_start(3,2000,1000)==0);output_stop();
+    assert(output_start(3,2000,1000)==-EBUSY);advance(200);
     assert(starts==0 && relay_value==0 && !published.running);
     start_output();output_stop();advance(100);assert(!published.running && relay_value==0);
 }
@@ -97,7 +97,7 @@ static void stale_ui(void) {
     setup();start_output();between_steps=NULL;int before=feeds;advance(250);
     assert(published.fault && !signal_active && relay_value==0 && starts>=1);
     assert(feeds-before<=2);int stopped_feeds=feeds;advance(100);assert(feeds==stopped_feeds);
-    heartbeat();advance(1);assert(!published.available && output_start(2000,1000)==-EACCES);
+    heartbeat();advance(1);assert(!published.available && output_start(3,2000,1000)==-EACCES);
 }
 static void sample_fault(void) {
     setup();start_output();signal_error=1;advance(1);
@@ -123,16 +123,16 @@ static void init_failure(void) {
 static void sample_permission(void) {
     setup();sample_invalid=true;advance(100);
     assert(!published.available && !published.fault && sampling && !signal_active && relay_value==0);
-    assert(output_start(2000,1000)==-EACCES && published.signal.temperature_ms>0);
+    assert(output_start(3,2000,1000)==-EACCES && published.signal.temperature_ms>0);
     sample_invalid=false;sample_age=150;advance(1);
-    assert(!published.available && output_start(2000,1000)==-EACCES);
+    assert(!published.available && output_start(3,2000,1000)==-EACCES);
     sample_age=-1;advance(1);
-    assert(!published.available && output_start(2000,1000)==-EACCES);
+    assert(!published.available && output_start(3,2000,1000)==-EACCES);
     sample_age=149;advance(1);assert(published.available);
     sample_age=0;advance(1);assert(published.available && starts==0 && relay_value==0);
 }
 static void pending_sample_invalid(void) {
-    setup();assert(output_start(2000,1000)==0);
+    setup();assert(output_start(3,2000,1000)==0);
     sample_invalid=true;advance(1);
     assert(control.state==POWER_IDLE && !published.fault && !published.available);
     assert(starts==0 && relay_value==0 && !request.pending);
@@ -145,7 +145,7 @@ static void first_window_grace(void) {
     assert(!published.fault && published.running && published.signal.reading.valid);
 }
 static void protection_race(void) {
-    setup();fault_during_select=true;assert(output_start(2000,1000)==0);advance(200);
+    setup();fault_during_select=true;assert(output_start(3,2000,1000)==0);advance(200);
     assert(published.fault && signal_failed && starts==0 && relay_value==0);
 }
 static void observe_stop(void) {
@@ -161,7 +161,7 @@ static void stop_in_flight(void) {
     setup();between_steps=observe_stop;
     const uint8_t ports[]={2,16};
     for(size_t i=0;i<2;i++) {
-        stop_at=ports[i];assert(output_start(2000,1000)==0);advance(4000);
+        stop_at=ports[i];assert(output_start(i == 0 ? 0 : 3,2000,1000)==0);advance(4000);
         assert(!published.fault && !published.running && relay_value==0);
         assert(observed_stops==(int)i+1);
     }
@@ -173,7 +173,7 @@ static void relay_fault(void) {
 }
 static void shutdown_output(void) {
     setup();start_output();output_shutdown();advance(1);
-    assert(signal_failed && published.fault && relay_value==0 && output_start(2000,1000)==-EACCES);
+    assert(signal_failed && published.fault && relay_value==0 && output_start(3,2000,1000)==-EACCES);
 }
 static void enclosure_interlocks(void) {
     setup();start_output();
@@ -189,7 +189,7 @@ static void enclosure_interlocks(void) {
 static void assert_tripped(void) {
     advance(1);
     assert(published.fault && !published.available && !signal_active && amplitude==0 && relay_value==0);
-    assert(control.fault_stopped && output_start(2000,1000)==-EACCES);
+    assert(control.fault_stopped && output_start(3,2000,1000)==-EACCES);
     int before=feeds;advance(100);assert(feeds>before);
 }
 static void running_oc(void) {setup();start_output();digital|=BIT(BOARD_OC);assert_tripped();}
@@ -204,7 +204,7 @@ static void protection_irq(void) {setup();start_output();protection(NULL,NULL,0)
 static void debug_cycle(void) {
     setup();assert(output_debug(2,2000,25,false)==0);advance(200);
     assert(published.debug.busy && relay_value==2 && !signal_active);
-    assert(output_start(2000,1000)==-EBUSY);
+    assert(output_start(3,2000,1000)==-EBUSY);
     assert(output_debug(2,2000,25,true)==0);advance(500);
     assert(published.debug.wave && amplitude==17 && signal_active && !published.running);
     advance(10100);assert(!published.debug.busy && relay_value==0 && amplitude==0);
@@ -230,7 +230,7 @@ static void dac_open_ntc(void) {
     setup();measured.temperature.samples[0].status=NTC_SATURATED;
     measured.temperature.samples[0].raw=NTC_ADC_MAX;advance(1);
     assert(!published.available && published.debug.dac_available);
-    assert(output_start(2000,1000)==-EACCES);
+    assert(output_start(3,2000,1000)==-EACCES);
     assert(output_debug(2,2000,25,true)==-EACCES);
     assert(output_debug(0,2000,25,false)==-EACCES);
     assert(output_debug(0,2000,25,true)==0);advance(500);
@@ -311,6 +311,25 @@ static void latch_relay_failure(void) {
     relay_failure = true; assert(output_init() == -EIO);
     assert(!published.ready && clears == 0 && starts == 0);
 }
+static void manual_range(void) {
+    setup();
+    assert(output_start(7,2000,1000)==-EINVAL);
+    assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EINVAL);
+    for (uint8_t range=0; range<7; ++range) {
+        assert(output_start(range,2000,1000)==0);
+        advance(180);
+        assert(!control.automatic && !control.matching && control.range==range);
+        assert(published.running && published.range==range && !published.matching);
+        assert(relay_value==((range>=4?1u:0u)|(1u<<(range+1u))));
+        output_stop(); advance(100); assert(relay_value==0 && !published.running);
+    }
+    assert(!published.fault);
+    /* 模拟30Ω负载时仍保持手动1Ω挡，不能跳进自动匹配或自行换挡。 */
+    assert(output_start(0,2000,1000)==0); advance(6000);
+    assert(published.running && published.range==0 && !published.matching && !published.fault);
+    assert(!control.automatic && control.changes==0 && control.rematches==0);
+    output_stop(); advance(100); assert(relay_value==0 && !published.running);
+}
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
@@ -318,7 +337,7 @@ int main(int argc,char **argv) {
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
     RUN(dac_open_ntc) RUN(dac_guards) RUN(dac_relay_guard)
 #endif
-    RUN(blocking_reasons) RUN(startup_latch) RUN(latch_failure) RUN(latch_relay_failure)
+    RUN(manual_range) RUN(blocking_reasons) RUN(startup_latch) RUN(latch_failure) RUN(latch_relay_failure)
     RUN(stop_priority) RUN(interlocks) RUN(stale_ui) RUN(sample_fault)
     RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)
     RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)

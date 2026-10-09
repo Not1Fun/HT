@@ -129,7 +129,7 @@ static void request_stop(void)
 static int request_start(struct service *service)
 {
 #if defined(CONFIG_HT_OUTPUT)
-	return output_start(service->panel.frequency_hz, service->panel.apparent_mva);
+	return output_start(service->panel.range, service->panel.frequency_hz, service->panel.apparent_mva);
 #elif defined(CONFIG_HT_DDS_BENCH)
 	return dds_bench_request_start(service->panel.frequency_hz, BENCH_MVPP, BENCH_SECONDS);
 #else
@@ -454,7 +454,7 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 				record_event(service, EVENT_FREQUENCY, (int32_t)service->panel.frequency_hz);
 				LOG_INF("Saved frequency request: %u Hz", service->panel.frequency_hz);
 			}
-			if (action == PANEL_ACTION_OUTPUT_STOP || action == PANEL_ACTION_POWER) {
+			if (action == PANEL_ACTION_OUTPUT_STOP || action == PANEL_ACTION_POWER || action == PANEL_ACTION_RANGE) {
 				request_stop();
 				stopping = true;
 			} else if (action == PANEL_ACTION_OUTPUT_START && !stopping) {
@@ -663,6 +663,8 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		.output = VIEW_OUTPUT_DISABLED,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
+	out->values[VIEW_RANGE_CHOICE] = (struct view_value){
+		panel_range_ohm(panel->field == PANEL_RANGE ? panel->draft_index : panel->range), true};
 	out->values[VIEW_FREQUENCY_CHOICE] = (struct view_value){
 		panel->field == PANEL_FREQUENCY ? panel_frequency_hz(panel->draft_index) :
 		panel->frequency_hz, true};
@@ -706,7 +708,7 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 #if defined(CONFIG_HT_OUTPUT)
 	struct output_snapshot value;
 	output_snapshot(&value);
-	out->state = value.fault ? VIEW_FAULT : value.matching ? VIEW_SWITCHING : value.running ? VIEW_RUNNING : VIEW_STANDBY;
+	out->state = value.fault ? VIEW_FAULT : value.switching ? VIEW_SWITCHING : value.running ? VIEW_RUNNING : VIEW_STANDBY;
 	out->output = value.fault ? VIEW_OUTPUT_FAULT : value.running || value.switching ? VIEW_OUTPUT_RUNNING :
 		!panel->output_available ? VIEW_OUTPUT_UNAVAILABLE :
 		panel->field == PANEL_OUTPUT && panel->draft_index ? VIEW_OUTPUT_ARMED : VIEW_OUTPUT_OFF;
