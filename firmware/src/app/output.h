@@ -2,13 +2,15 @@
 #ifndef HT_OUTPUT_H
 #define HT_OUTPUT_H
 #include "platform/signal_io.h"
+#include "core/output_reason.h"
 struct output_snapshot {
     bool ready, available, active, running, switching, matching, fault;
     int error;
     uint8_t range;
     uint32_t frequency, elapsed_seconds, target_mva;
+    uint32_t blocked;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
-    struct { bool busy, wave, trial, dac_available; uint8_t coils; uint32_t seconds; } debug;
+    struct { bool busy, wave, trial, dac_available; uint8_t coils; uint32_t seconds, blocked; } debug;
 #endif
     struct signal_snapshot signal;
 };

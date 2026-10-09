@@ -210,9 +210,31 @@ static void dac_keys(void)
 
 #endif
 
+static void reasons(void)
+{
+    struct service s = setup(); s.panel.page = PANEL_PAGE_SETTINGS;
+    measured.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_OC) | OUTPUT_REASON_BIT(OUTPUT_REASON_OV);
+    struct view_snapshot v;
+    clock_ms = 0; snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_OC);
+    clock_ms = 2000; snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_OV);
+    clock_ms = 4000; snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_TARGET);
+    s.panel.apparent_mva = 1000; measured.blocked = 0;
+    snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_NONE);
+    measured.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT); measured.error = POWER_ERROR_MATCH;
+    snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_COUNT + POWER_ERROR_MATCH - 1);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    s.panel.page = PANEL_PAGE_DAC; s.panel.debug.field = 1;
+    measured.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_NTC2_OPEN);
+    measured.debug.blocked = 0; measured.debug.dac_available = true;
+    snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_NONE);
+    measured.debug.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_OC);
+    snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_OC);
+#endif
+}
 int main(int argc, char **argv)
 {
     assert(argc == 2);
+    if (!strcmp(argv[1], "reasons")) { reasons(); return 0; }
     if (!strcmp(argv[1], "standby")) standby();
     else if (!strcmp(argv[1], "measurement_age")) measurement_age();
     else if (!strcmp(argv[1], "output_states")) output_states();

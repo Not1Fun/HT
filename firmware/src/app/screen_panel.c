@@ -637,6 +637,19 @@ static int display_send(void *ctx, const uint8_t *data, size_t length)
 	return rc;
 }
 
+#if defined(CONFIG_HT_OUTPUT)
+static uint8_t blocking_reason(uint32_t blocked, int error, int64_t now)
+{
+    uint8_t reasons[OUTPUT_REASON_COUNT], count = 0;
+    for (unsigned int reason = 1; reason < OUTPUT_REASON_COUNT; ++reason) {
+        if (!(blocked & OUTPUT_REASON_BIT(reason))) continue;
+        reasons[count++] = reason == OUTPUT_REASON_FAULT && error >= POWER_ERROR_IO &&
+            error <= POWER_ERROR_MATCH ? OUTPUT_REASON_COUNT + (unsigned int)error - 1u : reason;
+    }
+    return count ? reasons[(uint64_t)now / 2000u % count] : OUTPUT_REASON_NONE;
+}
+#endif
+
 static void snapshot(const struct service *service, struct view_snapshot *out)
 {
 	const struct panel *panel = &service->panel;
@@ -718,6 +731,14 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
     out->debug.starting = value.debug.trial && !value.debug.wave;
     out->debug.pending = panel->debug.field == 3 && panel->debug.draft && !value.debug.trial;
 #endif
+    uint32_t blocked = value.blocked;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    if (panel->page >= PANEL_PAGE_DEBUG && out->debug.relay == 0) blocked = value.debug.blocked;
+#endif
+    if (!value.ready) blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_INIT);
+    if (panel->page == PANEL_PAGE_SETTINGS && panel->apparent_mva == 0)
+        blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_TARGET);
+    out->reason = blocking_reason(blocked, value.error, k_uptime_get());
 	int64_t age = k_uptime_get() - value.signal.reading.time_ms;
 	bool valid = value.signal.reading.valid && age >= 0 && age < 150;
 	out->values[VIEW_CURRENT] = (struct view_value){value.signal.reading.current_ma, valid};

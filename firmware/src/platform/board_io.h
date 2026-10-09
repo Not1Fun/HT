@@ -27,5 +27,7 @@ int board_io_start_reference(void);
 #endif
 /* Each set bit means the corresponding active-low signal is asserted. */
 int board_io_read(uint32_t *state);
+/* 仅在输出初始化、DAC静音且继电器已释放后调用；运行期禁止自动清除。 */
+int board_io_clear_protection(void);
 
 #endif

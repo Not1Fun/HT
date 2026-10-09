@@ -79,7 +79,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=dac8"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=reasons9"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -108,6 +108,13 @@
     values.dac_focus=debug.field-1;
     values.debug_state=state.scene==="fault"?4:!debugAllowed()?3:debug.wave?2:debug.until?1:0;
     values.dac_state=values.debug_state;
+    const reasons=[];
+    if(state.scene==="offline") reasons.push(5);
+    if(state.benchDisabled) reasons.push(1);
+    if(state.scene==="fault") reasons.push(11,12);
+    if(state.temperatureInvalid && state.page!==4 && !(state.page===3 && debug.choice[0]===0)) reasons.push(18);
+    if(state.page===1 && state.power===0) reasons.push(29);
+    values.reason=reasons.length?reasons[Math.floor(performance.now()/2000)%reasons.length]:0;
     const choiceFrequency=state.field===0?state.draft:state.frequency;
     const running=state.output&&!state.matching;
     const texts={current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",
@@ -264,7 +271,10 @@
   addEvent(events.boot);addEvent(events.online);addEvent(events.batteryOk);
   for(let channel=1;channel<=3;channel++) addEvent(events.temperatureReady,channel);
   render();resize();
+  let reasonSlot=-1;
   setInterval(()=>{
+    const slot=Math.floor(performance.now()/2000);
+    if(slot!==reasonSlot) {reasonSlot=slot;if(state.page===1||state.page>=3)render();}
     if(updateMatch()) render();
     if(debug.until) {
       if(performance.now()>=debug.until) stopDebug();

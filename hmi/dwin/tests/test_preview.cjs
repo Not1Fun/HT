@@ -49,7 +49,7 @@ function field(index) {
 function start() { field(2); click('cw'); click('ok'); output(true); matching(true); assert.equal(icon('state'), 2); }
 
 (async () => {
-  assert.equal(ui.version, 7);
+  assert.equal(ui.version, 9);
   assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['frequency', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), false);
   for (const [name, vp] of Object.entries({current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
@@ -92,7 +92,14 @@ function start() { field(2); click('cw'); click('ok'); output(true); matching(tr
   click('cw'); click('cw'); click('cw'); assert.equal(text('debug_relay'),'K2 1R'); click('press');
   for(let i=0;i<3;i++) click('down'); click('cw'); click('press');
   assert.equal(text('debug_wave'),'ON'); advance(10001); assert.equal(text('debug_wave'),'OFF');
-  click('cw'); click('press'); assert.equal(text('debug_wave'),'ON'); click('right');page(0);
+  click('cw'); click('press'); assert.equal(text('debug_wave'),'ON'); click('right');page(4);
   click('left');page(3);assert.equal(text('debug_coils'),'00000000'); assert.equal(text('debug_wave'),'OFF');
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v7 VP contract, three fields, frequency wrap, VA bounds/draft, explicit start, matching transitions, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  click('right'); page(4); checked('temperature-invalid',true);
+  assert.equal(icon('reason'),0);
+  scene('fault'); const first=icon('reason'); advance(2000); const second=icon('reason');
+  assert.deepEqual([first,second].sort((a,b)=>a-b),[11,12]);
+  scene('idle'); click('right'); click('right'); page(1);
+  assert.equal(icon('reason'),18); checked('temperature-invalid',false);
+  assert.equal(icon('reason'),0);
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v9 reason rotation and DAC NTC exemption; VP contract, three fields, frequency wrap, VA bounds/draft, explicit start, matching transitions, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

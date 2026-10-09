@@ -23,7 +23,7 @@ static struct gpio_callback oc_callback, ov_callback;
 static struct k_spinlock guard;
 static K_SEM_DEFINE(wake, 0, 1);
 static struct power control;
-static struct output_snapshot published;
+static struct output_snapshot published = {.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_INIT)};
 static struct { uint8_t raw; bool connected, okay; int64_t time; } inputs;
 static struct {
     bool pending, stop;
@@ -76,6 +76,11 @@ int output_init(void)
     if (rc == 0) rc = bench_init(&debug, &ops);
 #endif
     if (rc == 0) rc = signal_io_init();
+    /* 上电只清一次旧锁存；之后仍按实际OC/OV电平判断，不自动重试。 */
+    if (rc == 0) rc = signal_io_stop();
+    if (rc == 0) rc = relay_io_select(0);
+    if (rc == 0) rc = relay_io_check();
+    if (rc == 0) rc = board_io_clear_protection();
     if (rc == 0) {
         gpio_init_callback(&oc_callback, protection, BIT(oc.pin));
         gpio_init_callback(&ov_callback, protection, BIT(ov.pin));
@@ -96,6 +101,7 @@ int output_init(void)
         (void)signal_io_stop();
         published.fault = true;
         published.error = rc;
+        published.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_INIT);
         return rc;
     }
     published.ready = true;
@@ -188,20 +194,24 @@ static void run(void *a, void *b, void *c)
     struct signal_snapshot signal = {0};
     int64_t next_feed = 0;
     bool pin = false;
-    uint8_t panel_mask = BIT(6);
-    uint32_t required = BIT(BOARD_SENSOR) | BIT(BOARD_DC);
-#if !defined(CONFIG_HT_OUTPUT_BENCH)
-    panel_mask |= BIT(7);
-    required |= BIT(BOARD_COIL);
-#endif
     for (;;) {
         uint32_t digital = 0;
-        int rc = board_io_read(&digital);
+        int board_rc = board_io_read(&digital);
+        int rc = board_rc;
         if (rc == 0) rc = signal_io_poll(&signal);
         int64_t now = k_uptime_get();
         k_spinlock_key_t key = k_spin_lock(&guard);
         bool alive = inputs.okay && now - inputs.time < 100 && !shut_down;
-        bool permitted = alive && inputs.connected && (inputs.raw & panel_mask) == 0;
+        uint32_t blocked = 0;
+#define BLOCK_IF(condition, reason) do { if (condition) blocked |= OUTPUT_REASON_BIT(reason); } while (0)
+        BLOCK_IF(shut_down, OUTPUT_REASON_SHUTDOWN);
+        BLOCK_IF(!inputs.okay || board_rc != 0, OUTPUT_REASON_INPUT_IO);
+        BLOCK_IF(now < inputs.time || now - inputs.time >= 100, OUTPUT_REASON_INPUT_STALE);
+        BLOCK_IF(!inputs.connected, OUTPUT_REASON_SCREEN);
+        BLOCK_IF(inputs.raw & BIT(6), OUTPUT_REASON_ENABLE);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+        BLOCK_IF(inputs.raw & BIT(7), OUTPUT_REASON_DOOR);
+#endif
         bool stop = request.stop;
         bool start = request.pending;
         if (start) active_epoch = request.epoch;
@@ -216,26 +226,35 @@ static void run(void *a, void *b, void *c)
         request.pending = false;
         request.stop = false;
         k_spin_unlock(&guard, key);
-        permitted = permitted && rc == 0 && (digital & required) == required &&
-            !(digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) &&
-            ((digital & BIT(BOARD_AC)) || (digital & BIT(BOARD_BAT))) &&
-            now - signal.temperature_ms < 1000;
-#if defined(CONFIG_HT_OUTPUT_BENCH)
-        bool dac_permitted = permitted;
+        if (board_rc == 0) {
+            BLOCK_IF(!(digital & BIT(BOARD_SENSOR)), OUTPUT_REASON_SENSOR);
+            BLOCK_IF(!(digital & BIT(BOARD_DC)), OUTPUT_REASON_DC);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+            BLOCK_IF(!(digital & BIT(BOARD_COIL)), OUTPUT_REASON_COIL);
+#endif
+            BLOCK_IF(digital & BIT(BOARD_OC), OUTPUT_REASON_OC);
+            BLOCK_IF(digital & BIT(BOARD_OV), OUTPUT_REASON_OV);
+            BLOCK_IF(!(digital & (BIT(BOARD_AC) | BIT(BOARD_BAT))), OUTPUT_REASON_SUPPLY);
+        }
+        if (signal_io_failed()) rc = -EIO;
+        BLOCK_IF(rc != 0 && board_rc == 0, OUTPUT_REASON_SAMPLE_IO);
+        BLOCK_IF(now < signal.temperature_ms || now - signal.temperature_ms >= 1000, OUTPUT_REASON_TEMP_STALE);
         for (size_t i = 0; i < 3; ++i) {
-            /* 仅全释放的DAC试波容许NTC开路，短路与有效过温仍拒绝。 */
             bool open = signal.temperature.samples[i].status == NTC_SATURATED &&
                 signal.temperature.samples[i].raw == NTC_ADC_MAX;
-            dac_permitted = dac_permitted && (open ||
-                (signal.temperature.samples[i].status == NTC_OK &&
-                 signal.temperature.samples[i].decicelsius < HT_OUTPUT_TEMP_LIMIT_DC));
+            BLOCK_IF(open, OUTPUT_REASON_NTC1_OPEN + i);
+            BLOCK_IF(!open && signal.temperature.samples[i].status != NTC_OK, OUTPUT_REASON_NTC1_INVALID + i);
+            BLOCK_IF(signal.temperature.samples[i].status == NTC_OK &&
+                signal.temperature.samples[i].decicelsius >= HT_OUTPUT_TEMP_LIMIT_DC, OUTPUT_REASON_NTC1_HOT + i);
         }
+        bool permitted = blocked == 0;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        /* 仅全释放的DAC试波容许NTC开路，短路与有效过温仍拒绝。 */
+        uint32_t dac_blocked = blocked & ~(OUTPUT_REASON_BIT(OUTPUT_REASON_NTC1_OPEN) |
+            OUTPUT_REASON_BIT(OUTPUT_REASON_NTC2_OPEN) | OUTPUT_REASON_BIT(OUTPUT_REASON_NTC3_OPEN));
+        bool dac_permitted = dac_blocked == 0;
 #endif
-        /* 暂用80°C软件保护阈值；硬件安全链独立生效，实机需核对探头安装位置。 */
-        for (size_t i = 0; i < 3; ++i) permitted = permitted &&
-            signal.temperature.samples[i].status == NTC_OK &&
-            signal.temperature.samples[i].decicelsius < HT_OUTPUT_TEMP_LIMIT_DC;
-        if (signal_io_failed()) rc = -EIO;
+#undef BLOCK_IF
         if (rc != 0) {
             signal.reading.valid = false;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -276,6 +295,8 @@ static void run(void *a, void *b, void *c)
                          control.state == POWER_RUNNING ? control.frequency : 0,
             .target_mva = control.target_mva,
             .elapsed_seconds = control.state == POWER_RUNNING ? (uint32_t)((now-control.session_ms)/1000) : 0,
+            .blocked = blocked | (sample_ready ? 0 : OUTPUT_REASON_BIT(OUTPUT_REASON_SAMPLE_STALE)) |
+                (control.state == POWER_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT) : 0),
             .signal = signal
         };
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -284,12 +305,17 @@ static void run(void *a, void *b, void *c)
         next.debug.trial = debug.wave && next.debug.busy &&
             debug.state != BENCH_STOP && debug.state != BENCH_RELEASE;
         next.debug.coils = debug.output;
-        next.debug.dac_available = dac_permitted && sample_ready && control.state == POWER_IDLE &&
-            debug.state != BENCH_FAULT && debug.output == 0;
+        next.debug.blocked = dac_blocked |
+            (sample_ready ? 0 : OUTPUT_REASON_BIT(OUTPUT_REASON_SAMPLE_STALE)) |
+            (control.state != POWER_IDLE && control.state != POWER_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_BUSY) : 0) |
+            (control.state == POWER_FAULT || debug.state == BENCH_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT) : 0) |
+            (debug.output ? OUTPUT_REASON_BIT(OUTPUT_REASON_RELAYS) : 0);
+        next.debug.dac_available = next.debug.blocked == 0;
         next.debug.seconds = next.debug.busy && debug.expires > now ?
             (uint32_t)((debug.expires - now + 999) / 1000) : 0;
         if (debug.state == BENCH_FAULT) {
             next.fault = true; next.error = debug.error; next.available = false;
+            next.blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT);
         }
         bool debug_safe = debug.state != BENCH_FAULT || debug.fault_stopped;
 #else

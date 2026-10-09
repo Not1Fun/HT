@@ -12,9 +12,29 @@ COLORS = dict(bg="#FFFFFF", surface="#FFFFFF", ink="#303133", muted="#606266",
               red="#F56C6C", red_pale="#FEF0F0", amber="#E6A23C", amber_pale="#FDF6EC")
 FONT_DIR = Path("C:/Windows/Fonts")
 EVENTS = ["", "启动完成", "屏幕连接", "屏幕断开", "阻抗匹配", "频率请求确认",
-          "电池正常", "电池低电或异常", "过流保护触发", "过流保护解除", "过压保护触发",
-          "过压保护解除", "温度就绪", "温度无效", "温度采样未就绪", "输入输出错误",
+          "电池正常", "电池低电或异常", "OC 保护输入有效", "OC 保护输入解除", "OV 保护输入有效",
+          "OV 保护输入解除", "温度就绪", "温度无效", "温度采样未就绪", "输入输出错误",
           "输出启动", "输出停止", "输出故障"]
+
+# 顺序对应 firmware/src/core/output_reason.h；末尾为 POWER_ERROR_IO..MATCH。
+REASONS = ["", "输出模块未初始化，检查启动日志", "输出服务已关闭，需要重新上电",
+    "面板或主板输入读取失败", "面板输入更新超时", "屏幕通信未连接",
+    "使能开关未接通", "机箱门互锁未闭合", "采样板在位信号无效（SNS_PRESENT）",
+    "DC_OK 未就绪，检查电源状态线", "安全继电器线圈回路未闭合",
+    "OC 保护输入为低，需检查检测板或锁存状态",
+    "OV 保护输入为低，需检查检测板或锁存状态",
+    "交流供电和电池正常信号均无效", "ADC / DAC 采样外设异常",
+    "电压电流采样无效或更新超时", "温度采样更新超时",
+    "NTC1 开路，整机输出需要接好探头", "NTC2 开路，整机输出需要接好探头",
+    "NTC3 开路，整机输出需要接好探头", "NTC1 短路或测量无效",
+    "NTC2 短路或测量无效", "NTC3 短路或测量无效",
+    "NTC1 温度达到 80℃", "NTC2 温度达到 80℃", "NTC3 温度达到 80℃",
+    "输出故障已锁存，需排除故障后重新上电", "整机输出忙，请先停止输出",
+    "继电器尚未全部释放", "目标功率为 0 VA，请设置并确认",
+    "继电器或输出驱动操作失败（故障 1）", "运行期间互锁或保护输入失效（故障 2）",
+    "采样外设异常或反馈超时（故障 3）", "电压、电流或功率超过软件限值（故障 4）",
+    "检测到负载开路（故障 5）", "检测到负载短路（故障 6）",
+    "阻抗匹配失败，未得到有效负载反馈（故障 7）"]
 
 
 def font(size, bold=False, mono=False):
@@ -114,8 +134,6 @@ def debug_page(dac=False):
     art.text((744, 217), "s", 20, COLORS["muted"], mono=True)
     art.text((744, 286), "V", 20, COLORS["muted"], mono=True)
     art.text((744, 356), "A", 20, COLORS["muted"], mono=True)
-    art.text((24, 428), "允许 NTC 开路；有效过温、短路及过流过压仍会停止" if dac else
-             "DAC 幅度为标称峰峰值；线圈命令不代表触点反馈", 14, COLORS["muted"])
     footer(art, "← / → 离页停止    ↑ / ↓ 选项    旋钮预选    OK / 下压执行")
     return art
 
@@ -231,7 +249,7 @@ def build():
     icons += [settings_focus_icon(index) for index in range(3)]
     icons += [output_icon(label, color) for label, color in [
         ("关闭", COLORS["muted"]), ("准备开启 · 待确认", COLORS["amber"]),
-        ("已开启 · 确认停止", COLORS["accent"]), ("未满足启动条件", COLORS["muted"]),
+        ("已开启 · 确认停止", COLORS["accent"]), ("禁止启动 · 原因见下方", COLORS["muted"]),
         ("故障 · 输出已停止", COLORS["red"]), ("输出未启用", COLORS["muted"]),
     ]]
     icons += [debug_focus(index) for index in range(4)]
@@ -239,7 +257,7 @@ def build():
         ("待机 · 继电器最多保持 30 秒，试波最多 10 秒", COLORS["muted"]),
         ("继电器测试 / 切换中 · 离页立即停止", COLORS["amber"]),
         ("正在试波 · 试波开关确认可停止", COLORS["accent"]),
-        ("条件未满足 · 检查使能、供电、采样与温度", COLORS["muted"]),
+        ("禁止启动 · 具体原因在下方轮流显示", COLORS["muted"]),
         ("保护已停止 · 详情见日志", COLORS["red"]),
     ]]
     icons += [debug_focus(index, True) for index in range(1, 4)]
@@ -247,9 +265,13 @@ def build():
         ("可试波 · 最长 10 秒；幅度为 DAC 标称峰峰值", COLORS["muted"]),
         ("准备试波 · 继电器释放中", COLORS["amber"]),
         ("正在试波 · 开关项确认或离页立即停止", COLORS["accent"]),
-        ("条件未满足 · 检查使能、供电、采样及保护", COLORS["muted"]),
+        ("禁止启动 · 具体原因在下方轮流显示", COLORS["muted"]),
         ("保护已停止 · 详情见日志", COLORS["red"]),
     ]]
+    for label in REASONS:
+        art = Art(752, 28, COLORS["bg"])
+        if label: art.text((0, 4), label, 17, COLORS["red"], True)
+        icons.append(art)
     for index, icon in enumerate(icons):
         icon.save(ROOT / f"assets/icons/{index:03d}.png")
 
@@ -319,7 +341,9 @@ def build():
         dict(name="dac_state", vp=0x1031, x=24, y=380, width=752, height=36,
              first=52, last=56, initial=3, values=["idle", "preparing", "wave", "blocked", "fault"], pages=[4]),
     ]
-    spec = dict(version=8, name="HT", width=800, height=480, touch=False, colors=COLORS,
+    variable_icons.append(dict(name="reason", vp=0x1005, x=24, y=416, width=752, height=28,
+        first=57, last=57 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
+    spec = dict(version=9, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
                        for index, name in enumerate(["status", "settings", "logs", "debug", "dac"])],

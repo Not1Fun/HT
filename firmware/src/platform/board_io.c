@@ -97,7 +97,7 @@ static int init_board(bool enable_vref)
 	if (rc != 0) {
 		return rc;
 	}
-	/* ACTIVE_LOW + INACTIVE releases the open-drain protection latch. */
+	/* 释放开漏管脚只恢复锁存模式，不会清除已经锁存的报警。 */
 	rc = setup_pin(&latch, GPIO_OUTPUT_INACTIVE);
 	if (rc != 0) {
 		return rc;
@@ -125,6 +125,18 @@ static int init_board(bool enable_vref)
 int board_io_init(void)
 {
 	return init_board(true);
+}
+
+int board_io_clear_protection(void)
+{
+	if (!ready) return -EACCES;
+	int rc = gpio_pin_set_dt(&latch, 1);
+	if (rc == 0) k_busy_wait(10);
+	int release_rc = gpio_pin_set_dt(&latch, 0);
+	if (rc != 0) return rc;
+	if (release_rc != 0) return release_rc;
+	k_busy_wait(10);
+	return 0;
 }
 
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE) || defined(CONFIG_HT_OUTPUT)

@@ -60,7 +60,7 @@ static void test_mapping(void)
         s.selected=PANEL_FREQUENCY; s.editing=true;
         refresh(&v,&c,&s,(enum dgus_crc)crc);
         CHECK(c.count==BASE_FRAME_COUNT && v.synced);
-        CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==5);
+        CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==6);
         CHECK(c.frames[0].words[0]==1 && c.frames[0].words[1]==0);
         CHECK(c.frames[0].words[2]==0 && c.frames[0].words[3]==1);
         CHECK(c.frames[0].words[4]==VIEW_OUTPUT_RUNNING);
@@ -78,7 +78,7 @@ static void test_output_states(void)
             s.output=(enum view_output)output;
             s.editing=output==VIEW_OUTPUT_ARMED;
             refresh(&v,&c,&s,(enum dgus_crc)crc);
-            CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==5);
+            CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==6);
             CHECK(c.frames[0].words[2]==2);
             CHECK(c.frames[0].words[3]==(output==VIEW_OUTPUT_ARMED?1u:0u));
             CHECK(c.frames[0].words[4]==(uint16_t)output);
@@ -423,11 +423,24 @@ static void test_debug(void)
     s.debug.field=1;
     s.debug.relay=9; CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
 }
+static void test_reasons(void)
+{
+    struct view v={0}; struct capture c; struct view_snapshot s=sample();
+    s.page=PANEL_PAGE_SETTINGS;
+    for(unsigned int reason=0; reason<VIEW_REASON_COUNT; ++reason) {
+        s.reason=reason; refresh(&v,&c,&s,DGUS_CRC_NONE);
+        CHECK(c.frames[0].vp==0x1000 && c.frames[0].count==6 && c.frames[0].words[5]==reason);
+    }
+    s.fresh=false; refresh(&v,&c,&s,DGUS_CRC_MODBUS);
+    CHECK(c.frames[0].words[5]==OUTPUT_REASON_SCREEN);
+    s.reason=VIEW_REASON_COUNT;
+    CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
+}
 int main(int argc,char **argv)
 {
     CHECK(argc==2);
     struct { const char *name; void (*run)(void); } cases[]={
-        {"debug",test_debug}, {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
+        {"reasons",test_reasons}, {"debug",test_debug}, {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
         {"power_choice",test_power_choice},{"auto_range",test_auto_range},
         {"temperature",test_temperature},{"logs",test_logs},
         {"output_states",test_output_states},{"output_stale",test_output_stale},{"dds_logs",test_dds_logs},

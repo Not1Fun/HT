@@ -202,7 +202,7 @@ static void startup(void)
         struct dgus_frame frame;
         assert(dgus_decode(DGUS_CRC_NONE, sent[i], sent_lengths[i], &frame) == 0);
         if (frame.kind == DGUS_WRITE && frame.vp == 0x1000) {
-            assert(frame.count == 5 && frame.words[0] == VIEW_STANDBY);
+            assert(frame.count == 6 && frame.words[0] == VIEW_STANDBY);
             assert(frame.words[4] == VIEW_OUTPUT_OFF);
             saw_icons = true;
         }

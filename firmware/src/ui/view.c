@@ -260,7 +260,7 @@ void view_reset(struct view *view)
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,
                  view_send_fn send, void *ctx)
 {
-    uint16_t icons[5];
+    uint16_t icons[6];
     uint16_t page[2];
     bool online;
     int result;
@@ -269,7 +269,7 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
         (unsigned int)snapshot->selected > PANEL_OUTPUT ||
-        (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED ||
+        (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED || snapshot->reason >= VIEW_REASON_COUNT ||
         snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 4 ||
         (snapshot->page == PANEL_PAGE_DAC && (snapshot->debug.field == 0 || snapshot->debug.relay != 0)) ||
         snapshot->log_count > EVENT_LOG_CAPACITY ||
@@ -292,7 +292,8 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     icons[2] = (uint16_t)snapshot->selected;
     icons[3] = snapshot->editing ? 1u : 0u;
     icons[4] = (uint16_t)(online ? snapshot->output : VIEW_OUTPUT_UNAVAILABLE);
-    result = send_words(crc, send, ctx, 0x1000, icons, 5);
+    icons[5] = online ? snapshot->reason : OUTPUT_REASON_SCREEN;
+    result = send_words(crc, send, ctx, 0x1000, icons, 6);
     if (result == VIEW_OK) {
         result = send_values(snapshot, crc, send, ctx);
     }

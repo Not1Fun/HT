@@ -31,7 +31,7 @@ set_target_properties(screen_output_tests PROPERTIES C_STANDARD 11 C_STANDARD_RE
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(screen_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
-foreach(case IN ITEMS standby measurement_age output_states)
+foreach(case IN ITEMS reasons standby measurement_age output_states)
   add_test(NAME screen_output_${case} COMMAND screen_output_tests ${case})
 endforeach()
 
@@ -45,3 +45,5 @@ target_compile_options(screen_debug_tests PRIVATE -Wall -Wextra -Werror -pedanti
 add_test(NAME screen_debug_keys COMMAND screen_debug_tests debug_keys)
 
 add_test(NAME screen_debug_dac_keys COMMAND screen_debug_tests dac_keys)
+
+add_test(NAME screen_debug_reasons COMMAND screen_debug_tests reasons)

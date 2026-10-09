@@ -14,6 +14,16 @@ static int64_t sample_age, reading_after;
 static uint8_t relay_value;
 static uint8_t panel_raw = 0x3f;
 static uint16_t amplitude;
+static int clears, clear_error;
+static bool old_alarm;
+int relay_io_check(void) { return relay_failure ? -EIO : 0; }
+int board_io_clear_protection(void) {
+    assert(!signal_active && relay_value == 0 && amplitude == 0 && !published.ready);
+    ++clears;
+    if (clear_error) return clear_error;
+    if (old_alarm) digital &= ~(BIT(BOARD_OC) | BIT(BOARD_OV));
+    return 0;
+}
 int board_io_read(uint32_t *value) {if(board_error)return -EIO;*value=digital;return 0;}
 int signal_io_init(void) {sampling=true;return 0;}
 int signal_io_stop(void) {signal_active=false;sampling=!signal_failed;amplitude=0;return 0;}
@@ -257,6 +267,50 @@ static void dac_relay_guard(void) {
     assert(!signal_active && relay_value==0 && !published.debug.dac_available);
 }
 #endif
+static void blocking_reasons(void) {
+    setup();
+    digital |= BIT(BOARD_OC) | BIT(BOARD_OV); advance(1);
+    assert(published.blocked == (OUTPUT_REASON_BIT(OUTPUT_REASON_OC) | OUTPUT_REASON_BIT(OUTPUT_REASON_OV)));
+    digital &= ~(BIT(BOARD_OC) | BIT(BOARD_OV));
+    measured.temperature.samples[1].status = NTC_SATURATED;
+    measured.temperature.samples[1].raw = NTC_ADC_MAX; advance(1);
+    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_NTC2_OPEN));
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(published.debug.blocked == 0 && published.debug.dac_available);
+#endif
+    measured.temperature.samples[1].status = NTC_SHORT; advance(1);
+    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_NTC2_INVALID));
+    measured.temperature.samples[1].status = NTC_OK;
+    measured.temperature.samples[2].decicelsius = 800; advance(1);
+    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_NTC3_HOT));
+    measured.temperature.samples[2].decicelsius = 250;
+    sample_invalid = true; advance(1);
+    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_SAMPLE_STALE));
+    sample_invalid = false; digital &= ~BIT(BOARD_DC); advance(1);
+    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_DC));
+    digital |= BIT(BOARD_DC); advance(1); assert(published.blocked == 0);
+    assert(clears == 1 && starts == 0 && relay_value == 0);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    power_fail(&control, POWER_ERROR_MATCH); advance(1);
+    assert(published.debug.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT));
+    assert(!(published.debug.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_BUSY)));
+#endif
+}
+static void startup_latch(void) {
+    old_alarm = true; digital |= BIT(BOARD_OC) | BIT(BOARD_OV);
+    setup(); assert(clears == 1 && published.blocked == 0 && starts == 0);
+    digital |= BIT(BOARD_OC); advance(100);
+    assert(!published.available && published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_OC));
+    assert(clears == 1 && starts == 0 && output_init() == -EALREADY);
+}
+static void latch_failure(void) {
+    clear_error = -EIO; assert(output_init() == -EIO);
+    assert(!published.ready && published.fault && clears == 1 && starts == 0 && relay_value == 0);
+}
+static void latch_relay_failure(void) {
+    relay_failure = true; assert(output_init() == -EIO);
+    assert(!published.ready && clears == 0 && starts == 0);
+}
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
@@ -264,6 +318,7 @@ int main(int argc,char **argv) {
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
     RUN(dac_open_ntc) RUN(dac_guards) RUN(dac_relay_guard)
 #endif
+    RUN(blocking_reasons) RUN(startup_latch) RUN(latch_failure) RUN(latch_relay_failure)
     RUN(stop_priority) RUN(interlocks) RUN(stale_ui) RUN(sample_fault)
     RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)
     RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)
