@@ -216,12 +216,53 @@ static void debug_disconnect(void) {
     assert(!published.debug.busy && !signal_active && relay_value==0);
     advance(500);assert(!published.debug.busy);
 }
+static void dac_open_ntc(void) {
+    setup();measured.temperature.samples[0].status=NTC_SATURATED;
+    measured.temperature.samples[0].raw=NTC_ADC_MAX;advance(1);
+    assert(!published.available && published.debug.dac_available);
+    assert(output_start(2000,1000)==-EACCES);
+    assert(output_debug(2,2000,25,true)==-EACCES);
+    assert(output_debug(0,2000,25,false)==-EACCES);
+    assert(output_debug(0,2000,25,true)==0);advance(500);
+    assert(published.debug.wave && relay_value==0 && amplitude==17);
+    advance(10100);assert(!signal_active && relay_value==0 && !published.debug.busy);
+    assert(!published.available && published.debug.dac_available);
+}
+static void dac_guards(void) {
+    setup();measured.temperature.samples[0].status=NTC_SATURATED;
+    measured.temperature.samples[0].raw=NTC_ADC_MAX;advance(1);
+    sample_invalid=true;advance(1);assert(!published.debug.dac_available);
+    sample_invalid=false;advance(1);assert(published.debug.dac_available);
+    measured.temperature.samples[1].status=NTC_SHORT;advance(1);
+    assert(!published.debug.dac_available && output_debug(0,2000,25,true)==-EACCES);
+    measured.temperature.samples[1].status=NTC_OK;
+    measured.temperature.samples[1].decicelsius=800;advance(1);
+    assert(!published.debug.dac_available);
+    measured.temperature.samples[1].decicelsius=250;
+    digital|=BIT(BOARD_OC);advance(1);assert(!published.debug.dac_available);
+    digital&=~BIT(BOARD_OC);advance(1);assert(published.debug.dac_available);
+    assert(output_debug(0,2000,25,true)==0);advance(500);
+    output_stop();advance(100);assert(!signal_active && relay_value==0);
+    assert(output_debug(0,2000,25,true)==0);advance(500);
+    measured.temperature.samples[1].decicelsius=800;advance(100);
+    assert(!signal_active && relay_value==0 && !published.debug.busy);
+}
+static void dac_relay_guard(void) {
+    setup();assert(output_debug(2,2000,25,false)==0);advance(200);
+    assert(relay_value==2 && !published.debug.dac_available);
+    assert(output_debug(0,2000,25,true)==-EACCES);
+    output_stop();advance(100);assert(published.debug.dac_available);
+    assert(output_debug(0,2000,25,true)==0);advance(500);
+    protection(NULL,NULL,0);advance(1);
+    assert(!signal_active && relay_value==0 && !published.debug.dac_available);
+}
 #endif
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
+    RUN(dac_open_ntc) RUN(dac_guards) RUN(dac_relay_guard)
 #endif
     RUN(stop_priority) RUN(interlocks) RUN(stale_ui) RUN(sample_fault)
     RUN(standby_sampling) RUN(standby_board_fault) RUN(init_failure)

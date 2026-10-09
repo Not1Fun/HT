@@ -141,7 +141,8 @@ int output_debug(uint8_t relay, uint32_t frequency, uint16_t millivolts_pp, bool
         (millivolts_pp != 10 && millivolts_pp != 25 && millivolts_pp != 50 && millivolts_pp != 100)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
-    if (!published.ready || !published.available || shut_down || published.fault) rc = -EACCES;
+    bool available = relay == 0 && wave ? published.debug.dac_available : published.available;
+    if (!published.ready || !available || shut_down || published.fault) rc = -EACCES;
     else if (published.active || published.switching || request.pending || request.stop) rc = -EBUSY;
     else {
         request.pending = request.debug = true;
@@ -219,6 +220,17 @@ static void run(void *a, void *b, void *c)
             !(digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) &&
             ((digital & BIT(BOARD_AC)) || (digital & BIT(BOARD_BAT))) &&
             now - signal.temperature_ms < 1000;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        bool dac_permitted = permitted;
+        for (size_t i = 0; i < 3; ++i) {
+            /* 仅全释放的DAC试波容许NTC开路，短路与有效过温仍拒绝。 */
+            bool open = signal.temperature.samples[i].status == NTC_SATURATED &&
+                signal.temperature.samples[i].raw == NTC_ADC_MAX;
+            dac_permitted = dac_permitted && (open ||
+                (signal.temperature.samples[i].status == NTC_OK &&
+                 signal.temperature.samples[i].decicelsius < HT_OUTPUT_TEMP_LIMIT_DC));
+        }
+#endif
         /* 暂用80°C软件保护阈值；硬件安全链独立生效，实机需核对探头安装位置。 */
         for (size_t i = 0; i < 3; ++i) permitted = permitted &&
             signal.temperature.samples[i].status == NTC_OK &&
@@ -236,10 +248,12 @@ static void run(void *a, void *b, void *c)
             now - signal.reading.time_ms < 150;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
         if (stop) bench_stop(&debug, now);
-        else if (debug_start && permitted && sample_ready && control.state == POWER_IDLE)
+        else if (debug_start && (relay == 0 && wave ? dac_permitted && debug.output == 0 : permitted) &&
+                 sample_ready && control.state == POWER_IDLE)
             (void)bench_start(&debug, relay, frequency, millivolts_pp, wave, now);
         if (debug.state != BENCH_IDLE) start = false;
-        bench_poll(&debug, permitted, &signal.reading, k_uptime_get());
+        bench_poll(&debug, debug.relay == 0 && debug.wave ? dac_permitted && debug.output == 0 : permitted,
+                   &signal.reading, k_uptime_get());
 #endif
         if (stop) power_stop(&control, now);
         else if (start && permitted && sample_ready)
@@ -270,6 +284,8 @@ static void run(void *a, void *b, void *c)
         next.debug.trial = debug.wave && next.debug.busy &&
             debug.state != BENCH_STOP && debug.state != BENCH_RELEASE;
         next.debug.coils = debug.output;
+        next.debug.dac_available = dac_permitted && sample_ready && control.state == POWER_IDLE &&
+            debug.state != BENCH_FAULT && debug.output == 0;
         next.debug.seconds = next.debug.busy && debug.expires > now ?
             (uint32_t)((debug.expires - now + 999) / 1000) : 0;
         if (debug.state == BENCH_FAULT) {

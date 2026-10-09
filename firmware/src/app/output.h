@@ -8,7 +8,7 @@ struct output_snapshot {
     uint8_t range;
     uint32_t frequency, elapsed_seconds, target_mva;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
-    struct { bool busy, wave, trial; uint8_t coils; uint32_t seconds; } debug;
+    struct { bool busy, wave, trial, dac_available; uint8_t coils; uint32_t seconds; } debug;
 #endif
     struct signal_snapshot signal;
 };

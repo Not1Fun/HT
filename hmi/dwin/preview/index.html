@@ -28,12 +28,12 @@
       <h2>旋转编码器</h2>
       <div class="encoder"><button id="ccw" aria-label="左旋：上一个挡位">↶</button><button id="press" aria-label="编码器下压确认"><span class="mark"></span><span>确认</span></button><button id="cw" aria-label="右旋：下一个挡位">↷</button></div>
       <p class="help">频率循环预选，输出右开左关<br>下压确认；匹配或输出时下压停止</p>
-      <p id="feedback" role="status">右键进入输出设置，左键进入 BENCH 调试。</p>
+      <p id="feedback" role="status">右键进入输出设置，左键进入 DAC 独立试波。</p>
     </aside>
   </div>
-  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">正常待机</button><button data-scene="fault">过流保护示例</button><button data-scene="offline">屏幕离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label><label><input id="temperature-invalid" type="checkbox">NTC2 无效示例</label><label><input id="bench-disabled" type="checkbox">未启用输出功能</label></section>
-  <footer>阻抗由设备自动匹配，状态页显示实际挡位；频率挡位：2 / 5 / 8 / 10 kHz。<br>先设置目标视在功率（1–50 VA），再选择输出控制，右旋预选开启，按 OK 或编码器确认；匹配或输出时再次确认停止。<br>预览以 30 Ω 模拟负载展示匹配过程；电压、电流、温度与日志均为演示数据，不连接硬件。刷新后重置，日志最多保留 32 条。调试页通过左键进入，继电器 30 秒、试波 10 秒后停止；离页释放。</footer>
+  <section class="scenes" aria-label="演示状态"><span>演示状态</span><div><button data-scene="idle" aria-pressed="true">正常待机</button><button data-scene="fault">过流保护示例</button><button data-scene="offline">屏幕离线</button></div><label><input id="battery-alarm" type="checkbox">电池异常示例</label><label><input id="temperature-invalid" type="checkbox">NTC2 开路示例</label><label><input id="bench-disabled" type="checkbox">未启用输出功能</label></section>
+  <footer>阻抗由设备自动匹配，状态页显示实际挡位；频率挡位：2 / 5 / 8 / 10 kHz。<br>先设置目标视在功率（1–50 VA），再选择输出控制，右旋预选开启，按 OK 或编码器确认；匹配或输出时再次确认停止。<br>预览以 30 Ω 模拟负载展示匹配过程；电压、电流、温度与日志均为演示数据，不连接硬件。刷新后重置，日志最多保留 32 条。DAC 独立页从状态页按左键进入，再按左键进入继电器调试；继电器 30 秒、试波 10 秒后停止；离页释放。</footer>
 </main>
-<script src="preview.js?v=debug7"></script>
+<script src="preview.js?v=dac8"></script>
 </body>
 </html>

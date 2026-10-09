@@ -12,8 +12,10 @@ static unsigned int starts, stops;
 static unsigned int debug_starts;
 static uint8_t debug_relay;
 static bool debug_wave;
+static uint32_t debug_frequency;
+static uint16_t debug_mvpp;
 int output_debug(uint8_t relay, uint32_t frequency, uint16_t mvpp, bool wave)
-{ assert(frequency==2000 && mvpp==25); ++debug_starts; debug_relay=relay; debug_wave=wave; return 0; }
+{ debug_frequency=frequency; debug_mvpp=mvpp; ++debug_starts; debug_relay=relay; debug_wave=wave; return 0; }
 #endif
 static char current[VIEW_TEXT_BYTES], voltage[VIEW_TEXT_BYTES];
 
@@ -161,7 +163,8 @@ static void press(struct service *s, enum panel_key key)
 static void debug_keys(void)
 {
     struct service s=setup(); s.panel.debug_enabled=true;
-    press(&s,PANEL_KEY_LEFT); assert(s.panel.page==PANEL_PAGE_DEBUG && stops==1);
+    press(&s,PANEL_KEY_LEFT); assert(s.panel.page==PANEL_PAGE_DAC && stops==1);
+    press(&s,PANEL_KEY_LEFT); assert(s.panel.page==PANEL_PAGE_DEBUG && stops==2);
     assert(panel_rotate(&s.panel,2)==0); press(&s,PANEL_KEY_ENCODER);
     assert(debug_starts==1 && debug_relay==2 && !debug_wave && starts==0);
     for(unsigned i=0;i<3;++i) press(&s,PANEL_KEY_DOWN);
@@ -173,10 +176,38 @@ static void debug_keys(void)
     measured.debug.seconds=9; measured.available=true; update_output(&s,true);
     struct view_snapshot v; snapshot(&s,&v);
     assert(v.debug.state==2 && v.debug.coils==2 && v.debug.seconds==9);
-    press(&s,PANEL_KEY_OK); assert(stops==2 && debug_starts==2);
+    press(&s,PANEL_KEY_OK); assert(stops==3 && debug_starts==2);
+    press(&s,PANEL_KEY_RIGHT); assert(stops==4 && s.panel.page==PANEL_PAGE_DAC);
+    assert(s.panel.debug.choice[0]==0);
+}
+static void dac_keys(void)
+{
+    struct service s=setup(); s.panel.debug_enabled=true;
+    press(&s,PANEL_KEY_LEFT);
+    assert(s.panel.page==PANEL_PAGE_DAC && stops==1);
+    measured.available=false; measured.debug.dac_available=true;
+    struct view_snapshot v; snapshot(&s,&v);
+    assert(v.debug.state==0 && v.debug.relay==0 && v.debug.field==1);
+    assert(v.debug.frequency==2000 && v.debug.millivolts_pp==10);
+    s.panel.page=PANEL_PAGE_DEBUG;
+    snapshot(&s,&v); assert(v.debug.state==0);
+    s.panel.debug.choice[0]=8;
+    snapshot(&s,&v); assert(v.debug.state==3);
+    s.panel.page=PANEL_PAGE_DAC;
+    for (unsigned i=0;i<2;++i) press(&s,PANEL_KEY_DOWN);
+    assert(panel_rotate(&s.panel,1)==0); press(&s,PANEL_KEY_ENCODER);
+    assert(debug_starts==1 && debug_wave && debug_relay==0);
+    assert(debug_frequency==2000 && debug_mvpp==10 && starts==0);
+    measured.debug.trial=measured.debug.busy=measured.debug.wave=true;
+    measured.debug.seconds=8; update_output(&s,true); snapshot(&s,&v);
+    assert(v.debug.state==2 && v.debug.seconds==8 && v.debug.relay==0);
+    press(&s,PANEL_KEY_OK); assert(stops==2 && debug_starts==1);
+    measured.debug.dac_available=false; snapshot(&s,&v); assert(v.debug.state==3);
+    measured.fault=true; snapshot(&s,&v); assert(v.debug.state==4);
     press(&s,PANEL_KEY_RIGHT); assert(stops==3 && s.panel.page==PANEL_PAGE_STATUS);
     assert(s.panel.debug.choice[0]==0);
 }
+
 #endif
 
 int main(int argc, char **argv)
@@ -187,6 +218,7 @@ int main(int argc, char **argv)
     else if (!strcmp(argv[1], "output_states")) output_states();
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     else if (!strcmp(argv[1], "debug_keys")) debug_keys();
+    else if (!strcmp(argv[1], "dac_keys")) dac_keys();
 #endif
     else assert(!"Unknown test");
     printf("PASS %s\n", argv[1]);

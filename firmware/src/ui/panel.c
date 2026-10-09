@@ -102,15 +102,19 @@ int panel_key(struct panel *panel, enum panel_key key)
     }
     if (key == PANEL_KEY_LEFT || key == PANEL_KEY_RIGHT) {
         enum panel_page before = panel->page;
-        enum panel_page last = panel->debug_enabled ? PANEL_PAGE_DEBUG : PANEL_PAGE_LOG;
+        enum panel_page last = panel->debug_enabled ? PANEL_PAGE_DAC : PANEL_PAGE_LOG;
         if (key == PANEL_KEY_LEFT) {
             panel->page = panel->page == PANEL_PAGE_STATUS ? last : panel->page - 1;
         } else {
             panel->page = panel->page == last ? PANEL_PAGE_STATUS : panel->page + 1;
         }
         panel->draft_index = selected_index(panel);
-        if (before == PANEL_PAGE_DEBUG || panel->page == PANEL_PAGE_DEBUG) {
+        if (before >= PANEL_PAGE_DEBUG || panel->page >= PANEL_PAGE_DEBUG) {
             panel->debug.field = panel->debug.draft = panel->debug.choice[0] = 0;
+            if (panel->page == PANEL_PAGE_DAC) {
+                panel->debug.field = 1;
+                panel->debug.choice[1] = panel->debug.choice[2] = 0;
+            }
             return PANEL_ACTION_OUTPUT_STOP;
         }
         return PANEL_ACTION_NONE;
@@ -125,9 +129,10 @@ int panel_key(struct panel *panel, enum panel_key key)
         }
         return PANEL_ACTION_NONE;
     }
-    if (panel->page == PANEL_PAGE_DEBUG && panel->debug_enabled) {
+    if (panel->page >= PANEL_PAGE_DEBUG && panel->debug_enabled) {
         if (key == PANEL_KEY_UP || key == PANEL_KEY_DOWN) {
-            if (key == PANEL_KEY_UP && panel->debug.field > 0) --panel->debug.field;
+            uint8_t first = panel->page == PANEL_PAGE_DAC ? 1u : 0u;
+            if (key == PANEL_KEY_UP && panel->debug.field > first) --panel->debug.field;
             if (key == PANEL_KEY_DOWN && panel->debug.field < 3) ++panel->debug.field;
             panel->debug.draft = debug_index(panel);
         } else if (key == PANEL_KEY_OK || key == PANEL_KEY_ENCODER) {
@@ -186,7 +191,7 @@ int panel_rotate(struct panel *panel, int32_t detents)
     if (result != PANEL_OK) {
         return result;
     }
-    if (panel->page == PANEL_PAGE_DEBUG && panel->debug_enabled) {
+    if (panel->page >= PANEL_PAGE_DEBUG && panel->debug_enabled) {
         unsigned int field = panel->debug.field;
         count = field == 0 ? 9 : field == 3 ? 2 : 4;
         next = (int64_t)panel->debug.draft + detents;

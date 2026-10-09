@@ -22,6 +22,6 @@ foreach(mode IN ITEMS output output_bench)
 endforeach()
 target_compile_definitions(output_bench_tests PRIVATE CONFIG_HT_OUTPUT_BENCH=1)
 
-foreach(case IN ITEMS debug_cycle debug_fault debug_disconnect)
+foreach(case IN ITEMS debug_cycle debug_fault debug_disconnect dac_open_ntc dac_guards dac_relay_guard)
   add_test(NAME output_bench_${case} COMMAND output_bench_tests ${case})
 endforeach()

@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "name": "HT",
   "width": 800,
   "height": 480,
@@ -41,6 +41,11 @@
       "id": 3,
       "name": "debug",
       "image": "assets/pages/003.png"
+    },
+    {
+      "id": 4,
+      "name": "dac",
+      "image": "assets/pages/004.png"
     }
   ],
   "fields": [
@@ -481,7 +486,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -503,7 +509,8 @@
       "max_chars": 8,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -525,7 +532,8 @@
       "max_chars": 8,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -547,7 +555,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -569,7 +578,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -591,7 +601,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -613,7 +624,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     },
     {
@@ -635,7 +647,8 @@
       "max_chars": 9,
       "color": "#303133",
       "pages": [
-        3
+        3,
+        4
       ]
     }
   ],
@@ -920,6 +933,46 @@
       ],
       "pages": [
         3
+      ]
+    },
+    {
+      "name": "dac_focus",
+      "vp": 4144,
+      "x": 24,
+      "y": 100,
+      "width": 452,
+      "height": 256,
+      "first": 49,
+      "last": 51,
+      "initial": 0,
+      "values": [
+        "frequency",
+        "amplitude",
+        "wave"
+      ],
+      "pages": [
+        4
+      ]
+    },
+    {
+      "name": "dac_state",
+      "vp": 4145,
+      "x": 24,
+      "y": 380,
+      "width": 752,
+      "height": 36,
+      "first": 52,
+      "last": 56,
+      "initial": 3,
+      "values": [
+        "idle",
+        "preparing",
+        "wave",
+        "blocked",
+        "fault"
+      ],
+      "pages": [
+        4
       ]
     }
   ],

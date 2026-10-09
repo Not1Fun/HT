@@ -224,8 +224,9 @@ static int send_debug(const struct view_snapshot *s, enum dgus_crc crc, view_sen
 {
     static const char *const relays[] = {"OFF", "K1", "K2 1R", "K3 3R", "K4 10R",
         "K5 30R", "K6 100R", "K7 300R", "K8 1000R"};
-    uint16_t icons[] = {s->debug.field, s->debug.state};
-    int rc = send_words(crc, send, ctx, 0x1020, icons, 2);
+    bool dac = s->page == PANEL_PAGE_DAC;
+    uint16_t icons[] = {dac ? s->debug.field - 1u : s->debug.field, s->debug.state};
+    int rc = send_words(crc, send, ctx, dac ? 0x1030 : 0x1020, icons, 2);
     for (unsigned int i = 0; i < 8 && rc == VIEW_OK; ++i) {
         char text[VIEW_TEXT_BYTES] = {0};
         switch (i) {
@@ -264,12 +265,13 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     bool online;
     int result;
     if (view == NULL || snapshot == NULL || send == NULL ||
-        (unsigned int)snapshot->page > PANEL_PAGE_DEBUG ||
+        (unsigned int)snapshot->page > PANEL_PAGE_DAC ||
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
         (unsigned int)snapshot->selected > PANEL_OUTPUT ||
         (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED ||
         snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 4 ||
+        (snapshot->page == PANEL_PAGE_DAC && (snapshot->debug.field == 0 || snapshot->debug.relay != 0)) ||
         snapshot->log_count > EVENT_LOG_CAPACITY ||
         snapshot->log_offset > (snapshot->log_count > VIEW_LOG_ROWS ?
                                snapshot->log_count - VIEW_LOG_ROWS : 0u)) {
@@ -297,7 +299,7 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
     if (result == VIEW_OK && snapshot->page == PANEL_PAGE_LOG) {
         result = send_logs(snapshot, crc, send, ctx);
     }
-    if (result == VIEW_OK && snapshot->page == PANEL_PAGE_DEBUG) {
+    if (result == VIEW_OK && snapshot->page >= PANEL_PAGE_DEBUG) {
         result = send_debug(snapshot, crc, send, ctx);
     }
     if (result == VIEW_OK && (!view->synced || view->page != snapshot->page)) {

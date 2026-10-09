@@ -412,6 +412,15 @@ static void test_debug(void)
     vp_text_is(&c,0x1330,"START?"); vp_text_is(&c,0x1340,"00000000");
     s.debug.starting=true;
     refresh(&v,&c,&s,DGUS_CRC_NONE); vp_text_is(&c,0x1330,"WAIT");
+    s.page=PANEL_PAGE_DAC; s.debug.relay=0; s.debug.field=1;
+    refresh(&v,&c,&s,DGUS_CRC_NONE); vp_text_is(&c,0x1300,"OFF");
+    bool found=false;
+    for(size_t i=0;i<c.count;++i) if(c.frames[i].vp==0x1030) {
+        CHECK(c.frames[i].words[0]==0); found=true;
+    }
+    CHECK(found);
+    s.debug.field=0; CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
+    s.debug.field=1;
     s.debug.relay=9; CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
 }
 int main(int argc,char **argv)

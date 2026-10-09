@@ -24,7 +24,8 @@ enum panel_page {
     PANEL_PAGE_STATUS = 0,
     PANEL_PAGE_SETTINGS = 1,
     PANEL_PAGE_LOG = 2,
-    PANEL_PAGE_DEBUG = 3
+    PANEL_PAGE_DEBUG = 3,
+    PANEL_PAGE_DAC = 4
 };
 
 enum panel_field {
@@ -88,7 +89,7 @@ struct panel {
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。
- * LEFT/RIGHT 按状态、设置、日志循环；Bench可启用第4调试页。
+ * LEFT/RIGHT 按状态、设置、日志循环；Bench增加调试和独立DAC页。
  * 进出调试页发STOP；离开设置丢弃草稿。
  * 状态页 OK/ENCODER 进入设置、DOWN请求停止；设置页UP/DOWN选择频率、VA和输出（到头停）。
  * 设置页 OK/ENCODER 提交请求并留页。

@@ -12,7 +12,7 @@
     overcurrent:8,overcurrentClear:9,overvoltage:10,overvoltageClear:11,
     temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15,
     outputStart:16,outputStop:17,outputFault:18};
-  const names = ["状态页","输出设置页","设备日志页","BENCH 调试页"];
+  const names = ["状态页","输出设置页","设备日志页","BENCH 调试页","DAC 独立试波页"];
   const state = {page:0,field:0,draft:0,range:0,frequency:0,power:0,scene:"idle",started:0,matchAt:0,
     output:false,matching:false,benchDisabled:false,batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
   const debug = {field:0,draft:0,choice:[0,0,1,0],coils:0,wave:false,until:0};
@@ -20,7 +20,7 @@
   const relayNames=["OFF","K1","K2 1R","K3 3R","K4 10R","K5 30R","K6 100R","K7 300R","K8 1000R"];
   function stopDebug() {debug.coils=0;debug.wave=false;debug.until=0;if(debug.field===3)debug.draft=0;}
   function debugSelected() {return debug.field===3?Number(debug.wave):debug.choice[debug.field];}
-  function debugAllowed() {return state.scene==="idle"&&!state.temperatureInvalid&&!state.benchDisabled;}
+  function debugAllowed() {return state.scene==="idle"&&(!state.temperatureInvalid||state.page===4)&&!state.benchDisabled;}
   const scenes = {idle:0,fault:3,offline:4};
   const bootTime = performance.now();
   function selected() { return state.field===0 ? state.frequency : state.field===1 ? state.power : Number(state.output); }
@@ -79,7 +79,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=bench7"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=dac8"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -105,7 +105,9 @@
     const values={state:state.matching?2:state.output?1:scenes[state.scene],battery:online?(state.batteryAlarm?1:0):2,
       focus:state.field,edit:dirty()?1:0,output:outputState()};
     values.debug_focus=debug.field;
+    values.dac_focus=debug.field-1;
     values.debug_state=state.scene==="fault"?4:!debugAllowed()?3:debug.wave?2:debug.until?1:0;
+    values.dac_state=values.debug_state;
     const choiceFrequency=state.field===0?state.draft:state.frequency;
     const running=state.output&&!state.matching;
     const texts={current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",
@@ -153,8 +155,9 @@
       const before=state.page;
       state.page=(state.page+(key==="right"?1:names.length-1))%names.length;
       state.draft=selected();
-      if(before===3 || state.page===3) {
+      if(before>=3 || state.page>=3) {
         stopOutput("进入调试已停止恒 VA 演示。");stopDebug();debug.field=0;debug.draft=0;debug.choice[0]=0;
+        if(state.page===4) {debug.field=1;debug.choice[1]=debug.choice[2]=0;}
       }
       if(state.page===2) state.logOffset=0;
       announce((abandoned?"未确认修改已取消。":"")+"已切到"+names[state.page]+"。");
@@ -163,9 +166,9 @@
         state.page=1; state.draft=selected(); announce("上下选择频率、目标 VA 或输出，旋钮预选后按下确认；阻抗会自动匹配。");
       }
       if(key==="down" && !stopOutput("已立即停止演示输出。")) announce("输出当前已关闭。");
-    } else if(state.page===3) {
+    } else if(state.page>=3) {
       if(key==="up" || key==="down") {
-        debug.field=Math.max(0,Math.min(3,debug.field+(key==="down"?1:-1)));debug.draft=debugSelected();
+        debug.field=Math.max(state.page===4?1:0,Math.min(3,debug.field+(key==="down"?1:-1)));debug.draft=debugSelected();
       } else if(key==="ok" || key==="press") {
         const choice=debug.draft;
         debug.choice[debug.field]=choice;
@@ -173,7 +176,7 @@
         else if(debug.field===3 && (debug.wave || !choice) || debug.field===0 && !choice) stopDebug();
         else if(debugAllowed()) {
           debug.wave=debug.field===3;
-          const relay=debug.choice[0];
+          const relay=state.page===4?0:debug.choice[0];
           debug.coils=relay<2?relay:(1<<(relay-1))|(relay>=6?1:0);
           debug.until=performance.now()+(debug.wave?10000:30000);
         }
@@ -206,7 +209,7 @@
   }
   function turn(delta) {
     if(state.page===0) {announce("在设置页旋转选择挡位，在日志页旋转翻看记录。");return;}
-    if(state.page===3) {
+    if(state.page>=3) {
       const count=debug.field===0?9:debug.field===3?2:4;
       debug.draft=debug.field===3?Math.max(0,Math.min(1,debug.draft+delta)):(debug.draft+delta+count)%count;
       announce("待确认；按 OK / 下压执行，左右切页停止。");

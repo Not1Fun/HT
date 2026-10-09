@@ -571,7 +571,9 @@ static void test_debug_page(void)
     struct panel p = initialize(false, false);
     CHECK(panel_key(&p, PANEL_KEY_LEFT) == PANEL_ACTION_NONE && p.page == PANEL_PAGE_LOG);
     p.page=PANEL_PAGE_STATUS; p.debug_enabled=true;
+    CHECK(panel_key(&p, PANEL_KEY_LEFT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_DAC);
     CHECK(panel_key(&p, PANEL_KEY_LEFT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_DEBUG);
+    p.debug.choice[2]=1;
     CHECK(panel_rotate(&p,-1)==PANEL_OK && p.debug.draft==8);
     CHECK(panel_key(&p,PANEL_KEY_ENCODER)==PANEL_ACTION_DEBUG_RELAY && p.debug.choice[0]==8);
     CHECK(panel_rotate(&p,1)==PANEL_OK && p.debug.draft==0);
@@ -586,6 +588,19 @@ static void test_debug_page(void)
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_WAVE);
     p.debug.wave=true;
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_OUTPUT_STOP);
+    CHECK(panel_key(&p,PANEL_KEY_RIGHT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_DAC);
+    CHECK(p.debug.field==1 && p.debug.choice[1]==0 && p.debug.choice[2]==0);
+    CHECK(panel_key(&p,PANEL_KEY_UP)==PANEL_ACTION_NONE && p.debug.field==1);
+    CHECK(panel_rotate(&p,-1)==PANEL_OK && p.debug.draft==3);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==2);
+    CHECK(panel_debug_mvpp(p.debug.draft)==10);
+    CHECK(panel_rotate(&p,3)==PANEL_OK);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==3);
+    p.debug.wave=false;
+    CHECK(panel_rotate(&p,1)==PANEL_OK);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_WAVE);
     CHECK(panel_key(&p,PANEL_KEY_RIGHT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_STATUS);
     CHECK(p.debug.choice[0]==0 && p.debug.draft==0);
 }

@@ -43,3 +43,5 @@ target_compile_definitions(screen_debug_tests PRIVATE CONFIG_HT_OUTPUT=1 CONFIG_
 set_target_properties(screen_debug_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_compile_options(screen_debug_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 add_test(NAME screen_debug_keys COMMAND screen_debug_tests debug_keys)
+
+add_test(NAME screen_debug_dac_keys COMMAND screen_debug_tests dac_keys)

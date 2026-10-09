@@ -442,7 +442,8 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
             if (action == PANEL_ACTION_DEBUG_PARAMS) { request_stop(); stopping = true; }
             if (!stopping && (action == PANEL_ACTION_DEBUG_RELAY || action == PANEL_ACTION_DEBUG_WAVE)) {
                 struct panel *p = &service->panel;
-                int rc = output_debug(p->debug.choice[0], panel_frequency_hz(p->debug.choice[1]),
+                uint8_t relay = p->page == PANEL_PAGE_DAC ? 0 : p->debug.choice[0];
+                int rc = output_debug(relay, panel_frequency_hz(p->debug.choice[1]),
                     panel_debug_mvpp(p->debug.choice[2]), action == PANEL_ACTION_DEBUG_WAVE);
                 if (rc != 0) { p->debug.draft = 0; LOG_WRN("Debug request rejected: %d", rc); }
             }
@@ -707,11 +708,13 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     out->debug.field = panel->debug.field;
     out->debug.relay = panel->debug.field == 0 ? panel->debug.draft : panel->debug.choice[0];
+    if (panel->page == PANEL_PAGE_DAC) out->debug.relay = 0;
     out->debug.frequency = panel_frequency_hz(panel->debug.field == 1 ? panel->debug.draft : panel->debug.choice[1]);
     out->debug.millivolts_pp = panel_debug_mvpp(panel->debug.field == 2 ? panel->debug.draft : panel->debug.choice[2]);
     out->debug.coils = value.debug.coils;
     out->debug.seconds = value.debug.seconds;
-    out->debug.state = value.fault ? 4 : !value.available ? 3 : value.debug.wave ? 2 : value.debug.busy ? 1 : 0;
+    bool available = out->debug.relay == 0 ? value.debug.dac_available : value.available;
+    out->debug.state = value.fault ? 4 : !available ? 3 : value.debug.wave ? 2 : value.debug.busy ? 1 : 0;
     out->debug.starting = value.debug.trial && !value.debug.wave;
     out->debug.pending = panel->debug.field == 3 && panel->debug.draft && !value.debug.trial;
 #endif
