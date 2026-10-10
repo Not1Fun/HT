@@ -7,11 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-static struct { int64_t now; uint8_t ports[64]; unsigned int count; int fail; int starts, mutes; uint16_t amp; uint32_t frequency; } hw;
-static int mute(void *ctx) { (void)ctx; hw.mutes++; hw.amp=0; return hw.fail==1?-1:0; }
+static struct { int64_t now; uint8_t ports[64]; unsigned int count; int fail; int starts, mutes; uint16_t amp, sample_amp; uint32_t frequency; } hw;
+static int mute(void *ctx) { (void)ctx; hw.mutes++; hw.amp=hw.sample_amp=0; return hw.fail==1?-1:0; }
 static int select_port(void *ctx, uint8_t output)
 {
     (void)ctx;
+    assert(hw.amp == 0);
     hw.now += 5;
     if(hw.fail==2) return -1;
     assert(hw.count<64); hw.ports[hw.count++]=output; return 0;
@@ -144,8 +145,8 @@ static void limits(void)
 }
 static void open_short(void)
 {
-    struct power p=running(0);p.level_milli=2047000;p.started=-2000;p.low_since=hw.now-1100;
-    struct power_reading r={.valid=true,.sequence=p.sequence};tick(&p,50,true,&r);assert(p.error==POWER_ERROR_OPEN);
+    struct power p=running(0);p.amplitude=1000;p.level_milli=1000000;p.started=-3000;p.low_since=hw.now-2100;
+    struct power_reading r={.valid=true,.sequence=p.sequence,.voltage_mv=1000};tick(&p,50,true,&r);assert(p.error==POWER_ERROR_OPEN);
     p=running(0);p.started=-1000;r=(struct power_reading){.valid=true,.sequence=p.sequence,.current_ma=1000,.voltage_mv=99};
     tick(&p,50,true,&r);assert(p.error==POWER_ERROR_SHORT);
 }
@@ -157,19 +158,24 @@ static void continuous(void)
 }
 static uint32_t codes[8500];
 static bool quantized;
+static bool delayed;
+static double gain = 15.0, noise_mv, noise_ma;
 static void plant_tick(struct power *p, double resistance)
 {
     static const double nominal[]={7070,12250,22360,38730,70700,122500,223600};
     uint8_t range=p->range;
-    double voltage=nominal[range]*hw.amp/2047.0;
+    uint16_t code=delayed?hw.sample_amp:hw.amp;hw.sample_amp=hw.amp;
+    double voltage=code*2900.0/4095.0/sqrt(2.0)*gain*nominal[range]/14100.0;
+    double current=hypot(voltage/resistance,noise_ma);
+    voltage=hypot(voltage,noise_mv);
     struct power_reading r={.valid=true,.sequence=p->sequence,
-        .voltage_mv=(uint32_t)lround(voltage),.current_ma=(uint32_t)lround(voltage/resistance)};
+        .voltage_mv=(uint32_t)lround(voltage),.current_ma=(uint32_t)lround(current)};
     r.apparent_mva=(uint32_t)((uint64_t)r.voltage_mv*r.current_ma/1000);
     if(quantized) {
         for(int n=0;n<8500;n++) {
             double wave=1.4142135623730951*sin(6.283185307179586*(n%85)/85.0);
             unsigned int v=(unsigned int)lround(2048+wave*voltage/(5800.0/4095*357806/1612));
-            unsigned int i=(unsigned int)lround(2048+wave*(voltage/resistance)/(5800.0/4095/0.164));
+            unsigned int i=(unsigned int)lround(2048+wave*current/(5800.0/4095/0.164));
             codes[n]=v|(i<<16);
         }
         struct rms a;rms_reset(&a);assert(rms_add(&a,codes,8500)==0);assert(rms_result(&a,&r)==0);
@@ -214,7 +220,73 @@ static void auto_no_signal(void)
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
     struct power_reading r={.valid=true};
     for(int n=0;n<350 && p.state!=POWER_FAULT;n++)tick(&p,50,true,&r);
-    assert(p.state==POWER_FAULT && p.error==POWER_ERROR_MATCH && hw.amp==0);
+    assert(p.state==POWER_FAULT && p.error==POWER_ERROR_FEEDBACK && hw.amp==0);
+}
+static void gain_conversion(void)
+{
+    assert(power_drive_limit()==1877);
+    /* 1Ω/1VA需要1Vrms次级：15倍功放、0.5014匝比，DAC约376mVpp。 */
+    assert(power_feedforward(0,1000,1000)>=264 && power_feedforward(0,1000,1000)<=266);
+    assert(power_feedforward(6,50000,1000000)==power_drive_limit());
+    assert(power_feedforward(7,1000,1000)==0 && power_feedforward(0,1000,0)==0);
+}
+static void auto_power_matrix(void)
+{
+    const double loads[]={1,3,10,30,100,300,1000};
+    const uint32_t targets[]={1000,5000,10000,25000,50000};
+    const uint32_t frequencies[]={2000,5000,8000,10000};
+    delayed=true;
+    for(size_t l=0;l<7;++l) for(size_t t=0;t<5;++t) for(size_t f=0;f<4;++f) {
+        struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,frequencies[f],targets[t],0)==0);
+        seek(&p,loads[l]);
+        for(int n=0;n<120;++n) {
+            plant_tick(&p,loads[l]);
+            if(p.state!=POWER_RUNNING)fprintf(stderr,"regulation failed load=%g target=%u error=%d\n",loads[l],targets[t],p.error);
+            assert(p.state==POWER_RUNNING && p.range==l && hw.amp<=power_drive_limit());
+        }
+        double volts=hw.amp*2.9/4095/sqrt(2.0)*gain*sqrt(50*loads[l])/14.1;
+        double va=volts*volts/loads[l];
+        assert(fabs(va-targets[t]/1000.0)<targets[t]/1000.0*.04);
+        assert(hw.frequency==frequencies[f] && p.rematches==0);
+    }
+}
+static void auto_noise_gain(void)
+{
+    delayed=true;noise_mv=223;noise_ma=6;
+    const double loads[]={1,30,1000};
+    const double gains[]={13.5,15.0,16.5};
+    for(size_t g=0;g<3;++g) for(size_t l=0;l<3;++l) {
+        gain=gains[g];struct power p=initialized();
+        assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);seek(&p,loads[l]);
+        for(int n=0;n<100;++n)plant_tick(&p,loads[l]);
+        assert(p.state==POWER_RUNNING && p.rematches==0);
+        double v=hw.amp*2900.0/4095/sqrt(2.0)*gain*sqrt(50*loads[l])/14.1;
+        double measured=hypot(v,noise_mv)*hypot(v/loads[l],noise_ma)/1000;
+        assert(fabs(measured-1000)<50);
+    }
+}
+static void auto_capacity(void)
+{
+    struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
+    for(int n=0;n<300 && p.state!=POWER_FAULT;++n)plant_tick(&p,2);
+    assert(p.error==POWER_ERROR_TARGET && hw.amp==0);
+    gain=10; p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
+    seek(&p,30);
+    for(int n=0;n<300 && p.state!=POWER_FAULT;++n)plant_tick(&p,30);
+    assert(p.error==POWER_ERROR_TARGET && hw.amp==0);
+}
+static void auto_quantized_regulation(void)
+{
+    quantized=delayed=true;
+    const double loads[]={1,30,1000};
+    for(size_t i=0;i<3;++i) {
+        struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,10000,50000,0)==0);
+        seek(&p,loads[i]);
+        for(int n=0;n<120;++n)plant_tick(&p,loads[i]);
+        assert(p.state==POWER_RUNNING && p.rematches==0 && p.frequency==10000);
+        double v=hw.amp*2.9/4095/sqrt(2.0)*15*sqrt(50*loads[i])/14.1;
+        assert(fabs(v*v/loads[i]-50)<2);
+    }
 }
 static void auto_timeout(void)
 {
@@ -315,6 +387,9 @@ static void relay_mutex(void)
 int main(int argc,char **argv)
 {
     const struct {const char *name;void (*fn)(void);} cases[]={
+        {"gain_conversion",gain_conversion},{"auto_power_matrix",auto_power_matrix},
+        {"auto_noise_gain",auto_noise_gain},{"auto_capacity",auto_capacity},
+        {"auto_quantized_regulation",auto_quantized_regulation},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
         {"auto_timeout",auto_timeout},{"auto_stop",auto_stop},{"auto_rematch",auto_rematch},{"auto_stale",auto_stale},
         {"auto_settle_protection",auto_settle_protection},{"auto_interlock",auto_interlock},

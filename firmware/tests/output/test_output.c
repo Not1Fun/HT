@@ -326,7 +326,6 @@ static void latch_relay_failure(void) {
 static void manual_range(void) {
     setup();
     assert(output_start(7,2000,1000)==-EINVAL);
-    assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EINVAL);
     for (uint8_t range=0; range<7; ++range) {
         assert(output_start(range,2000,1000)==0);
         advance(180);
@@ -341,6 +340,12 @@ static void manual_range(void) {
     assert(published.running && published.range==0 && !published.matching && !published.fault);
     assert(!control.automatic && control.changes==0 && control.rematches==0);
     output_stop(); advance(100); assert(relay_value==0 && !published.running);
+}
+static void automatic_range(void) {
+    setup();assert(output_start(POWER_RANGE_AUTO,2000,1000)==0);advance(8000);
+    assert(published.running && !published.fault && published.range==3 && control.automatic);
+    assert(published.frequency==2000 && control.target_mva==1000 && relay_value==16);
+    output_stop();advance(100);assert(!signal_active && relay_value==0);
 }
 static void clear_fault(void) {
     setup();start_output();protection(NULL,NULL,0);advance(1);
@@ -397,6 +402,7 @@ int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
     RUN(clear_fault) RUN(clear_blocked) RUN(clear_cancel) RUN(clear_sample) RUN(clear_io)
+    RUN(automatic_range)
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
     RUN(dac_one_volt)

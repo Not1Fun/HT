@@ -130,7 +130,8 @@ static void request_stop(void)
 static int request_start(struct service *service)
 {
 #if defined(CONFIG_HT_OUTPUT)
-	return output_start(service->panel.range, service->panel.frequency_hz, service->panel.apparent_mva);
+	uint8_t range = service->panel.range == PANEL_RANGE_AUTO ? POWER_RANGE_AUTO : service->panel.range;
+	return output_start(range, service->panel.frequency_hz, service->panel.apparent_mva);
 #elif defined(CONFIG_HT_DDS_BENCH)
 	return dds_bench_request_start(service->panel.frequency_hz, BENCH_MVPP, BENCH_SECONDS);
 #else
@@ -666,7 +667,7 @@ static uint8_t blocking_reason(uint32_t blocked, int error, int64_t now)
     for (unsigned int reason = 1; reason < OUTPUT_REASON_COUNT; ++reason) {
         if (!(blocked & OUTPUT_REASON_BIT(reason))) continue;
         reasons[count++] = reason == OUTPUT_REASON_FAULT && error >= POWER_ERROR_IO &&
-            error <= POWER_ERROR_MATCH ? OUTPUT_REASON_COUNT + (unsigned int)error - 1u : reason;
+            error < POWER_ERROR_COUNT ? OUTPUT_REASON_COUNT + (unsigned int)error - 1u : reason;
     }
     return count ? reasons[(uint64_t)now / 2000u % count] : OUTPUT_REASON_NONE;
 }

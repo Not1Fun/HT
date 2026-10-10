@@ -88,6 +88,7 @@ static void format_value(char text[VIEW_TEXT_BYTES], enum view_field field, int6
             format_number(text, value / 1000, 0);
         }
     } else if (field == VIEW_RANGE || field == VIEW_RANGE_CHOICE) {
+        if (field == VIEW_RANGE_CHOICE && value == 0) strcpy(text, "AUTO");
         if (value == 1 || value == 3 || value == 10 || value == 30 ||
             value == 100 || value == 300 || value == 1000) {
             format_number(text, value, 0);

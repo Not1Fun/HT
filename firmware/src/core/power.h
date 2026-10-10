@@ -8,7 +8,8 @@
 enum power_state { POWER_IDLE, POWER_MUTING, POWER_BREAK, POWER_TRANS,
     POWER_TAP, POWER_ZERO, POWER_PROBING, POWER_RUNNING, POWER_STOPPING, POWER_RELEASE, POWER_FAULT };
 enum power_error { POWER_ERROR_NONE, POWER_ERROR_IO, POWER_ERROR_INTERLOCK,
-    POWER_ERROR_SAMPLE, POWER_ERROR_LIMIT, POWER_ERROR_OPEN, POWER_ERROR_SHORT, POWER_ERROR_MATCH };
+    POWER_ERROR_SAMPLE, POWER_ERROR_LIMIT, POWER_ERROR_OPEN, POWER_ERROR_SHORT, POWER_ERROR_MATCH,
+    POWER_ERROR_TARGET, POWER_ERROR_FEEDBACK, POWER_ERROR_COUNT };
 struct power_reading {
     uint32_t voltage_mv, current_ma, apparent_mva, sequence;
     int64_t time_ms;
@@ -34,13 +35,18 @@ struct power {
     uint16_t amplitude;
     bool fault_stopped;
     bool automatic, matching;
-    uint8_t candidate, stable, changes, rematches;
+    uint8_t candidate, stable, changes, rematches, overload;
     uint16_t ramp_base;
     uint32_t noise_mv, noise_ma;
+    uint32_t load_mohm;
+    int64_t limit_since;
     int64_t session_ms, match_deadline, probe_after, resident_since;
 };
 int power_init(struct power *power, const struct power_ops *ops);
-/* 整机启动使用POWER_RANGE_AUTO；指定挡位入口供底层独立验证。 */
+/* 标称增益/匝比给出前馈峰值码；闭环仍以实测VA为准。 */
+uint16_t power_feedforward(uint8_t range, uint32_t target_mva, uint32_t load_mohm);
+uint16_t power_drive_limit(void);
+/* AUTO先探测负载再选挡；0..6为手动挡。频率由用户选择，控制器不改频率。 */
 int power_start(struct power *power, uint8_t range, uint32_t frequency,
                 uint32_t target_mva, int64_t now);
 void power_stop(struct power *power, int64_t now);

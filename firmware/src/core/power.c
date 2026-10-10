@@ -1,10 +1,58 @@
 /* @brief 静音后先断后合，按真实VA反馈积分调幅；停止/故障取消后续合闸。 */
 #include "core/power.h"
+#include "config/analog.h"
+#include "config/output.h"
 #include <stddef.h>
 
 static const uint32_t volts[] = {7070, 12250, 22360, 38730, 70700, 122500, 223600};
 static const uint32_t amps[] = {7070, 4080, 2240, 1290, 710, 408, 224};
 static const uint32_t boundaries[] = {1732, 5477, 17321, 54772, 173205, 547723}; /* mΩ */
+static const uint32_t loads[] = {1000, 3000, 10000, 30000, 100000, 300000, 1000000};
+
+static uint32_t root(uint64_t value)
+{
+    uint64_t result = 0, bit = UINT64_C(1) << 62;
+    while (bit > value) bit >>= 2;
+    while (bit) {
+        if (value >= result + bit) { value -= result + bit; result = (result >> 1) + bit; }
+        else result >>= 1;
+        bit >>= 2;
+    }
+    return (uint32_t)result;
+}
+
+static uint16_t primary_amplitude(uint32_t rms_mv)
+{
+    uint64_t code = (uint64_t)rms_mv * 4095u * 1414214u /
+        ((uint64_t)HT_VREF_MV * HT_AMP_GAIN_MILLI * 1000u);
+    return (uint16_t)(code > 2047 ? 2047 : code);
+}
+
+uint16_t power_drive_limit(void) { return primary_amplitude(HT_PRIMARY_RMS_MV); }
+
+uint16_t power_feedforward(uint8_t range, uint32_t target, uint32_t load)
+{
+    if (range >= 7 || !load || !target || target > 50000) return 0;
+    uint32_t rms = root((uint64_t)target * load);
+    uint64_t primary = (uint64_t)rms * HT_PRIMARY_RMS_MV / volts[range];
+    if (primary > HT_PRIMARY_RMS_MV) primary = HT_PRIMARY_RMS_MV;
+    return primary_amplitude((uint32_t)primary);
+}
+
+static uint32_t capacity(uint8_t range, uint32_t load)
+{
+    uint64_t voltage = (uint64_t)volts[range] * volts[range] / load;
+    uint64_t current = (uint64_t)amps[range] * amps[range] * load / 1000000u;
+    uint64_t result = voltage < current ? voltage : current;
+    return result > 50000 ? 50000 : (uint32_t)result;
+}
+
+static bool attainable(uint8_t range, uint32_t load, uint32_t target)
+{
+    uint32_t limit = capacity(range, load);
+    /* 规格表电流取整；保留2%数值余量，运行硬限值不变。 */
+    return target <= limit + limit / 50u;
+}
 
 static uint8_t closest(uint32_t impedance)
 {
@@ -68,8 +116,10 @@ int power_start(struct power *p, uint8_t range, uint32_t frequency, uint32_t tar
     p->automatic = range == POWER_RANGE_AUTO;
     p->matching = p->automatic;
     p->range = p->automatic ? 0 : range;
-    p->changes = p->rematches = p->stable = 0;
+    p->changes = p->rematches = p->stable = p->overload = 0;
     p->ramp_base = 0;
+    p->load_mohm = p->automatic ? 0 : loads[range];
+    p->limit_since = 0;
     p->session_ms = p->ops.now(p->ops.ctx);
     p->match_deadline = p->session_ms + 15000;
     p->frequency = frequency;
@@ -100,7 +150,7 @@ static void switch_range(struct power *p, uint8_t range)
     if (++p->changes > 10) { power_fail(p, POWER_ERROR_MATCH); return; }
     if (p->ops.mute(p->ops.ctx) != 0) { power_fail(p, POWER_ERROR_IO); return; }
     p->range = range;
-    p->amplitude = p->ramp_base = p->stable = 0;
+    p->amplitude = p->ramp_base = p->stable = p->overload = 0;
     p->level_milli = 0;
     p->matching = true;
     p->state = POWER_MUTING;
@@ -119,8 +169,8 @@ static uint32_t maximum(uint32_t a, uint32_t b) { return a > b ? a : b; }
 
 static void probe(struct power *p, const struct power_reading *r, int64_t now)
 {
-    uint32_t min_mv = maximum(800, p->noise_mv * 4u);
-    uint32_t min_ma = maximum(20, p->noise_ma * 4u);
+    uint32_t min_mv = maximum(500, p->noise_mv * 3u);
+    uint32_t min_ma = maximum(20, p->noise_ma * 3u);
     uint32_t margin_mv = maximum(200, p->noise_mv * 2u);
     uint32_t margin_ma = maximum(5, p->noise_ma * 2u);
     uint32_t limit = p->target_mva < 5000 ? p->target_mva : 5000;
@@ -128,12 +178,17 @@ static void probe(struct power *p, const struct power_reading *r, int64_t now)
         r->current_ma > amps[p->range] * 70u / 100u) {
         power_fail(p, POWER_ERROR_LIMIT); return;
     }
-    if (now < p->probe_after) return;
+    if (r->time_ms < p->probe_after) return;
     if (r->voltage_mv >= min_mv && r->current_ma >= min_ma) {
         uint32_t impedance = (uint32_t)((uint64_t)r->voltage_mv * 1000u / r->current_ma);
         if (impedance < 500 || impedance > 2000000) { power_fail(p, POWER_ERROR_MATCH); return; }
         uint8_t range = (p->changes || p->rematches) ? stable_range(p->range, impedance) : closest(impedance);
+        if (!attainable(range, impedance, p->target_mva)) {
+            for (uint8_t i = 0; i < 7; ++i)
+                if (capacity(i, impedance) > capacity(range, impedance)) range = i;
+        }
         if (!consistent(p, range)) return;
+        p->load_mohm = impedance;
         if (range != p->range) { switch_range(p, range); return; }
         p->matching = false;
         p->state = POWER_RUNNING;
@@ -143,7 +198,8 @@ static void probe(struct power *p, const struct power_reading *r, int64_t now)
         p->stable = 0;
         return;
     }
-    bool bound = p->amplitude >= 511 || r->apparent_mva >= limit ||
+    uint16_t probe_limit = (uint16_t)(power_drive_limit() * 35u / 100u);
+    bool bound = p->amplitude >= probe_limit || r->apparent_mva >= limit ||
         r->voltage_mv >= volts[p->range] * 35u / 100u || r->current_ma >= amps[p->range] * 35u / 100u;
     if (bound) {
         uint8_t next = p->range;
@@ -152,27 +208,88 @@ static void probe(struct power *p, const struct power_reading *r, int64_t now)
             uint32_t lower = (uint32_t)((uint64_t)(r->voltage_mv - margin_mv) * 1000u /
                                        (r->current_ma + margin_ma));
             uint8_t candidate = stable_range(p->range, lower);
-            if (candidate > next) next = candidate;
+            if (candidate > next) { next = candidate; p->load_mohm = lower; }
         } else if (r->current_ma >= min_ma && r->voltage_mv < min_mv) {
             uint32_t upper = (uint32_t)((uint64_t)(r->voltage_mv + margin_mv) * 1000u /
                                        (r->current_ma - margin_ma));
             uint8_t candidate = stable_range(p->range, upper);
-            if (candidate < next) next = candidate;
+            if (candidate < next) { next = candidate; p->load_mohm = upper; }
         }
         if (next != p->range) {
             if (consistent(p, next)) switch_range(p, next);
         }
-        else power_fail(p, POWER_ERROR_MATCH);
+        else power_fail(p, r->voltage_mv >= min_mv && p->range == 6 ? POWER_ERROR_OPEN : POWER_ERROR_FEEDBACK);
         return;
     }
     p->stable = 0;
+    if (r->voltage_mv >= min_mv && r->current_ma < min_ma)
+        p->load_mohm = (uint32_t)((uint64_t)(r->voltage_mv - margin_mv) * 1000u /
+            (r->current_ma + margin_ma));
     /* 最慢50ms窗口；留100ms等待空闲半区生效及一个完整稳定窗。 */
     uint16_t amplitude = p->amplitude + 32u;
-    if (amplitude > 511) amplitude = 511;
+    if (amplitude > probe_limit) amplitude = probe_limit;
+    if (p->load_mohm) {
+        uint16_t ceiling = power_feedforward(p->range, limit, p->load_mohm);
+        if (ceiling && amplitude > ceiling) amplitude = ceiling;
+    }
+    if (amplitude <= p->amplitude) { power_fail(p, POWER_ERROR_FEEDBACK); return; }
     if (p->ops.level(p->ops.ctx, amplitude) != 0) { power_fail(p, POWER_ERROR_IO); return; }
     p->amplitude = amplitude;
     p->probe_after = p->ops.now(p->ops.ctx) + 100;
     (void)cancel(p);
+}
+
+static void regulate(struct power *p, const struct power_reading *r, int64_t now)
+{
+    uint16_t maximum_code = power_drive_limit();
+    uint32_t min_mv = maximum(500, p->noise_mv * 3u);
+    uint32_t min_ma = maximum(20, p->noise_ma * 3u);
+    bool useful = r->voltage_mv >= min_mv && r->current_ma >= min_ma;
+    if (useful) p->load_mohm = (uint32_t)((uint64_t)r->voltage_mv * 1000u / r->current_ma);
+    if (r->current_ma > 200 && r->voltage_mv < maximum(100, p->noise_mv * 2u) && now - p->started > 200) {
+        power_fail(p, POWER_ERROR_SHORT); return;
+    }
+    uint16_t feedforward = power_feedforward(p->range, p->target_mva, p->load_mohm);
+    if (useful || p->amplitude < maximum(16, feedforward / 4u)) p->low_since = now;
+    if (now - p->low_since > 2000) {
+        power_fail(p, r->voltage_mv >= min_mv && r->current_ma < min_ma ? POWER_ERROR_OPEN : POWER_ERROR_FEEDBACK);
+        return;
+    }
+    if (useful && r->apparent_mva >= p->target_mva / 4u &&
+        !attainable(p->range, p->load_mohm, p->target_mva)) {
+        if (++p->overload >= 3) power_fail(p, POWER_ERROR_TARGET);
+        return;
+    } else p->overload = 0;
+    if (p->amplitude + 2u < maximum_code || r->apparent_mva >= p->target_mva * 95u / 100u)
+        p->limit_since = now;
+    if (now - p->limit_since > 2000) { power_fail(p, POWER_ERROR_TARGET); return; }
+    if (r->time_ms < p->probe_after) return;
+    int64_t dt = now - p->feedback;
+    p->feedback = now;
+    if (dt <= 0) return;
+    if (dt > 150) dt = 150;
+    int64_t desired = (int64_t)feedforward * 1000;
+    if (useful && p->amplitude && r->apparent_mva) {
+        desired = root((uint64_t)p->target_mva * p->amplitude * p->amplitude * 1000000u / r->apparent_mva);
+    }
+    uint32_t error = r->apparent_mva > p->target_mva ? r->apparent_mva - p->target_mva : p->target_mva - r->apparent_mva;
+    if (useful && error <= maximum(10, p->target_mva / 50u)) desired = p->level_milli;
+    int64_t next = p->level_milli + (desired - p->level_milli) * dt / (dt + 150);
+    int64_t step = (int64_t)maximum_code * dt;
+    if (next > p->level_milli + step) next = p->level_milli + step;
+    if (next < p->level_milli - step) next = p->level_milli - step;
+    int64_t ceiling = (int64_t)p->ramp_base * 1000 + (now - p->started) * maximum_code;
+    if (ceiling > (int64_t)maximum_code * 1000) ceiling = (int64_t)maximum_code * 1000;
+    if (next < 0) next = 0;
+    if (next > ceiling) next = ceiling;
+    uint16_t amplitude = (uint16_t)(next / 1000);
+    p->level_milli = next;
+    if (amplitude != p->amplitude) {
+        if (p->ops.level(p->ops.ctx, amplitude) != 0) { power_fail(p, POWER_ERROR_IO); return; }
+        p->amplitude = amplitude;
+        p->probe_after = p->ops.now(p->ops.ctx) + 100;
+        (void)cancel(p);
+    }
 }
 
 void power_poll(struct power *p, bool permitted, const struct power_reading *r, int64_t now)
@@ -208,6 +325,7 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
             p->started = now;
             p->feedback = now;
             p->low_since = now;
+            p->limit_since = now;
             p->sequence = r->sequence;
             return;
         }
@@ -215,7 +333,8 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
         p->sequence = r->sequence;
         if (p->state == POWER_PROBING) { probe(p, r, now); return; }
         if (p->automatic && now - p->resident_since >= 1000 &&
-            r->voltage_mv >= maximum(800, p->noise_mv * 4u) && r->current_ma >= maximum(20, p->noise_ma * 4u)) {
+            r->time_ms >= p->probe_after &&
+            r->voltage_mv >= maximum(500, p->noise_mv * 3u) && r->current_ma >= maximum(20, p->noise_ma * 3u)) {
             uint32_t impedance = (uint32_t)((uint64_t)r->voltage_mv * 1000u / r->current_ma);
             uint8_t next = stable_range(p->range, impedance);
             if (next != p->range && consistent(p, next)) {
@@ -227,24 +346,7 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
             }
             if (next == p->range) p->stable = 0;
         } else p->stable = 0;
-        int64_t dt = now - p->feedback;
-        p->feedback = now;
-        if (dt <= 0 || dt > 150) { power_fail(p, POWER_ERROR_SAMPLE); return; }
-        /* 初始Ki=20码/(VA·s)，待实际负载整定；积分及软启动都按时间，不按调用次数。 */
-        p->level_milli += ((int64_t)p->target_mva - r->apparent_mva) * dt / 50;
-        int64_t ceiling = (int64_t)p->ramp_base * 1000 + (now - p->started) * 2047;
-        if (ceiling > 2047000) ceiling = 2047000;
-        if (p->level_milli < 0) p->level_milli = 0;
-        if (p->level_milli > ceiling) p->level_milli = ceiling;
-        p->amplitude = (uint16_t)(p->level_milli / 1000);
-        if (r->current_ma >= 20 || p->amplitude < 1024) p->low_since = now;
-        if (now - p->low_since > 1000) { power_fail(p, POWER_ERROR_OPEN); return; }
-        if (r->current_ma > 200 && r->voltage_mv < 100 && now - p->started > 200) {
-            power_fail(p, POWER_ERROR_SHORT);
-            return;
-        }
-        if (p->ops.level(p->ops.ctx, p->amplitude) != 0) power_fail(p, POWER_ERROR_IO);
-        else (void)cancel(p);
+        regulate(p, r, now);
         return;
     }
     if (now < p->deadline) return;

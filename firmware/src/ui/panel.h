@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #define PANEL_RANGE_COUNT 7u
+#define PANEL_RANGE_AUTO PANEL_RANGE_COUNT
 #define PANEL_FREQUENCY_COUNT 4u
 
 enum panel_result {
@@ -90,7 +91,7 @@ struct panel {
     struct { uint8_t field, draft, choice[4]; bool busy, wave; } debug;
 };
 
-/* 默认状态页、1 Ω 和 2 kHz 请求、目标为 0；参数错误撤销 ready。 */
+/* 默认状态页、自动阻抗和2 kHz请求、目标为0；参数错误撤销ready。 */
 int panel_init(struct panel *panel, const struct panel_config *config,
                enum panel_mode mode, bool enabled, bool fault);
 /* 每次调用表示一次已消抖按下；返回 panel_action 或负错误。

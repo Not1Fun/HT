@@ -25,10 +25,10 @@ if ([IntPtr]::Size -ne 4 -or $PSVersionTable.PSEdition -eq 'Core' -or
 $ui = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
 $sourceDir = Split-Path -Parent $Manifest
 if ($ui.width -ne 800 -or $ui.height -ne 480 -or $ui.touch) { throw 'Expected an 800 x 480 non-touch project.' }
-if ($ui.version -ne 11 -or @($ui.pages).Count -ne 5 -or
+if ($ui.version -ne 12 -or @($ui.pages).Count -ne 5 -or
     $ui.pages[0].id -ne 0 -or $ui.pages[1].id -ne 1 -or
     $ui.pages[2].id -ne 2 -or $ui.pages[3].id -ne 3 -or
-    $ui.pages[4].id -ne 4) { throw 'Expected HT v11 status/settings/logs/debug/DAC pages.' }
+    $ui.pages[4].id -ne 4) { throw 'Expected HT v12 status/settings/logs/debug/DAC pages.' }
 if (@($ui.fields).Count -ne 28 -or @($ui.icons).Count -ne 14 -or
     @($ui.animations).Count -ne 0) { throw 'Expected 28 fields, 14 icon controls and no animation.' }
 $usedVp = @{}

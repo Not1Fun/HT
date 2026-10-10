@@ -96,6 +96,8 @@ static void test_output_states(void)
         CHECK(c.frames[0].words[0]==VIEW_FAULT && c.frames[0].words[4]==VIEW_OUTPUT_FAULT);
         CHECK(c.frames[0].words[3]==0);
         text_is(&c,VIEW_CURRENT,"--"); text_is(&c,VIEW_NTC1,"25.1");
+        s.values[VIEW_RANGE_CHOICE] = (struct view_value){0,true};
+        refresh(&v,&c,&s,(enum dgus_crc)crc); text_is(&c,VIEW_RANGE_CHOICE,"AUTO");
     }
 }
 static void test_output_stale(void)

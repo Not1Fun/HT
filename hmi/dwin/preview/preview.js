@@ -13,9 +13,10 @@
     temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15,
     outputStart:16,outputStop:17,outputFault:18,clear:19,clearFailed:20};
   const names = ["状态页","输出设置页","设备日志页","BENCH 调试页","DAC 独立试波页"];
-  const state = {page:0,field:0,draft:0,range:0,rangeChoice:0,frequency:0,power:0,scene:"idle",started:0,
+  const state = {page:0,field:0,draft:7,range:0,rangeChoice:7,frequency:0,power:0,scene:"idle",started:0,
     output:false,matching:false,fault:false,clearing:0,benchDisabled:false,batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
   const debug = {field:0,draft:0,choice:[0,0,1,0],coils:0,wave:false,until:0};
+  function rangeText(index) { return index===7 ? "AUTO" : String(ranges[index]); }
   const amplitudes=[10,25,50,100,1000];
   const relayNames=["OFF","K1","K2 1R","K3 3R","K4 10R","K5 30R","K6 100R","K7 300R","K8 1000R"];
   function stopDebug() {debug.coils=0;debug.wave=false;debug.until=0;if(debug.field===3)debug.draft=0;}
@@ -80,7 +81,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=clear11"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=auto12"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -117,10 +118,10 @@
     if(state.temperatureInvalid && state.page!==4 && !(state.page===3 && debug.choice[0]===0)) reasons.push(18);
     if(state.page===1 && state.power===0) reasons.push(29);
     values.reason=reasons.length?reasons[Math.floor(performance.now()/2000)%reasons.length]:0;
-    if(state.clearing) values.reason=37;
+    if(state.clearing) values.reason=39;
     const choiceFrequency=state.field===1?state.draft:state.frequency;
     const running=state.output&&!state.matching;
-    const texts={range_choice:String(ranges[state.field===0?state.draft:state.rangeChoice]),current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",
+    const texts={range_choice:rangeText(state.field===0?state.draft:state.rangeChoice),current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",
       power_choice:String(state.field===2?state.draft:state.power),
       frequency:state.output?String(frequencies[state.frequency]/1000):"--",
       elapsed:running?timeText(elapsedSeconds()):"--",
@@ -209,10 +210,10 @@
         else if(state.output) stopOutput("已停止演示输出；再次启动需重新右旋并确认。");
         else if(outputState()>=3) {state.draft=0;announce("当前状态不能启动输出；恢复可用后重新预选并确认。");}
         else if(state.draft===1) {
-          state.output=true;state.matching=false;state.started=performance.now();state.range=state.rangeChoice;
-          addEvent(events.range,ranges[state.range]);
+          state.output=true;state.matching=state.rangeChoice===7;state.started=performance.now();state.range=state.matching?0:state.rangeChoice;
+          if(!state.matching) addEvent(events.range,ranges[state.range]);
           addEvent(events.outputStart,frequencies[state.frequency]);
-          announce("已按手动阻抗挡位开始恒 VA 演示输出；再次确认或状态页下键立即停止。");
+          announce(state.matching?"正在演示自动选挡，模拟负载为30 Ω；频率保持用户选择。":"已按手动阻抗挡位开始恒 VA 演示输出；再次确认或状态页下键立即停止。");
         } else announce("输出保持关闭，右旋预选开启后按下确认。");
       } else {
         cancelClear();
@@ -220,7 +221,7 @@
         if(state.field===1) {state.frequency=state.draft;addEvent(events.frequency,frequencies[state.frequency]);}
         else if(state.field===0) state.rangeChoice=state.draft;
         else state.power=state.draft;
-        announce((stopped?"输出已停止。":"")+"演示请求已保存："+(state.field===0?ranges[state.rangeChoice]+" Ω":state.field===1?frequencies[state.frequency]/1000+" kHz":state.power+" VA")+"。输出需重新开启并确认。");
+        announce((stopped?"输出已停止。":"")+"演示请求已保存："+(state.field===0?rangeText(state.rangeChoice):state.field===1?frequencies[state.frequency]/1000+" kHz":state.power+" VA")+"。输出需重新开启并确认。");
       }
     }
     render();
@@ -236,7 +237,7 @@
       if(state.field===3) state.draft=Math.max(0,Math.min(1,state.draft+delta));
       else if(state.field===2) state.draft=Math.max(0,Math.min(50,state.draft+delta));
       else {
-        const count=state.field===0?ranges.length:frequencies.length;
+        const count=state.field===0?ranges.length+1:frequencies.length;
         state.draft=(state.draft+delta+count)%count;
       }
       announce(state.field===3?(state.output?"正在演示输出；按下编码器或 OK 将立即停止。":state.draft?"已预选开启，按下编码器或 OK 才会按手动挡位输出。":"已预选关闭。"):dirty()?"当前为预选值，按下编码器或 OK 保存请求。":"与已确认请求一致。");
@@ -284,6 +285,9 @@
   render();resize();
   let reasonSlot=-1;
   setInterval(()=>{
+    if(state.output&&state.matching&&performance.now()-state.started>=800) {
+      state.matching=false;state.range=3;addEvent(events.range,30);render();
+    }
     if(state.clearing && performance.now()>=state.clearing) {
       state.clearing=0;
       if(state.scene!=="idle"||state.benchDisabled) {

@@ -23,6 +23,7 @@ static struct panel initialize(bool enabled, bool fault)
 
     CHECK(panel_init(&panel, &config, PANEL_CC, enabled, fault) == PANEL_OK);
     panel.field = PANEL_FREQUENCY; /* 既有用例从频率项开始；手动挡与默认值单独验证。 */
+    panel.draft_index = 0;
     return panel;
 }
 
@@ -43,7 +44,7 @@ static void test_defaults(void)
         CHECK(!panel.output_running && !panel.output_available);
         CHECK(panel.mode == (enum panel_mode)mode);
         CHECK(panel.page == PANEL_PAGE_STATUS && panel.field == PANEL_RANGE);
-        CHECK(panel.draft_index == 0 && panel.frequency_hz == 2000);
+        CHECK(panel.range == PANEL_RANGE_AUTO && panel.draft_index == PANEL_RANGE_AUTO && panel.frequency_hz == 2000);
         CHECK(panel.current_ma == 0 && panel.apparent_mva == 0 && !panel_draft_changed(&panel));
         CHECK(panel_init(&panel, &panel.config, (enum panel_mode)mode, false, false) == PANEL_OK);
         CHECK(panel.config.current_max_ma == 7070 && panel.config.apparent_max_mva == 50000);
@@ -160,19 +161,19 @@ static void test_field_selection(void)
 static void test_manual_range(void)
 {
     struct panel panel;
-    CHECK(panel_init(&panel,&config,PANEL_VA,false,false)==0 && panel.range==0);
+    CHECK(panel_init(&panel,&config,PANEL_VA,false,false)==0 && panel.range==PANEL_RANGE_AUTO);
     CHECK(panel_key(&panel,PANEL_KEY_RIGHT)==0);
-    CHECK(panel_rotate(&panel,-1)==0 && panel.draft_index==6 && panel.range==0);
+    CHECK(panel_rotate(&panel,-1)==0 && panel.draft_index==6 && panel.range==PANEL_RANGE_AUTO);
     CHECK(panel_key(&panel,PANEL_KEY_OK)==PANEL_ACTION_RANGE && panel.range==6);
-    CHECK(panel_rotate(&panel,1)==0 && panel.draft_index==0 && panel.range==6);
+    CHECK(panel_rotate(&panel,1)==0 && panel.draft_index==PANEL_RANGE_AUTO && panel.range==6);
     CHECK(panel_key(&panel,PANEL_KEY_LEFT)==0 && panel.range==6);
     CHECK(panel_key(&panel,PANEL_KEY_RIGHT)==0 && panel.draft_index==6);
-    CHECK(panel_rotate(&panel,2)==0 && panel.draft_index==1);
+    CHECK(panel_rotate(&panel,3)==0 && panel.draft_index==1);
     CHECK(panel_key(&panel,PANEL_KEY_ENCODER)==PANEL_ACTION_RANGE && panel.range==1);
     CHECK(panel_key(&panel,PANEL_KEY_DOWN)==0 && panel.field==PANEL_FREQUENCY);
     CHECK(panel_key(&panel,PANEL_KEY_UP)==0 && panel.draft_index==1);
-    CHECK(panel_rotate(&panel,INT32_MIN)==0 && panel.draft_index<7);
-    CHECK(panel_rotate(&panel,INT32_MAX)==0 && panel.draft_index<7);
+    CHECK(panel_rotate(&panel,INT32_MIN)==0 && panel.draft_index<=PANEL_RANGE_AUTO);
+    CHECK(panel_rotate(&panel,INT32_MAX)==0 && panel.draft_index<=PANEL_RANGE_AUTO);
 }
 
 static void select_output(struct panel *panel)

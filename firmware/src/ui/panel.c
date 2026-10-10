@@ -81,6 +81,7 @@ int panel_init(struct panel *panel, const struct panel_config *config,
     panel->mode = mode;
     panel->page = PANEL_PAGE_STATUS;
     panel->field = PANEL_RANGE;
+    panel->range = panel->draft_index = PANEL_RANGE_AUTO;
     panel->frequency_hz = frequencies[0];
     panel->enabled = enabled;
     panel->fault = fault;
@@ -230,7 +231,7 @@ int panel_rotate(struct panel *panel, int32_t detents)
         panel->draft_index = next < 0 ? 0u : next > limit ? (uint8_t)limit : (uint8_t)next;
         return PANEL_OK;
     }
-    count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT : PANEL_FREQUENCY_COUNT;
+    count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT + 1u : PANEL_FREQUENCY_COUNT;
     next = ((int64_t)panel->draft_index + detents) % count;
     panel->draft_index = (uint8_t)(next < 0 ? next + count : next);
     return PANEL_OK;

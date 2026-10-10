@@ -48,12 +48,12 @@ function field(index) {
 }
 function start() { field(3); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
 function clear() {
-  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),37);
+  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),39);
   click('ok'); advance(600); output(false); click('ok'); output(false);
 }
 
 (async () => {
-  assert.equal(ui.version, 11);
+  assert.equal(ui.version, 12);
   assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), true);
   for (const [name, vp] of Object.entries({range_choice: 0x1150, current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
@@ -63,7 +63,9 @@ function clear() {
   await vm.runInNewContext(fs.readFileSync(path.join(root, 'preview/preview.js'), 'utf8'), context);
   output(false); matching(false); page(0); click('right'); page(1); assert.equal(icon('output'), 3);
   field(3); click('down'); assert.equal(icon('focus'), 3); click('cw'); click('ok'); output(false);
-  field(0); click('ccw'); assert.equal(text('range_choice'),'1000'); click('cw'); assert.equal(text('range_choice'),'1');
+  field(0); assert.equal(text('range_choice'),'AUTO');
+  click('ccw'); assert.equal(text('range_choice'),'1000'); click('cw'); assert.equal(text('range_choice'),'AUTO');
+  click('cw'); assert.equal(text('range_choice'),'1'); click('ok');
   field(1); click('ccw'); assert.equal(text('frequency_choice'), '10'); click('cw'); assert.equal(text('frequency_choice'), '2');
   field(2); assert.equal(text('power_choice'), '0'); click('ccw'); assert.equal(text('power_choice'), '0');
   for (let count = 0; count < 55; count++) click('cw');
@@ -113,5 +115,14 @@ function clear() {
   click('right'); click('right'); page(1);
   assert.equal(icon('reason'),18); checked('temperature-invalid',false);
   assert.equal(icon('reason'),0);
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v11 manual range, no automatic matching; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  field(0);
+  for(let i=0;i<8 && text('range_choice')!=='AUTO';++i)click('cw');
+  assert.equal(text('range_choice'),'AUTO');click('ok');
+  field(1);const frequency=text('frequency_choice');field(3);click('cw');click('ok');
+  output(true);matching(true);assert.equal(icon('state'),2);
+  advance(800);matching(false);output(true);click('left');page(0);
+  assert.equal(text('range'),'30');assert.equal(text('frequency'),frequency);
+  click('down');advance(2000);output(false);click('right');field(0);
+  assert.equal(text('range_choice'),'AUTO');
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v12 automatic and manual range, frequency retained; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

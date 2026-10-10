@@ -131,7 +131,7 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
 
 int output_start(uint8_t range, uint32_t frequency, uint32_t target)
 {
-    if (range >= 7 || target == 0 || target > 50000 ||
+    if ((range >= 7 && range != POWER_RANGE_AUTO) || target == 0 || target > 50000 ||
         (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
