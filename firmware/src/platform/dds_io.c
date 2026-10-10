@@ -384,6 +384,34 @@ int dds_io_stop(void)
 	return stopped ? 0 : -EIO;
 }
 
+int dds_io_recover(void)
+{
+	k_mutex_lock(&lock, K_FOREVER);
+	uint32_t key = __get_PRIMASK();
+	__disable_irq();
+	int rc = !owned ? -EACCES : running || sampling ? -EBUSY : 0;
+	if (rc == 0) {
+		if (!quiet()) rc = -EIO;
+		else {
+			fault = DDS_FAULT_NONE;
+			rc = check();
+		}
+		configured = false;
+		amplitude = 0;
+#if defined(CONFIG_HT_OUTPUT)
+		pending_amplitude = half_amplitude[0] = half_amplitude[1] = 0;
+#endif
+		if (rc == 0) {
+			NVIC_ClearPendingIRQ(DMA1_Channel1_IRQn);
+			NVIC_ClearPendingIRQ(TIM6_DAC_IRQn);
+		} else if (fault == DDS_FAULT_NONE) fault = DDS_FAULT_STOP;
+	}
+	__set_PRIMASK(key);
+	if (rc == 0 && fault != DDS_FAULT_NONE) rc = -EIO;
+	k_mutex_unlock(&lock);
+	return rc;
+}
+
 #if defined(CONFIG_HT_OUTPUT)
 int dds_io_sample_start(uint32_t frequency_hz)
 {

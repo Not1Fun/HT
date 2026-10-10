@@ -8,6 +8,8 @@ const struct device mock_gpio = {0};
 static int64_t clock_ms = 1000;
 static struct output_snapshot measured;
 static unsigned int starts, stops;
+static unsigned int clear_requests;
+int output_clear(void) { ++clear_requests; return 0; }
 static uint8_t requested_range;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
 static unsigned int debug_starts;
@@ -251,9 +253,36 @@ static void reasons(void)
     snapshot(&s, &v); assert(v.reason == OUTPUT_REASON_OC);
 #endif
 }
+static void clear_controls(void)
+{
+    struct service s = setup(); measured.fault = measured.clear_needed = true;
+    measured.error = POWER_ERROR_OPEN; update_output(&s, true);
+    assert(s.dds_failed && event_log_count(&s.log) == 1);
+    press(&s, PANEL_KEY_OK); assert(s.panel.field == PANEL_OUTPUT);
+    press(&s, PANEL_KEY_ENCODER); assert(clear_requests == 1 && starts == 0 && s.panel.clearing);
+    measured.clearing = true; update_output(&s, true);
+    struct view_snapshot v; snapshot(&s, &v);
+    assert(v.output == VIEW_OUTPUT_CLEARING && v.reason == VIEW_REASON_CLEARING);
+    press(&s, PANEL_KEY_OK); assert(clear_requests == 1 && starts == 0);
+    measured.clearing = measured.clear_needed = measured.fault = false;
+    measured.available = true; measured.clear_count = 1; s.panel.apparent_mva = 1000;
+    update_output(&s, true); assert(!s.dds_failed && s.panel.draft_index == 0);
+    press(&s, PANEL_KEY_OK); assert(starts == 0 && stops == 1);
+    struct event_entry entry; assert(event_log_get(&s.log, 0, &entry) == 0 && entry.kind == EVENT_FAULT_CLEAR);
+    measured.fault = measured.clear_needed = true; update_output(&s, true);
+    assert(event_log_get(&s.log, 0, &entry) == 0 && entry.kind == EVENT_DDS_FAILED && entry.value == POWER_ERROR_OPEN);
+    measured.clear_count = 2; measured.clear_result = -EIO; update_output(&s, true);
+    assert(event_log_get(&s.log, 0, &entry) == 0 && entry.kind == EVENT_FAULT_CLEAR_FAILED);
+    assert(event_log_count(&s.log) == 4 && starts == 0);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    s.panel.debug_enabled = true; s.panel.page = PANEL_PAGE_DAC; s.panel.debug.field = 3;
+    press(&s, PANEL_KEY_OK); assert(clear_requests == 2 && debug_starts == 0);
+#endif
+}
 int main(int argc, char **argv)
 {
     assert(argc == 2);
+    if (!strcmp(argv[1], "clear_controls")) { clear_controls(); return 0; }
     if (!strcmp(argv[1], "manual_selection")) { manual_selection(); return 0; }
     if (!strcmp(argv[1], "reasons")) { reasons(); return 0; }
     if (!strcmp(argv[1], "standby")) standby();

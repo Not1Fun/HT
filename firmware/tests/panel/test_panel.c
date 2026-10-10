@@ -609,7 +609,7 @@ static void test_debug_page(void)
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
     CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==2);
     CHECK(panel_debug_mvpp(p.debug.draft)==10);
-    CHECK(panel_rotate(&p,3)==PANEL_OK);
+    CHECK(panel_rotate(&p,4)==PANEL_OK && panel_debug_mvpp(p.debug.draft)==1000);
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
     CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==3);
     p.debug.wave=false;
@@ -617,6 +617,7 @@ static void test_debug_page(void)
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_WAVE);
     CHECK(panel_key(&p,PANEL_KEY_RIGHT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_STATUS);
     CHECK(p.debug.choice[0]==0 && p.debug.draft==0);
+    CHECK(p.debug.choice[2]==0);
 }
 
 int main(int argc, char **argv)

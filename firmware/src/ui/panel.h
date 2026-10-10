@@ -52,7 +52,8 @@ enum panel_action {
     PANEL_ACTION_OUTPUT_START = 3,
     PANEL_ACTION_OUTPUT_STOP = 4,
     PANEL_ACTION_POWER = 5,
-    PANEL_ACTION_DEBUG_RELAY, PANEL_ACTION_DEBUG_WAVE, PANEL_ACTION_DEBUG_PARAMS
+    PANEL_ACTION_DEBUG_RELAY, PANEL_ACTION_DEBUG_WAVE, PANEL_ACTION_DEBUG_PARAMS,
+    PANEL_ACTION_CLEAR
 };
 
 enum panel_request {
@@ -84,6 +85,7 @@ struct panel {
     bool ready;
     bool output_running;
     bool output_available;
+    bool clear_needed, clearing;
     bool debug_enabled;
     struct { uint8_t field, draft, choice[4]; bool busy, wave; } debug;
 };

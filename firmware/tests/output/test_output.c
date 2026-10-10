@@ -18,7 +18,7 @@ static int clears, clear_error;
 static bool old_alarm;
 int relay_io_check(void) { return relay_failure ? -EIO : 0; }
 int board_io_clear_protection(void) {
-    assert(!signal_active && relay_value == 0 && amplitude == 0 && !published.ready);
+    assert(!signal_active && relay_value == 0 && amplitude == 0);
     ++clears;
     if (clear_error) return clear_error;
     if (old_alarm) digital &= ~(BIT(BOARD_OC) | BIT(BOARD_OV));
@@ -29,6 +29,11 @@ int signal_io_init(void) {sampling=true;return 0;}
 int signal_io_stop(void) {signal_active=false;sampling=!signal_failed;amplitude=0;return 0;}
 void signal_io_fault(void) {signal_failed=true;(void)signal_io_stop();}
 bool signal_io_failed(void) {return signal_failed;}
+int signal_io_recover(void) {
+    assert(!signal_active && !relay_value);
+    if(signal_error)return -EIO;
+    signal_failed=false;sampling=true;reading_after=clock_time+sample_delay;return 0;
+}
 int signal_io_start(uint32_t hz) {
     assert(hz==2000);if(signal_failed)return -EIO;
     starts++;signal_active=true;reading_after=clock_time+sample_delay;return 0;
@@ -266,6 +271,13 @@ static void dac_relay_guard(void) {
     protection(NULL,NULL,0);advance(1);
     assert(!signal_active && relay_value==0 && !published.debug.dac_available);
 }
+static void dac_one_volt(void) {
+    setup();assert(output_debug(2,2000,1000,true)==-EINVAL);
+    assert(output_debug(0,2000,1000,false)==-EINVAL);
+    assert(output_debug(0,2000,1000,true)==0);advance(500);
+    assert(published.debug.wave && amplitude==706 && relay_value==0 && !published.running);
+    advance(10000);assert(!signal_active && amplitude==0 && relay_value==0 && !published.debug.busy);
+}
 #endif
 static void blocking_reasons(void) {
     setup();
@@ -330,11 +342,64 @@ static void manual_range(void) {
     assert(!control.automatic && control.changes==0 && control.rematches==0);
     output_stop(); advance(100); assert(relay_value==0 && !published.running);
 }
+static void clear_fault(void) {
+    setup();start_output();protection(NULL,NULL,0);advance(1);
+    assert(published.fault && published.clear_needed);
+    int before=starts;old_alarm=true;digital|=BIT(BOARD_OC)|BIT(BOARD_OV);
+    assert(output_clear()==0 && published.clearing);
+    assert(output_clear()==-EBUSY && output_start(0,2000,1000)!=0);
+    advance(40);assert(published.clearing && published.fault && !relay_value && !signal_active);
+    advance(200);assert(!published.clearing && !published.fault && published.available);
+    assert(published.clear_count==1 && published.clear_result==0 && clears==2 && starts==before);
+    assert(!published.running && !relay_value && sampling && !signal_active);
+    advance(1000);assert(starts==before);
+    start_output();assert(output_clear()==-EBUSY);
+}
+static void clear_blocked(void) {
+    setup();protection(NULL,NULL,0);digital|=BIT(BOARD_OC);advance(1);
+    assert(output_clear()==0);advance(200);
+    assert(published.fault && !published.clearing && published.clear_result==-EACCES);
+    assert(clears==2 && starts==0 && !relay_value && !signal_active);
+    advance(1500);assert(clears==2 && published.clear_count==1);
+    digital&=~BIT(BOARD_OC);assert(output_clear()==0);advance(300);
+    assert(!published.fault && published.clear_count==2 && published.clear_result==0);
+}
+static void clear_cancel(void) {
+    setup();power_fail(&control,POWER_ERROR_OPEN);advance(1);
+    assert(output_clear()==0);output_stop();advance(200);
+    assert(published.fault && published.clear_result==-ECANCELED && clears==1);
+    assert(output_clear()==0);advance(50);output_stop();advance(200);
+    assert(published.fault && published.clear_result==-ECANCELED && clears==2);
+    assert(!relay_value && !signal_active && starts==0);
+    assert(output_clear()==0);advance(50);output_shutdown();advance(200);
+    assert(published.fault && output_clear()==-EACCES && starts==0);
+}
+static void clear_sample(void) {
+    setup();power_fail(&control,POWER_ERROR_OPEN);advance(1);
+    sample_invalid=true;assert(output_clear()==0);advance(1100);
+    assert(published.fault && published.clear_result==-ETIMEDOUT && starts==0);
+    sample_invalid=false;panel_raw|=BIT(6);heartbeat();
+    assert(output_clear()==0);advance(300);
+    assert(!published.fault && !published.available && published.clear_result==0);
+    assert(published.blocked==OUTPUT_REASON_BIT(OUTPUT_REASON_ENABLE));
+}
+static void clear_io(void) {
+    setup();power_fail(&control,POWER_ERROR_OPEN);advance(1);relay_failure=true;
+    assert(output_clear()==0);advance(200);
+    assert(published.fault && published.clear_result==-EIO && clears==1);
+    relay_failure=false;signal_error=1;assert(output_clear()==0);advance(200);
+    assert(published.fault && published.clear_result==-EIO && clears==2);
+    signal_error=0;assert(output_clear()==0);advance(80);protection(NULL,NULL,0);advance(200);
+    assert(published.fault && published.clear_result==-EIO && !signal_active && !relay_value);
+    assert(output_clear()==0);advance(300);assert(!published.fault && starts==0);
+}
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
+    RUN(clear_fault) RUN(clear_blocked) RUN(clear_cancel) RUN(clear_sample) RUN(clear_io)
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
+    RUN(dac_one_volt)
     RUN(dac_open_ntc) RUN(dac_guards) RUN(dac_relay_guard)
 #endif
     RUN(manual_range) RUN(blocking_reasons) RUN(startup_latch) RUN(latch_failure) RUN(latch_relay_failure)

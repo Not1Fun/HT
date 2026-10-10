@@ -13,8 +13,10 @@ int signal_io_init(void);
 int signal_io_start(uint32_t frequency);
 /* 停止波形并恢复待机采样；故障锁存时不恢复。 */
 int signal_io_stop(void);
+/* 仅输出已关闭时显式调用；核对资源、清旧故障并重新获取待机样本。 */
+int signal_io_recover(void);
 int signal_io_poll(struct signal_snapshot *snapshot);
-/* 可从ISR调用，不执行I2C或等待，锁存至复位。 */
+/* 可从ISR调用，不执行I2C或等待，锁存至显式恢复。 */
 void signal_io_fault(void);
 bool signal_io_failed(void);
 #endif

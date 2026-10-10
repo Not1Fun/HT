@@ -43,6 +43,11 @@ static void setup(void)
 }
 int main(void)
 {
+    setup(); assert(bench_start(&b,2,2000,1000,true,0)<0);
+    assert(bench_start(&b,0,2000,1000,false,0)<0);
+    assert(bench_start(&b,0,2000,1000,true,0)==0);step(400);
+    assert(b.state==BENCH_ON && port==0 && amplitude==706 && signal_on);
+    step(10000);assert(b.state==BENCH_IDLE && !signal_on && port==0);
     setup(); assert(bench_start(&b,9,2000,25,false,0)<0);
     assert(bench_start(&b,2,2000,101,true,0)<0);
     assert(bench_start(&b,2,3000,25,true,0)<0);

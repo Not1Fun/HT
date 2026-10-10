@@ -14,7 +14,7 @@ FONT_DIR = Path("C:/Windows/Fonts")
 EVENTS = ["", "启动完成", "屏幕连接", "屏幕断开", "阻抗挡位生效", "频率请求确认",
           "电池正常", "电池低电或异常", "OC 保护输入有效", "OC 保护输入解除", "OV 保护输入有效",
           "OV 保护输入解除", "温度就绪", "温度无效", "温度采样未就绪", "输入输出错误",
-          "输出启动", "输出停止", "输出故障"]
+          "输出启动", "输出停止", "输出故障", "故障已清除", "故障清除未完成"]
 
 # 顺序对应 firmware/src/core/output_reason.h；末尾为 POWER_ERROR_IO..MATCH。
 REASONS = ["", "输出模块未初始化，检查启动日志", "输出服务已关闭，需要重新上电",
@@ -29,12 +29,16 @@ REASONS = ["", "输出模块未初始化，检查启动日志", "输出服务已
     "NTC3 开路，整机输出需要接好探头", "NTC1 短路或测量无效",
     "NTC2 短路或测量无效", "NTC3 短路或测量无效",
     "NTC1 温度达到 80℃", "NTC2 温度达到 80℃", "NTC3 温度达到 80℃",
-    "输出故障已锁存，需排除故障后重新上电", "整机输出忙，请先停止输出",
+    "故障已锁存，在输出或试波开关项按确认清除", "整机输出忙，请先停止输出",
     "继电器尚未全部释放", "目标功率为 0 VA，请设置并确认",
     "继电器或输出驱动操作失败（故障 1）", "运行期间互锁或保护输入失效（故障 2）",
     "采样外设异常或反馈超时（故障 3）", "电压、电流或功率超过软件限值（故障 4）",
     "检测到负载开路（故障 5）", "检测到负载短路（故障 6）",
-    "阻抗匹配失败，未得到有效负载反馈（故障 7）"]
+    "阻抗匹配失败，未得到有效负载反馈（故障 7）",
+    "正在清除旧锁存并检查新采样，输出保持关闭",
+    "清除未完成：外设或继电器检查失败",
+    "清除未完成：未得到新的有效电压电流采样",
+    "清除已取消，输出保持关闭"]
 
 
 def font(size, bold=False, mono=False):
@@ -264,7 +268,8 @@ def build():
     icons += [output_icon(label, color) for label, color in [
         ("关闭", COLORS["muted"]), ("准备开启 · 待确认", COLORS["amber"]),
         ("已开启 · 确认停止", COLORS["accent"]), ("禁止启动 · 原因见下方", COLORS["muted"]),
-        ("故障 · 输出已停止", COLORS["red"]), ("输出未启用", COLORS["muted"]),
+        ("故障 · 确认清除", COLORS["red"]), ("输出未启用", COLORS["muted"]),
+        ("清除中 · 输出关闭", COLORS["amber"]),
     ]]
     icons += [debug_focus(index) for index in range(4)]
     icons += [debug_status(label, color) for label, color in [
@@ -272,7 +277,8 @@ def build():
         ("继电器测试 / 切换中 · 离页立即停止", COLORS["amber"]),
         ("正在试波 · 试波开关确认可停止", COLORS["accent"]),
         ("禁止启动 · 具体原因在下方轮流显示", COLORS["muted"]),
-        ("保护已停止 · 详情见日志", COLORS["red"]),
+        ("故障已停止 · 在试波开关项按确认清除", COLORS["red"]),
+        ("正在清除故障 · 输出与继电器保持关闭", COLORS["amber"]),
     ]]
     icons += [debug_focus(index, True) for index in range(1, 4)]
     icons += [debug_status(label, color) for label, color in [
@@ -280,7 +286,8 @@ def build():
         ("准备试波 · 继电器释放中", COLORS["amber"]),
         ("正在试波 · 开关项确认或离页立即停止", COLORS["accent"]),
         ("禁止启动 · 具体原因在下方轮流显示", COLORS["muted"]),
-        ("保护已停止 · 详情见日志", COLORS["red"]),
+        ("故障已停止 · 在试波开关项按确认清除", COLORS["red"]),
+        ("正在清除故障 · 输出与继电器保持关闭", COLORS["amber"]),
     ]]
     for label in REASONS:
         art = Art(752, 28, COLORS["bg"])
@@ -336,30 +343,30 @@ def build():
              initial=4, values=["standby", "running", "switching", "fault", "offline"], pages=[0, 1, 2]),
         dict(name="battery", vp=0x1001, x=568, y=408, width=208, height=28, first=5, last=7,
              initial=2, values=["normal", "low_or_abnormal", "unknown"], pages=[0]),
-        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=94, last=97,
+        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=103, last=106,
              initial=0, values=["range", "frequency", "power", "output"], pages=[1]),
         dict(name="edit", vp=0x1003, x=24, y=382, width=752, height=32, first=10, last=11,
              initial=0, values=["confirmed", "pending"], pages=[1]),
-        dict(name="output", vp=0x1004, x=346, y=320, width=400, height=44, first=34, last=39,
-             initial=5, values=["off", "pending", "running", "unavailable", "fault", "disabled"], pages=[1]),
+        dict(name="output", vp=0x1004, x=346, y=320, width=400, height=44, first=36, last=42,
+             initial=5, values=["off", "pending", "running", "unavailable", "fault", "disabled", "clearing"], pages=[1]),
     ]
     for index in range(4):
         variable_icons.append(dict(name=f"log_event_{index}", vp=0x1010 + index,
                                    x=208, y=146 + index * 60, width=380, height=50,
-                                   first=12, last=30, initial=0, values=EVENTS, pages=[2]))
+                                   first=12, last=32, initial=0, values=EVENTS, pages=[2]))
     variable_icons += [
         dict(name="debug_focus", vp=0x1020, x=24, y=100, width=452, height=256,
-             first=40, last=43, initial=0, values=["relay", "frequency", "amplitude", "wave"], pages=[3]),
+             first=43, last=46, initial=0, values=["relay", "frequency", "amplitude", "wave"], pages=[3]),
         dict(name="debug_state", vp=0x1021, x=24, y=380, width=752, height=36,
-             first=44, last=48, initial=3, values=["idle", "relay", "wave", "blocked", "fault"], pages=[3]),
+             first=47, last=52, initial=3, values=["idle", "relay", "wave", "blocked", "fault", "clearing"], pages=[3]),
         dict(name="dac_focus", vp=0x1030, x=24, y=100, width=452, height=256,
-             first=49, last=51, initial=0, values=["frequency", "amplitude", "wave"], pages=[4]),
+             first=53, last=55, initial=0, values=["frequency", "amplitude", "wave"], pages=[4]),
         dict(name="dac_state", vp=0x1031, x=24, y=380, width=752, height=36,
-             first=52, last=56, initial=3, values=["idle", "preparing", "wave", "blocked", "fault"], pages=[4]),
+             first=56, last=61, initial=3, values=["idle", "preparing", "wave", "blocked", "fault", "clearing"], pages=[4]),
     ]
     variable_icons.append(dict(name="reason", vp=0x1005, x=24, y=416, width=752, height=28,
-        first=57, last=57 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
-    spec = dict(version=10, name="HT", width=800, height=480, touch=False, colors=COLORS,
+        first=62, last=62 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
+    spec = dict(version=11, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
                        for index, name in enumerate(["status", "settings", "logs", "debug", "dac"])],

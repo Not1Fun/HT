@@ -7,6 +7,13 @@
 static bool clock_on, waveform, clock_fault, fail_start;
 static unsigned int sample_starts, wave_starts, stops;
 static uint32_t configured_frequency;
+static bool recover_fault;
+int dds_io_recover(void) {
+    assert(!clock_on && !waveform);
+    clock_fault=false;
+    if (recover_fault) signal_io_fault();
+    return 0;
+}
 int board_io_start_reference(void) { return 0; }
 int dds_io_init(void) { return 0; }
 int dds_io_check(void) { return clock_fault ? -EIO : 0; }
@@ -246,6 +253,28 @@ static void copy_fault(void)
     assert(signal_io_stop() == 0 && sample_starts == 1);
 }
 
+static void recover_reading(void)
+{
+    init(); fill(2048, 2, 4); window(); uint32_t seq = current.reading.sequence;
+    assert(signal_io_start(2000) == 0 && signal_io_recover() == -EACCES);
+    signal_io_fault(); assert(signal_io_recover() == 0);
+    assert(!failed && active && !output && !waveform && wave_starts == 1);
+    assert(signal_io_poll(&current) == 0 && !current.reading.valid);
+    assert(current.temperature_ms == now);
+    fill(2048, 0, 0); window();
+    assert(current.reading.sequence > seq && current.reading.current_ma == 0);
+    signal_io_fault(); recover_fault = true;
+    assert(signal_io_recover() == -EIO && failed && !active && !clock_on);
+    recover_fault = false; assert(signal_io_recover() == 0 && !failed);
+}
+static void recover_resources(void)
+{
+    init(); signal_io_fault(); adc[0].channel = 3;
+    assert(signal_io_recover() == -EIO && failed && !clock_on && !waveform);
+    adc[0].channel = 6; assert(signal_io_recover() == 0);
+    signal_io_fault(); stop_stuck = true; adc[0].CR |= ADC_CR_ADSTART;
+    assert(signal_io_recover() == -ETIMEDOUT && failed && !clock_on);
+}
 int main(int argc, char **argv)
 {
 #ifdef _WIN32
@@ -253,6 +282,7 @@ int main(int argc, char **argv)
 #endif
     assert(argc == 2);
     struct { const char *name; void (*run)(void); } cases[] = {
+        {"recover_reading", recover_reading}, {"recover_resources", recover_resources},
         {"idle_reading", idle_reading}, {"output_transition", output_transition},
         {"temperature_resume", temperature_resume}, {"sample_fault", sample_fault},
         {"stop_fault", stop_fault}, {"stale_window", stale_window},

@@ -31,6 +31,7 @@ static struct signal_snapshot value;
 static bool ready, discard;
 static volatile bool active, output;
 static volatile bool failed;
+static volatile uint32_t fault_epoch;
 static uint32_t number, expected, windows;
 static int64_t next_temperature;
 static uint32_t adc_config[2], common_config;
@@ -50,6 +51,8 @@ static int wait_bits(volatile const uint32_t *reg, uint32_t bits, uint32_t want)
 
 void signal_io_fault(void)
 {
+    uint32_t key = irq_lock();
+    ++fault_epoch;
     failed = true;
     active = output = false;
     dds_io_fault_stop();
@@ -58,6 +61,7 @@ void signal_io_fault(void)
         ADC2->IER = 0;
         DMA1_Channel2->CCR &= ~DMA_CCR_EN;
     }
+    irq_unlock(key);
 }
 
 bool signal_io_failed(void) { return failed; }
@@ -276,6 +280,29 @@ int signal_io_stop(void)
     int rc = stop();
     if (rc != 0) signal_io_fault();
     if (rc == 0 && ready && !failed) rc = sample();
+    return rc;
+}
+
+int signal_io_recover(void)
+{
+    if (!ready || output) return -EACCES;
+    uint32_t epoch = fault_epoch;
+    int rc = stop();
+    if (rc == 0 && !resources_ready()) rc = -EIO;
+    if (rc == 0) rc = dds_io_recover();
+    uint32_t key = irq_lock();
+    if (rc == 0 && fault_epoch != epoch) rc = -EIO;
+    if (rc == 0) {
+        LL_ADC_ClearFlag_OVR(ADC1);
+        LL_ADC_ClearFlag_OVR(ADC2);
+        NVIC_ClearPendingIRQ(ADC1_2_IRQn);
+        value = (struct signal_snapshot){0};
+        next_temperature = 0;
+        failed = false;
+    }
+    irq_unlock(key);
+    if (rc == 0) rc = sample();
+    if (rc != 0) signal_io_fault();
     return rc;
 }
 

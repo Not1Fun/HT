@@ -393,7 +393,7 @@ static void test_invalid_args(void)
     s=sample(); s.battery=(enum view_power)3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.selected=(enum panel_field)(PANEL_OUTPUT+1); CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.selected=(enum panel_field)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
-    s=sample(); s.output=(enum view_output)6; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
+    s=sample(); s.output=(enum view_output)(VIEW_OUTPUT_CLEARING+1); CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.output=(enum view_output)-1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.log_count=EVENT_LOG_CAPACITY+1; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);
     s=sample(); s.log_count=6; s.log_offset=3; CHECK(view_refresh(&v,&s,c.crc,receive,&c)==VIEW_ERR_ARG);

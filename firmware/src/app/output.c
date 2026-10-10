@@ -26,7 +26,7 @@ static struct power control;
 static struct output_snapshot published = {.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_INIT)};
 static struct { uint8_t raw; bool connected, okay; int64_t time; } inputs;
 static struct {
-    bool pending, stop;
+    bool pending, stop, clear;
     uint8_t range;
     uint32_t frequency, target, epoch;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -36,8 +36,15 @@ static struct {
 #endif
 } request;
 static uint32_t stop_epoch, active_epoch;
+static volatile uint32_t protection_epoch;
 static bool initialized, shut_down;
 static int watchdog_channel;
+static struct {
+    uint8_t phase;
+    uint32_t epoch, protection, sequence, count;
+    int result;
+    int64_t began, sampled, healthy;
+} recovery;
 
 static int mute(void *ctx) { ARG_UNUSED(ctx); return signal_io_stop(); }
 static int select_range(void *ctx, uint8_t value)
@@ -63,6 +70,7 @@ static bool cancelled(void *ctx)
 static void protection(const struct device *port, struct gpio_callback *cb, gpio_port_pins_t pins)
 {
     ARG_UNUSED(port); ARG_UNUSED(cb); ARG_UNUSED(pins);
+    ++protection_epoch;
     signal_io_fault();
 }
 
@@ -128,7 +136,7 @@ int output_start(uint8_t range, uint32_t frequency, uint32_t target)
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
     if (!published.ready || !published.available || shut_down) rc = -EACCES;
-    else if (published.running || published.switching || request.pending || request.stop) rc = -EBUSY;
+    else if (published.running || published.switching || published.clearing || request.clear || request.pending || request.stop) rc = -EBUSY;
     else {
 #if defined(CONFIG_HT_OUTPUT_BENCH)
         if (published.debug.busy) { k_spin_unlock(&guard, key); return -EBUSY; }
@@ -145,12 +153,12 @@ int output_start(uint8_t range, uint32_t frequency, uint32_t target)
 int output_debug(uint8_t relay, uint32_t frequency, uint16_t millivolts_pp, bool wave)
 {
     if (relay > 8 || (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000) ||
-        (millivolts_pp != 10 && millivolts_pp != 25 && millivolts_pp != 50 && millivolts_pp != 100)) return -EINVAL;
+        !bench_amplitude_valid(relay, millivolts_pp, wave)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
     bool available = relay == 0 && wave ? published.debug.dac_available : published.available;
     if (!published.ready || !available || shut_down || published.fault) rc = -EACCES;
-    else if (published.active || published.switching || request.pending || request.stop) rc = -EBUSY;
+    else if (published.active || published.switching || published.clearing || request.clear || request.pending || request.stop) rc = -EBUSY;
     else {
         request.pending = request.debug = true;
         request.relay = relay; request.frequency = frequency;
@@ -160,6 +168,26 @@ int output_debug(uint8_t relay, uint32_t frequency, uint16_t millivolts_pp, bool
     return rc;
 }
 #endif
+
+int output_clear(void)
+{
+    k_spinlock_key_t key = k_spin_lock(&guard);
+    int rc = 0;
+    if (!published.ready || shut_down) rc = -EACCES;
+    else if (published.active || published.switching || published.clearing || request.stop
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+             || published.debug.busy
+#endif
+    ) rc = -EBUSY;
+    else {
+        request.pending = false;
+        request.clear = true;
+        request.epoch = ++stop_epoch;
+        published.clearing = true;
+    }
+    k_spin_unlock(&guard, key);
+    return rc;
+}
 
 void output_stop(void)
 {
@@ -186,6 +214,95 @@ void output_shutdown(void)
     request.stop = true;
     k_spin_unlock(&guard, key);
     signal_io_fault();
+}
+
+static void finish_clear(int result)
+{
+    if (result != 0) {
+        int quiet = signal_io_stop();
+        int off = relay_io_select(0);
+        power_fail(&control, POWER_ERROR_SAMPLE);
+        if (off == 0) control.output = 0;
+        control.fault_stopped = quiet == 0 && off == 0;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        if (off == 0) debug.output = 0;
+        debug.fault_stopped = quiet == 0 && off == 0;
+#endif
+    }
+    recovery.phase = 0;
+    recovery.result = result;
+    ++recovery.count;
+}
+
+static void clear_poll(bool begin, bool stop, uint32_t blocked,
+                       const struct signal_snapshot *signal, bool fresh, int64_t now)
+{
+    if (begin) {
+        recovery.phase = 1;
+        recovery.epoch = active_epoch;
+        recovery.protection = protection_epoch;
+        recovery.began = now;
+        recovery.healthy = 0;
+    }
+    if (!recovery.phase) return;
+    if (stop || cancelled(NULL)) { finish_clear(-ECANCELED); return; }
+    if (recovery.protection != protection_epoch) { finish_clear(-EIO); return; }
+    if (begin) {
+        bool idle = control.state == POWER_IDLE || control.state == POWER_FAULT;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        idle = idle && (debug.state == BENCH_IDLE || debug.state == BENCH_FAULT);
+#endif
+        if (!idle) { finish_clear(-EBUSY); return; }
+        int quiet = signal_io_stop();
+        int off = relay_io_select(0);
+        if (quiet != 0 || off != 0 || relay_io_check() != 0) { finish_clear(-EIO); return; }
+        control.output = 0;
+        control.fault_stopped = true;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        debug.output = 0;
+        debug.fault_stopped = true;
+#endif
+    }
+    if (recovery.phase == 1) {
+        if (now - recovery.began < 30) return;
+        uint32_t digital = 0;
+        int rc = board_io_clear_protection();
+        if (rc == 0) rc = board_io_read(&digital);
+        if (rc == 0 && (digital & (BIT(BOARD_OC) | BIT(BOARD_OV)))) rc = -EACCES;
+        if (rc == 0 && !cancelled(NULL)) rc = signal_io_recover();
+        else if (rc == 0) rc = -ECANCELED;
+        if (rc != 0) { finish_clear(rc); return; }
+        recovery.sequence = signal->reading.sequence;
+        recovery.sampled = k_uptime_get();
+        recovery.phase = 2;
+        return;
+    }
+    if (signal_io_failed()) { finish_clear(-EIO); return; }
+    /* 使能可保持关闭；Bench开路NTC只影响整机启动，不妨碍独立DAC故障恢复。 */
+    uint32_t required = blocked & ~OUTPUT_REASON_BIT(OUTPUT_REASON_ENABLE);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+    required &= ~(OUTPUT_REASON_BIT(OUTPUT_REASON_NTC1_OPEN) |
+        OUTPUT_REASON_BIT(OUTPUT_REASON_NTC2_OPEN) | OUTPUT_REASON_BIT(OUTPUT_REASON_NTC3_OPEN));
+#endif
+    bool healthy = !required && fresh && signal->reading.sequence != recovery.sequence &&
+        signal->reading.time_ms >= recovery.sampled && signal->temperature_ms >= recovery.sampled;
+    if (!healthy) recovery.healthy = 0;
+    else if (!recovery.healthy) recovery.healthy = now;
+    if (healthy && now - recovery.healthy >= 100) {
+        if (relay_io_check() != 0) { finish_clear(-EIO); return; }
+        k_spinlock_key_t key = k_spin_lock(&guard);
+        bool valid = !shut_down && recovery.epoch == stop_epoch &&
+            recovery.protection == protection_epoch && !signal_io_failed();
+        if (valid) {
+            struct power_ops ops = control.ops;
+            (void)power_init(&control, &ops);
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+            (void)bench_init(&debug, &ops);
+#endif
+        }
+        k_spin_unlock(&guard, key);
+        finish_clear(valid ? 0 : -ECANCELED);
+    } else if (now - recovery.began >= 1000) finish_clear(required ? -EACCES : -ETIMEDOUT);
 }
 
 static void run(void *a, void *b, void *c)
@@ -215,7 +332,8 @@ static void run(void *a, void *b, void *c)
 #endif
         bool stop = request.stop;
         bool start = request.pending;
-        if (start) active_epoch = request.epoch;
+        bool clear = request.clear;
+        if (start || clear) active_epoch = request.epoch;
         uint8_t range = request.range;
         uint32_t frequency = request.frequency, target = request.target;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -227,6 +345,7 @@ static void run(void *a, void *b, void *c)
 #endif
         request.pending = false;
         request.stop = false;
+        request.clear = false;
         k_spin_unlock(&guard, key);
         if (board_rc == 0) {
             BLOCK_IF(!(digital & BIT(BOARD_SENSOR)), OUTPUT_REASON_SENSOR);
@@ -257,7 +376,8 @@ static void run(void *a, void *b, void *c)
         bool dac_permitted = dac_blocked == 0;
 #endif
 #undef BLOCK_IF
-        if (rc != 0) {
+        bool clearing = clear || recovery.phase != 0;
+        if (rc != 0 && !clearing) {
             signal.reading.valid = false;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
             if (debug.state != BENCH_IDLE) bench_fail(&debug, POWER_ERROR_SAMPLE);
@@ -267,7 +387,10 @@ static void run(void *a, void *b, void *c)
         /* 仅限制启动准入，输出起始的首窗等待仍由POWER_ZERO管理。 */
         bool sample_ready = signal.reading.valid && now >= signal.reading.time_ms &&
             now - signal.reading.time_ms < 150;
+        clear_poll(clear, stop, blocked, &signal, sample_ready, now);
+        if (clearing) start = false;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
+        if (clearing) debug_start = false;
         if (stop) bench_stop(&debug, now);
         else if (debug_start && (relay == 0 && wave ? dac_permitted && debug.output == 0 : permitted) &&
                  sample_ready && control.state == POWER_IDLE)
@@ -284,7 +407,8 @@ static void run(void *a, void *b, void *c)
         if (control.state != POWER_FAULT)
             for (uint8_t i = 0; i < 7; ++i) if (control.output & BIT(i + 1)) applied = i;
         struct output_snapshot next = {
-            .ready = true, .available = permitted && sample_ready && control.state != POWER_FAULT,
+            .ready = true, .available = !clearing && permitted && sample_ready && control.state != POWER_FAULT,
+            .clearing = recovery.phase != 0, .clear_count = recovery.count, .clear_result = recovery.result,
             .active = control.state != POWER_IDLE && control.state != POWER_FAULT &&
                       control.state != POWER_STOPPING && control.state != POWER_RELEASE,
             .matching = control.matching && control.state != POWER_IDLE && control.state != POWER_FAULT &&
@@ -312,7 +436,7 @@ static void run(void *a, void *b, void *c)
             (control.state != POWER_IDLE && control.state != POWER_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_BUSY) : 0) |
             (control.state == POWER_FAULT || debug.state == BENCH_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT) : 0) |
             (debug.output ? OUTPUT_REASON_BIT(OUTPUT_REASON_RELAYS) : 0);
-        next.debug.dac_available = next.debug.blocked == 0;
+        next.debug.dac_available = !clearing && next.debug.blocked == 0;
         next.debug.seconds = next.debug.busy && debug.expires > now ?
             (uint32_t)((debug.expires - now + 999) / 1000) : 0;
         if (debug.state == BENCH_FAULT) {
@@ -323,7 +447,10 @@ static void run(void *a, void *b, void *c)
 #else
         bool debug_safe = true;
 #endif
+        next.clear_needed = next.fault || (blocked & (OUTPUT_REASON_BIT(OUTPUT_REASON_OC) |
+            OUTPUT_REASON_BIT(OUTPUT_REASON_OV))) != 0;
         key = k_spin_lock(&guard);
+        next.clearing |= request.clear;
         published = next;
         k_spin_unlock(&guard, key);
         if (alive && debug_safe && (control.state != POWER_FAULT || control.fault_stopped) && now >= next_feed) {

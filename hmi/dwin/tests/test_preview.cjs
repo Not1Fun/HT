@@ -47,9 +47,13 @@ function field(index) {
   assert.equal(icon('focus'), index);
 }
 function start() { field(3); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
+function clear() {
+  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),37);
+  click('ok'); advance(600); output(false); click('ok'); output(false);
+}
 
 (async () => {
-  assert.equal(ui.version, 10);
+  assert.equal(ui.version, 11);
   assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), true);
   for (const [name, vp] of Object.entries({range_choice: 0x1150, current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
@@ -83,9 +87,10 @@ function start() { field(3); click('cw'); click('ok'); output(true); matching(fa
   start(); field(2); click('ccw'); click('ok'); output(false); matching(false); assert.match(ids.feedback.textContent, /49 VA/);
   advance(5000); output(false); start(); field(1); click('cw'); click('ok'); output(false); matching(false);
   start(); advance(2400); matching(false); field(2); click('ok'); output(false);
-  start(); checked('temperature-invalid', true); output(false); matching(false); assert.equal(icon('output'), 3);
-  checked('temperature-invalid', false); start(); scene('fault'); output(false); matching(false); assert.equal(icon('output'), 4);
-  scene('idle'); start(); scene('offline'); output(false); assert.equal(icon('output'), 3); scene('idle');
+  start(); checked('temperature-invalid', true); output(false); matching(false); assert.equal(icon('output'), 4);
+  checked('temperature-invalid', false); clear(); start(); scene('fault'); output(false); matching(false); assert.equal(icon('output'), 4);
+  field(3); click('ok'); advance(600); assert.equal(icon('output'),4); output(false);
+  scene('idle'); assert.equal(icon('output'),4); clear(); start(); scene('offline'); output(false); assert.equal(icon('output'), 3); scene('idle');
   checked('bench-disabled', true); assert.equal(icon('output'), 5); click('cw'); click('ok'); output(false);
   checked('bench-disabled', false); field(2); click('ccw'); click('left'); click('right'); assert.equal(text('power_choice'), '49');
   start(); click('left'); click('down'); output(false); advance(5000); output(false); matching(false);
@@ -103,8 +108,10 @@ function start() { field(3); click('cw'); click('ok'); output(true); matching(fa
   assert.equal(icon('reason'),0);
   scene('fault'); const first=icon('reason'); advance(2000); const second=icon('reason');
   assert.deepEqual([first,second].sort((a,b)=>a-b),[11,12]);
-  scene('idle'); click('right'); click('right'); page(1);
+  scene('idle'); click('down'); click('down'); click('ok'); assert.equal(icon('dac_state'),5);
+  advance(600); assert.equal(icon('dac_state'),0); assert.equal(text('debug_wave'),'OFF');
+  click('right'); click('right'); page(1);
   assert.equal(icon('reason'),18); checked('temperature-invalid',false);
   assert.equal(icon('reason'),0);
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v10 manual range, no automatic matching; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v11 manual range, no automatic matching; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

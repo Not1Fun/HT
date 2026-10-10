@@ -17,6 +17,7 @@ struct bench {
 };
 /* relay: 0全释放、1仅K1、2..8对应K2..K8抽头（自动配合K1）。 */
 uint8_t bench_mask(uint8_t relay);
+bool bench_amplitude_valid(uint8_t relay, uint16_t millivolts_pp, bool wave);
 int bench_init(struct bench *bench, const struct power_ops *ops);
 int bench_start(struct bench *bench, uint8_t relay, uint32_t frequency,
                 uint16_t millivolts_pp, bool wave, int64_t now);

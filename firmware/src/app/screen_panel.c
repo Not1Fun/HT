@@ -95,6 +95,7 @@ struct service {
 #if defined(CONFIG_HT_OUTPUT)
 	uint8_t matched_range;
 	bool match_seen;
+	uint32_t clear_count;
 #endif
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE)
 	struct temperature_snapshot temperature;
@@ -145,10 +146,23 @@ static void update_output(struct service *service, bool io_ok)
 		!(service->link.pending && k_uptime_get() >= service->link.deadline), io_ok && service->digital_valid);
 	struct output_snapshot value;
 	output_snapshot(&value);
+	if (value.clear_count != service->clear_count) {
+		record_event(service, value.clear_result == 0 ? EVENT_FAULT_CLEAR : EVENT_FAULT_CLEAR_FAILED,
+			value.clear_result);
+		service->clear_count = value.clear_count;
+	}
 	if (value.fault && !service->dds_failed) {
 		record_event(service, EVENT_DDS_FAILED, value.error);
 		service->dds_failed = true;
 	}
+	if (!value.fault) service->dds_failed = false;
+	if (service->panel.clearing || value.clearing) {
+		if (service->panel.field == PANEL_OUTPUT) service->panel.draft_index = 0;
+		if (service->panel.debug.field == 3) service->panel.debug.draft = 0;
+		service->panel.debug.choice[3] = 0;
+	}
+	service->panel.clear_needed = value.clear_needed || value.fault;
+	service->panel.clearing = value.clearing;
 	if (value.active != service->dds_running) {
 		record_event(service, value.active ? EVENT_DDS_START : EVENT_DDS_STOP,
 			value.active ? (int32_t)service->panel.frequency_hz : 0);
@@ -438,6 +452,14 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 			if (action < 0) {
 				return action;
 			}
+#if defined(CONFIG_HT_OUTPUT)
+            if (action == PANEL_ACTION_CLEAR && !stopping) {
+                int rc = output_clear();
+                if (rc != 0) record_event(service, EVENT_FAULT_CLEAR_FAILED, rc);
+                else service->panel.clearing = true;
+                stopping = true;
+            }
+#endif
 #if defined(CONFIG_HT_OUTPUT_BENCH)
             if (action == PANEL_ACTION_DEBUG_PARAMS) { request_stop(); stopping = true; }
             if (!stopping && (action == PANEL_ACTION_DEBUG_RELAY || action == PANEL_ACTION_DEBUG_WAVE)) {
@@ -709,7 +731,8 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 	struct output_snapshot value;
 	output_snapshot(&value);
 	out->state = value.fault ? VIEW_FAULT : value.switching ? VIEW_SWITCHING : value.running ? VIEW_RUNNING : VIEW_STANDBY;
-	out->output = value.fault ? VIEW_OUTPUT_FAULT : value.running || value.switching ? VIEW_OUTPUT_RUNNING :
+	out->output = value.clearing ? VIEW_OUTPUT_CLEARING : value.clear_needed || value.fault ? VIEW_OUTPUT_FAULT :
+        value.running || value.switching ? VIEW_OUTPUT_RUNNING :
 		!panel->output_available ? VIEW_OUTPUT_UNAVAILABLE :
 		panel->field == PANEL_OUTPUT && panel->draft_index ? VIEW_OUTPUT_ARMED : VIEW_OUTPUT_OFF;
 	if (value.active) {
@@ -729,7 +752,7 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
     out->debug.coils = value.debug.coils;
     out->debug.seconds = value.debug.seconds;
     bool available = out->debug.relay == 0 ? value.debug.dac_available : value.available;
-    out->debug.state = value.fault ? 4 : !available ? 3 : value.debug.wave ? 2 : value.debug.busy ? 1 : 0;
+    out->debug.state = value.clearing ? 5 : value.clear_needed || value.fault ? 4 : !available ? 3 : value.debug.wave ? 2 : value.debug.busy ? 1 : 0;
     out->debug.starting = value.debug.trial && !value.debug.wave;
     out->debug.pending = panel->debug.field == 3 && panel->debug.draft && !value.debug.trial;
 #endif
@@ -741,6 +764,12 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
     if (panel->page == PANEL_PAGE_SETTINGS && panel->apparent_mva == 0)
         blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_TARGET);
     out->reason = blocking_reason(blocked, value.error, k_uptime_get());
+    if (value.clearing) out->reason = VIEW_REASON_CLEARING;
+    else if (value.clear_count && value.clear_result && (k_uptime_get() / 2000) % 2 == 0) {
+        if (value.clear_result == -EIO) out->reason = VIEW_REASON_CLEAR_IO;
+        else if (value.clear_result == -ETIMEDOUT) out->reason = VIEW_REASON_CLEAR_SAMPLE;
+        else if (value.clear_result == -ECANCELED) out->reason = VIEW_REASON_CLEAR_CANCELLED;
+    }
 	int64_t age = k_uptime_get() - value.signal.reading.time_ms;
 	bool valid = value.signal.reading.valid && age >= 0 && age < 150;
 	out->values[VIEW_CURRENT] = (struct view_value){value.signal.reading.current_ma, valid};

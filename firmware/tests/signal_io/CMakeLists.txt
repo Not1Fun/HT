@@ -16,7 +16,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(signal_io_tests PRIVATE -Wall -Wextra -Werror -pedantic)
   target_link_libraries(signal_io_tests PRIVATE m)
 endif()
-foreach(case IN ITEMS idle_reading output_transition temperature_resume sample_fault
+foreach(case IN ITEMS recover_reading recover_resources idle_reading output_transition temperature_resume sample_fault
     stop_fault stale_window dma_fault start_fault resource_loss adc_overrun idle_invalid
     block_ownership queue_overflow temperature_purge dma_copy_overlap copy_fault)
   add_test(NAME signal_io_${case} COMMAND signal_io_tests ${case})

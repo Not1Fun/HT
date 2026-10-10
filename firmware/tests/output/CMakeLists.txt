@@ -12,7 +12,7 @@ foreach(mode IN ITEMS output output_bench)
   if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(${mode}_tests PRIVATE -Wall -Wextra -Werror -pedantic)
   endif()
-  foreach(case IN ITEMS manual_range blocking_reasons startup_latch latch_failure latch_relay_failure stop_priority interlocks stale_ui sample_fault standby_sampling standby_board_fault init_failure
+  foreach(case IN ITEMS clear_fault clear_blocked clear_cancel clear_sample clear_io manual_range blocking_reasons startup_latch latch_failure latch_relay_failure stop_priority interlocks stale_ui sample_fault standby_sampling standby_board_fault init_failure
       sample_permission pending_sample_invalid first_window_grace
       protection_race stop_in_flight relay_fault shutdown_output enclosure_interlocks
       running_oc running_ov running_sensor_loss running_temperature running_ntc_failure
@@ -22,6 +22,6 @@ foreach(mode IN ITEMS output output_bench)
 endforeach()
 target_compile_definitions(output_bench_tests PRIVATE CONFIG_HT_OUTPUT_BENCH=1)
 
-foreach(case IN ITEMS debug_cycle debug_fault debug_disconnect dac_open_ntc dac_guards dac_relay_guard)
+foreach(case IN ITEMS dac_one_volt debug_cycle debug_fault debug_disconnect dac_open_ntc dac_guards dac_relay_guard)
   add_test(NAME output_bench_${case} COMMAND output_bench_tests ${case})
 endforeach()

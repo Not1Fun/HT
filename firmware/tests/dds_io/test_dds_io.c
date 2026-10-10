@@ -432,10 +432,33 @@ static void dynamic_fault(void)
 }
 #endif
 
+static void recover_idle(void)
+{
+    assert(dds_io_recover() == -EACCES);
+    start(); assert(dds_io_recover() == -EBUSY);
+    dds_io_fault_stop(); assert(dds_io_recover() == 0);
+    assert_quiet(DDS_FAULT_NONE);
+    assert(!configured && amplitude == 0 && dds_io_start() == -EACCES);
+    assert(dds_io_configure(2000, 17) == 0 && dds_io_start() == 0);
+    hw_dma.ISR |= 8u; handlers[0](NULL);
+    assert(snapshot().fault == DDS_FAULT_DMA);
+    hw_dma.ISR = 0; /* 模拟quiet写IFCR的清标志副作用。 */
+    assert(dds_io_recover() == 0); assert_quiet(DDS_FAULT_NONE);
+}
+static void recover_resource(void)
+{
+    start(); dds_io_fault_stop(); mux.CCR ^= 1;
+    assert(dds_io_recover() == -EIO); assert_quiet(DDS_FAULT_RESOURCE);
+    reset(); start(); dds_io_fault_stop(); vref_ready = false;
+    assert(dds_io_recover() == -EIO); assert_quiet(DDS_FAULT_RESOURCE);
+    reset(); start(); dds_io_fault_stop(); rcc.APB1ENR = 0;
+    assert(dds_io_recover() == -EIO && snapshot().fault != DDS_FAULT_NONE);
+}
 int main(int argc, char **argv)
 {
     assert(argc == 2); reset();
 #define RUN(name) if (strcmp(argv[1], #name) == 0) { name(); puts("DDS IO test passed"); return 0; }
+    RUN(recover_idle) RUN(recover_resource)
     RUN(init_idle) RUN(input_guards) RUN(resource_conflicts) RUN(reference_guards)
     RUN(start_stop) RUN(frequency_restart) RUN(dma_stream) RUN(dma_width_fault) RUN(dma_fault) RUN(dac_fault)
     RUN(startup_error) RUN(stop_timeout) RUN(resource_loss) RUN(clock_loss)

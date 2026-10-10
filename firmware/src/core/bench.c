@@ -55,7 +55,7 @@ int bench_start(struct bench *b, uint8_t relay, uint32_t frequency,
                 uint16_t millivolts_pp, bool wave, int64_t now)
 {
     if (relay > 8 || (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000) ||
-        (millivolts_pp != 10 && millivolts_pp != 25 && millivolts_pp != 50 && millivolts_pp != 100) ||
+        !bench_amplitude_valid(relay, millivolts_pp, wave) ||
         b->state == BENCH_FAULT || b->state == BENCH_STOP || b->state == BENCH_RELEASE || cancelled(b)) return -1;
     if (b->ops.mute(b->ops.ctx) != 0) { bench_fail(b, POWER_ERROR_IO); return -1; }
     b->relay = relay;
@@ -66,6 +66,12 @@ int bench_start(struct bench *b, uint8_t relay, uint32_t frequency,
     b->deadline = b->ops.now(b->ops.ctx) + 30;
     b->expires = now + (wave ? 10000 : 30000);
     return 0;
+}
+
+bool bench_amplitude_valid(uint8_t relay, uint16_t millivolts_pp, bool wave)
+{
+    return millivolts_pp == 10 || millivolts_pp == 25 || millivolts_pp == 50 ||
+        millivolts_pp == 100 || (relay == 0 && wave && millivolts_pp == 1000);
 }
 
 void bench_poll(struct bench *b, bool permitted, const struct power_reading *r, int64_t now)

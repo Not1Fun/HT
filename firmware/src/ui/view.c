@@ -174,6 +174,7 @@ static void format_log_value(char text[VIEW_TEXT_BYTES], const struct event_entr
     case EVENT_TEMP_INIT_FAILED:
     case EVENT_IO_ERROR:
     case EVENT_DDS_FAILED:
+    case EVENT_FAULT_CLEAR_FAILED:
         text[0] = '-';
         text[1] = '-';
         format_number(text, entry->value, 0);
@@ -270,8 +271,8 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
         (unsigned int)snapshot->selected > PANEL_OUTPUT ||
-        (unsigned int)snapshot->output > VIEW_OUTPUT_DISABLED || snapshot->reason >= VIEW_REASON_COUNT ||
-        snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 4 ||
+        (unsigned int)snapshot->output > VIEW_OUTPUT_CLEARING || snapshot->reason >= VIEW_REASON_COUNT ||
+        snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 5 ||
         (snapshot->page == PANEL_PAGE_DAC && (snapshot->debug.field == 0 || snapshot->debug.relay != 0)) ||
         snapshot->log_count > EVENT_LOG_CAPACITY ||
         snapshot->log_offset > (snapshot->log_count > VIEW_LOG_ROWS ?
