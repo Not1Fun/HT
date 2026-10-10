@@ -347,6 +347,33 @@ static void automatic_range(void) {
     assert(published.frequency==2000 && control.target_mva==1000 && relay_value==16);
     output_stop();advance(100);assert(!signal_active && relay_value==0);
 }
+static void automatic_interlocks(void) {
+    setup();uint8_t saved=panel_raw;
+    panel_raw|=BIT(7);heartbeat();advance(1);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(!published.available && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_DOOR)));
+    assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EACCES);
+#else
+    assert(published.available);
+#endif
+    panel_raw=saved;digital&=~BIT(BOARD_COIL);heartbeat();advance(1);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(!published.available && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_COIL)));
+    assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EACCES);
+#else
+    assert(published.available);
+#endif
+    digital|=BIT(BOARD_COIL);advance(1);
+    assert(output_start(POWER_RANGE_AUTO,2000,1000)==0);advance(8000);
+    assert(published.running && control.automatic);
+    panel_raw|=BIT(7);heartbeat();advance(1);
+#if !defined(CONFIG_HT_OUTPUT_BENCH)
+    assert(published.fault && published.error==POWER_ERROR_INTERLOCK && !signal_active && !relay_value);
+#else
+    assert(published.running && !published.fault);
+    output_stop();advance(100);assert(!signal_active && !relay_value);
+#endif
+}
 static void clear_fault(void) {
     setup();start_output();protection(NULL,NULL,0);advance(1);
     assert(published.fault && published.clear_needed);
@@ -403,6 +430,7 @@ int main(int argc,char **argv) {
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
     RUN(clear_fault) RUN(clear_blocked) RUN(clear_cancel) RUN(clear_sample) RUN(clear_io)
     RUN(automatic_range)
+    RUN(automatic_interlocks)
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
     RUN(dac_one_volt)

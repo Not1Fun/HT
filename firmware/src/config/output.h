@@ -2,5 +2,7 @@
 #ifndef HT_OUTPUT_CONFIG_H
 #define HT_OUTPUT_CONFIG_H
 #define HT_AMP_GAIN_MILLI 15000U
-#define HT_PRIMARY_RMS_MV 14100U
+#define HT_PRIMARY_RATED_RMS_MV 14100U
+/* 独立工作上限；未确认更高允许值前保持额定值。 */
+#define HT_PRIMARY_MAX_RMS_MV 14100U
 #endif

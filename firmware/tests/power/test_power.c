@@ -288,6 +288,48 @@ static void auto_quantized_regulation(void)
         assert(fabs(v*v/loads[i]-50)<2);
     }
 }
+static void capacity_rematch(void)
+{
+    delayed=true;
+    struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,8000,30000,0)==0);
+    seek(&p,1.6);for(int n=0;n<120;++n)plant_tick(&p,1.6);
+    assert(p.state==POWER_RUNNING && p.range==0);
+    int64_t session=p.session_ms;
+    for(int n=0;n<140 && p.state!=POWER_FAULT;++n)plant_tick(&p,1.9);
+    assert(p.state==POWER_RUNNING && p.range==1 && p.rematches==1);
+    assert(p.session_ms==session && p.frequency==8000);
+}
+static void saturation_tolerance(void)
+{
+    gain=14.7;delayed=true;
+    struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
+    seek(&p,30);
+    for(int n=0;n<180 && p.state!=POWER_FAULT;++n)plant_tick(&p,30);
+    assert(p.error==POWER_ERROR_TARGET && hw.amp==0 && p.output==0);
+}
+static void unstable_impedance(void)
+{
+    struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
+    seek(&p,30);for(int n=0;n<120;++n)plant_tick(&p,30);
+    const uint32_t currents[]={142,62,100};
+    for(size_t i=0;i<3;++i) {
+        struct power_reading r={.valid=true,.voltage_mv=10000,.current_ma=currents[i],
+            .apparent_mva=10*currents[i],.sequence=p.sequence};
+        tick(&p,100,true,&r);
+    }
+    for(int n=0;n<120;++n)plant_tick(&p,30);
+    assert(p.state==POWER_RUNNING && p.range==3 && p.rematches==0);
+}
+static void zero_requires_new_window(void)
+{
+    struct power p=initialized();assert(power_start(&p,0,2000,1000,0)==0);
+    for(int n=0;n<4;++n)tick(&p,30,true,NULL);
+    assert(p.state==POWER_ZERO);
+    struct power_reading r={.valid=true,.sequence=1,.time_ms=hw.now-1};
+    power_poll(&p,true,&r,hw.now);
+    assert(p.state==POWER_ZERO && p.amplitude==0);
+    tick(&p,50,true,&r);assert(p.state==POWER_RUNNING);
+}
 static void auto_timeout(void)
 {
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
@@ -390,6 +432,8 @@ int main(int argc,char **argv)
         {"gain_conversion",gain_conversion},{"auto_power_matrix",auto_power_matrix},
         {"auto_noise_gain",auto_noise_gain},{"auto_capacity",auto_capacity},
         {"auto_quantized_regulation",auto_quantized_regulation},
+        {"capacity_rematch",capacity_rematch},{"saturation_tolerance",saturation_tolerance},
+        {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
         {"auto_timeout",auto_timeout},{"auto_stop",auto_stop},{"auto_rematch",auto_rematch},{"auto_stale",auto_stale},
         {"auto_settle_protection",auto_settle_protection},{"auto_interlock",auto_interlock},

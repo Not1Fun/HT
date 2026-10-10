@@ -39,6 +39,8 @@ struct power {
     uint16_t ramp_base;
     uint32_t noise_mv, noise_ma;
     uint32_t load_mohm;
+    uint32_t impedance[3];
+    uint8_t impedance_count, impedance_next;
     int64_t limit_since;
     int64_t session_ms, match_deadline, probe_after, resident_since;
 };

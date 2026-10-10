@@ -21,7 +21,7 @@ enum view_result {
 enum view_state {
     VIEW_STANDBY, VIEW_RUNNING, VIEW_SWITCHING, VIEW_FAULT, VIEW_OFFLINE
 };
-/* 原因图标末尾对应 POWER_ERROR_IO..MATCH 的7种锁存故障。 */
+/* 故障图标按power_error连续编号，后接主动清除状态。 */
 #define VIEW_REASON_CLEARING (OUTPUT_REASON_COUNT + POWER_ERROR_COUNT - 1u)
 #define VIEW_REASON_CLEAR_IO (VIEW_REASON_CLEARING + 1u)
 #define VIEW_REASON_CLEAR_SAMPLE (VIEW_REASON_CLEARING + 2u)
@@ -36,7 +36,7 @@ enum view_output {
 
 /* VP1100..1140：电流mA、电压mV、实际阻抗挡Ω、实际频率Hz、本次运行秒数。
  * VP1160：候选频率Hz；VP1170..1190：NTC1..3（0.1°C）；VP11A0：目标mVA。
- * VP1150：手动阻抗候选Ω；状态页仍显示实际已切入挡位。
+ * VP1150：AUTO或手动阻抗候选Ω；状态页仍显示实际已切入挡位。
  * 频率仅2000/5000/8000/10000；温度显示范围-20.0..120.0°C。
  */
 enum view_field {
