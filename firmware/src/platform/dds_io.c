@@ -194,6 +194,7 @@ static int check(void)
 	}
 	if (sampling) {
 		timer |= TIM_CR1_CEN;
+		dac |= DAC_CR_EN1;
 	}
 	if (!clocks_ready() || !reference_ready() ||
 	    LL_AHB2_GRP1_IsEnabledClock(LL_AHB2_GRP1_PERIPH_DAC3) ||
@@ -317,6 +318,24 @@ int dds_io_configure(uint32_t frequency_hz, uint16_t requested_amplitude)
 	return rc;
 }
 
+static int prepare_midpoint(void)
+{
+	uint32_t key = __get_PRIMASK();
+	__disable_irq();
+	if (fault != DDS_FAULT_NONE) { __set_PRIMASK(key); return -EIO; }
+	bool enable = !(DAC1->CR & DAC_CR_EN1);
+	DAC1->DHR12R1 = DDS_MIDPOINT;
+	if (enable) LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
+	__set_PRIMASK(key);
+	if (enable) k_busy_wait(LL_DAC_DELAY_STARTUP_VOLTAGE_SETTLING_US);
+	if (fault != DDS_FAULT_NONE) return -EIO;
+	if (!LL_DAC_IsReady(DAC1, LL_DAC_CHANNEL_1) || DAC1->DOR1 != DDS_MIDPOINT) {
+		fail(DDS_FAULT_DAC);
+		return -EIO;
+	}
+	return 0;
+}
+
 int dds_io_start(void)
 {
 	int rc;
@@ -332,14 +351,8 @@ int dds_io_start(void)
 	/* 起始DHR预载上一周期末点，第一触发输出该点并DMA装入sample[0]。
 	 * 之后输出0..1699连续循环；不宣称与未来ADC已有相位配对。
 	 */
-	DAC1->DHR12R1 = DDS_MIDPOINT;
-	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
-	k_busy_wait(LL_DAC_DELAY_STARTUP_VOLTAGE_SETTLING_US);
-	if (!LL_DAC_IsReady(DAC1, LL_DAC_CHANNEL_1) || DAC1->DOR1 != DDS_MIDPOINT) {
-		fail(DDS_FAULT_DAC);
-		rc = -EIO;
-		goto done;
-	}
+	rc = prepare_midpoint();
+	if (rc != 0) goto done;
 	DMA1_Channel1->CNDTR = DDS_BUFFER_SAMPLES;
 	TIM6->CNT = 0;
 	TIM6->SR = 0;
@@ -420,6 +433,8 @@ int dds_io_sample_start(uint32_t frequency_hz)
 	k_mutex_lock(&lock, K_FOREVER);
 	int rc = check();
 	if (rc == 0 && (running || sampling)) rc = -EBUSY;
+	/* 待机、继电器释放时建立中点，避免接上负载后首次使能DAC产生电平跃变。 */
+	if (rc == 0) rc = prepare_midpoint();
 	uint32_t key = __get_PRIMASK();
 	__disable_irq();
 	if (rc == 0 && fault == DDS_FAULT_NONE) {

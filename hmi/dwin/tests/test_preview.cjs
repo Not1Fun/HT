@@ -48,12 +48,12 @@ function field(index) {
 }
 function start() { field(3); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
 function clear() {
-  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),39);
+  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),41);
   click('ok'); advance(600); output(false); click('ok'); output(false);
 }
 
 (async () => {
-  assert.equal(ui.version, 12);
+  assert.equal(ui.version, 13);
   assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), true);
   for (const [name, vp] of Object.entries({range_choice: 0x1150, current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
@@ -124,5 +124,5 @@ function clear() {
   assert.equal(text('range'),'30');assert.equal(text('frequency'),frequency);
   click('down');advance(2000);output(false);click('right');field(0);
   assert.equal(text('range_choice'),'AUTO');
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v12 automatic and manual range, frequency retained; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v13 automatic and manual range, frequency retained; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

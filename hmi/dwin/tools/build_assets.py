@@ -37,6 +37,8 @@ REASONS = ["", "输出模块未初始化，检查启动日志", "输出服务已
     "阻抗匹配失败，未得到有效负载反馈（故障 7）",
     "目标 VA 超出当前负载或幅度能力，请降低目标（故障 8）",
     "未得到有效输出反馈，检查功放、变压器与采样链（故障 9）",
+    "零幅启动检测到电压或电流，检查偏置与残留信号（故障 10）",
+    "启动采样超时，未收到新的有效测量窗口（故障 11）",
     "正在清除旧锁存并检查新采样，输出保持关闭",
     "清除未完成：外设或继电器检查失败",
     "清除未完成：未得到新的有效电压电流采样",
@@ -345,7 +347,7 @@ def build():
              initial=4, values=["standby", "running", "switching", "fault", "offline"], pages=[0, 1, 2]),
         dict(name="battery", vp=0x1001, x=568, y=408, width=208, height=28, first=5, last=7,
              initial=2, values=["normal", "low_or_abnormal", "unknown"], pages=[0]),
-        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=105, last=108,
+        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=107, last=110,
              initial=0, values=["range", "frequency", "power", "output"], pages=[1]),
         dict(name="edit", vp=0x1003, x=24, y=382, width=752, height=32, first=10, last=11,
              initial=0, values=["confirmed", "pending"], pages=[1]),
@@ -368,7 +370,7 @@ def build():
     ]
     variable_icons.append(dict(name="reason", vp=0x1005, x=24, y=416, width=752, height=28,
         first=62, last=62 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
-    spec = dict(version=12, name="HT", width=800, height=480, touch=False, colors=COLORS,
+    spec = dict(version=13, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
                        for index, name in enumerate(["status", "settings", "logs", "debug", "dac"])],

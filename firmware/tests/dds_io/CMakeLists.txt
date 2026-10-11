@@ -19,7 +19,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(dds_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
 foreach(case IN ITEMS recover_idle recover_resource dynamic_amplitude dynamic_deadline dynamic_fault start_stop startup_cancel
-    sample_only sample_restart sample_fault sample_resource dma_stream dma_width_fault)
+    sample_only sample_restart sample_fault sample_resource midpoint_guard dma_stream dma_width_fault)
   add_test(NAME dds_output_${case} COMMAND dds_output_tests ${case})
 endforeach()
 add_executable(dds_io_tests test_dds_io.c ../../src/core/dds.c)

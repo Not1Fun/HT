@@ -79,7 +79,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v12：Bench独立DAC页复用VP1300..1370，VP1030/1031为选项和试波状态；VP1005为具体阻止原因。
+/* ui.json v13：Bench独立DAC页复用VP1300..1370，VP1030/1031为选项和试波状态；VP1005为具体阻止原因。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,

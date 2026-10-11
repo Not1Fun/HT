@@ -9,7 +9,8 @@ enum power_state { POWER_IDLE, POWER_MUTING, POWER_BREAK, POWER_TRANS,
     POWER_TAP, POWER_ZERO, POWER_PROBING, POWER_RUNNING, POWER_STOPPING, POWER_RELEASE, POWER_FAULT };
 enum power_error { POWER_ERROR_NONE, POWER_ERROR_IO, POWER_ERROR_INTERLOCK,
     POWER_ERROR_SAMPLE, POWER_ERROR_LIMIT, POWER_ERROR_OPEN, POWER_ERROR_SHORT, POWER_ERROR_MATCH,
-    POWER_ERROR_TARGET, POWER_ERROR_FEEDBACK, POWER_ERROR_COUNT };
+    POWER_ERROR_TARGET, POWER_ERROR_FEEDBACK, POWER_ERROR_ZERO, POWER_ERROR_FIRST_SAMPLE,
+    POWER_ERROR_COUNT };
 struct power_reading {
     uint32_t voltage_mv, current_ma, apparent_mva, sequence;
     int64_t time_ms;
@@ -28,6 +29,9 @@ struct power {
     struct power_ops ops;
     enum power_state state;
     enum power_error error;
+    enum power_state fault_state;
+    int64_t fault_ms;
+    struct power_reading last_reading;
     uint8_t range, output;
     uint32_t frequency, target_mva, sequence;
     int64_t deadline, started, feedback, low_since;

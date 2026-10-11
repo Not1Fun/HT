@@ -330,6 +330,27 @@ static void zero_requires_new_window(void)
     assert(p.state==POWER_ZERO && p.amplitude==0);
     tick(&p,50,true,&r);assert(p.state==POWER_RUNNING);
 }
+static void startup_diagnosis(void)
+{
+    for(int reason=0;reason<3;++reason) {
+        struct power p=initialized();assert(power_start(&p,0,2000,50000,0)==0);
+        for(int n=0;n<4;++n)tick(&p,30,true,NULL);
+        struct power_reading r={.valid=true,.sequence=15};
+        if(reason==0)r.voltage_mv=3001;
+        if(reason==1)r.current_ma=101;
+        if(reason==2)r.valid=false;
+        tick(&p,reason==2?250:50,true,&r);
+        assert(p.state==POWER_FAULT && p.fault_state==POWER_ZERO && p.fault_ms==r.time_ms);
+        assert(p.error==(reason==2?POWER_ERROR_FIRST_SAMPLE:POWER_ERROR_ZERO));
+        assert(p.last_reading.voltage_mv==r.voltage_mv && p.last_reading.current_ma==r.current_ma);
+        assert(p.last_reading.valid==r.valid && p.amplitude==0 && p.output==0);
+        struct power_reading stored=p.last_reading;
+        r=(struct power_reading){.valid=true};tick(&p,100,true,&r);
+        assert(stored.time_ms==p.last_reading.time_ms && stored.sequence==p.last_reading.sequence);
+        assert(stored.voltage_mv==p.last_reading.voltage_mv && stored.current_ma==p.last_reading.current_ma);
+        assert(stored.valid==p.last_reading.valid);
+    }
+}
 static void auto_timeout(void)
 {
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
@@ -434,6 +455,7 @@ int main(int argc,char **argv)
         {"auto_quantized_regulation",auto_quantized_regulation},
         {"capacity_rematch",capacity_rematch},{"saturation_tolerance",saturation_tolerance},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
+        {"startup_diagnosis",startup_diagnosis},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
         {"auto_timeout",auto_timeout},{"auto_stop",auto_stop},{"auto_rematch",auto_rematch},{"auto_stale",auto_stale},
         {"auto_settle_protection",auto_settle_protection},{"auto_interlock",auto_interlock},

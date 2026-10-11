@@ -204,6 +204,16 @@ static void running_temperature(void) {setup();start_output();measured.temperatu
 static void running_ntc_failure(void) {setup();start_output();measured.temperature.samples[2].status=NTC_SATURATED;assert_tripped();}
 static void running_enable_release(void) {setup();start_output();panel_raw|=BIT(6);heartbeat();assert_tripped();}
 static void protection_irq(void) {setup();start_output();protection(NULL,NULL,0);assert(signal_failed && !signal_active && amplitude==0);assert_tripped();}
+static void protection_origin(void) {
+    setup();start_output();protection(NULL,&oc_callback,0);advance(1);
+    assert(published.error==POWER_ERROR_INTERLOCK && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_OC)));
+    assert(protection_reason==OUTPUT_REASON_BIT(OUTPUT_REASON_OC) && !signal_active && !relay_value);
+    assert(output_clear()==0);advance(300);
+    assert(!published.fault && !protection_reason && published.clear_result==0);
+    start_output();protection(NULL,&ov_callback,0);advance(1);
+    assert(published.error==POWER_ERROR_INTERLOCK && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_OV)));
+    assert(!signal_active && !relay_value);
+}
 
 #if defined(CONFIG_HT_OUTPUT_BENCH)
 static void debug_cycle(void) {
@@ -431,6 +441,7 @@ int main(int argc,char **argv) {
     RUN(clear_fault) RUN(clear_blocked) RUN(clear_cancel) RUN(clear_sample) RUN(clear_io)
     RUN(automatic_range)
     RUN(automatic_interlocks)
+    RUN(protection_origin)
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     RUN(debug_cycle) RUN(debug_fault) RUN(debug_disconnect)
     RUN(dac_one_volt)

@@ -323,7 +323,8 @@ static void sample_only(void)
         assert(hw_timer.CR1 == (TIM_CR1_ARPE | TIM_CR1_CEN));
         assert(hw_timer.CR2 == LL_TIM_TRGO_UPDATE);
         assert((hw_timer.ARR + 1u) * DDS_CYCLE_SAMPLES * hz[i] == SystemCoreClock);
-        assert(!(hw_dac.CR & (DAC_CR_EN1 | DAC_CR_TEN1 | DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1)));
+        assert((hw_dac.CR & DAC_CR_EN1) && hw_dac.DOR1 == DDS_MIDPOINT);
+        assert(!(hw_dac.CR & (DAC_CR_TEN1 | DAC_CR_DMAEN1 | DAC_CR_DMAUDRIE1)));
         assert(!(channel.CCR & (DMA_CCR_EN | DMA_IRQS)));
         assert(dds_io_check() == 0);
         assert(dds_io_sample_start(hz[i]) == -EBUSY);
@@ -370,7 +371,7 @@ static void sample_fault(void)
 
 static void sample_resource(void)
 {
-    for (unsigned int i = 0; i < 8; ++i) {
+    for (unsigned int i = 0; i < 9; ++i) {
         reset(); assert(dds_io_init() == 0 && dds_io_sample_start(2000) == 0);
         switch (i) {
         case 0: hw_dac.CR |= DAC_CR_TEN1; break;
@@ -381,11 +382,29 @@ static void sample_resource(void)
         case 5: hw_timer.ARR++; break;
         case 6: vref_ready = false; break;
         case 7: rcc.AHB1ENR &= ~LL_AHB1_GRP1_PERIPH_DMAMUX1; break;
+        case 8: hw_dac.CR &= ~DAC_CR_EN1; break;
         }
         assert(dds_io_check() == -EIO && !sampling);
         assert_latched(DDS_FAULT_RESOURCE);
         assert(dds_io_sample_start(2000) == -EIO);
     }
+}
+static void midpoint_guard(void)
+{
+    assert(dds_io_init()==0 && dds_io_check()==0);dds_io_fault_stop();
+    assert(prepare_midpoint()==-EIO && !(hw_dac.CR & DAC_CR_EN1));
+    reset();
+    assert(dds_io_init()==0);dac_ready=false;
+    assert(dds_io_sample_start(2000)==-EIO);
+    assert_quiet(DDS_FAULT_DAC);assert(!sampling);
+    reset();assert(dds_io_init()==0);wait_hook=dds_io_fault_stop;
+    assert(dds_io_sample_start(2000)==-EIO);
+    assert_quiet(DDS_FAULT_EXTERNAL);assert(!sampling);
+    reset();assert(dds_io_init()==0 && dds_io_sample_start(2000)==0);
+    assert(hw_dac.DOR1==DDS_MIDPOINT && !running);
+    assert(dds_io_stop()==0 && dds_io_configure(2000,0)==0 && dds_io_start()==0);
+    assert(hw_dac.DOR1==DDS_MIDPOINT && amplitude==0);
+    assert(dds_io_stop()==0 && dds_io_sample_start(2000)==0 && hw_dac.DOR1==DDS_MIDPOINT);
 }
 
 static void dynamic_amplitude(void)
@@ -466,6 +485,7 @@ int main(int argc, char **argv)
 #if defined(CONFIG_HT_OUTPUT)
     RUN(dynamic_amplitude) RUN(dynamic_deadline) RUN(dynamic_fault)
     RUN(sample_only) RUN(sample_restart) RUN(sample_fault) RUN(sample_resource)
+    RUN(midpoint_guard)
 #endif
     assert(!"unknown test"); return 1;
 }

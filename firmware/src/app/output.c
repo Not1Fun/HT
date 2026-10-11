@@ -37,6 +37,7 @@ static struct {
 } request;
 static uint32_t stop_epoch, active_epoch;
 static volatile uint32_t protection_epoch;
+static volatile uint32_t protection_reason;
 static bool initialized, shut_down;
 static int watchdog_channel;
 static struct {
@@ -71,6 +72,8 @@ static void protection(const struct device *port, struct gpio_callback *cb, gpio
 {
     ARG_UNUSED(port); ARG_UNUSED(cb); ARG_UNUSED(pins);
     ++protection_epoch;
+    if (cb == &oc_callback) protection_reason |= OUTPUT_REASON_BIT(OUTPUT_REASON_OC);
+    if (cb == &ov_callback) protection_reason |= OUTPUT_REASON_BIT(OUTPUT_REASON_OV);
     signal_io_fault();
 }
 
@@ -272,6 +275,11 @@ static void clear_poll(bool begin, bool stop, uint32_t blocked,
         if (rc == 0 && !cancelled(NULL)) rc = signal_io_recover();
         else if (rc == 0) rc = -ECANCELED;
         if (rc != 0) { finish_clear(rc); return; }
+        k_spinlock_key_t key = k_spin_lock(&guard);
+        bool unchanged = recovery.protection == protection_epoch;
+        if (unchanged) protection_reason = 0;
+        k_spin_unlock(&guard, key);
+        if (!unchanged) { finish_clear(-EIO); return; }
         recovery.sequence = signal->reading.sequence;
         recovery.sampled = k_uptime_get();
         recovery.phase = 2;
@@ -320,7 +328,7 @@ static void run(void *a, void *b, void *c)
         int64_t now = k_uptime_get();
         k_spinlock_key_t key = k_spin_lock(&guard);
         bool alive = inputs.okay && now - inputs.time < 100 && !shut_down;
-        uint32_t blocked = 0;
+        uint32_t blocked = protection_reason;
 #define BLOCK_IF(condition, reason) do { if (condition) blocked |= OUTPUT_REASON_BIT(reason); } while (0)
         BLOCK_IF(shut_down, OUTPUT_REASON_SHUTDOWN);
         BLOCK_IF(!inputs.okay || board_rc != 0, OUTPUT_REASON_INPUT_IO);
@@ -379,10 +387,11 @@ static void run(void *a, void *b, void *c)
         bool clearing = clear || recovery.phase != 0;
         if (rc != 0 && !clearing) {
             signal.reading.valid = false;
+            enum power_error error = protection_reason ? POWER_ERROR_INTERLOCK : POWER_ERROR_SAMPLE;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
-            if (debug.state != BENCH_IDLE) bench_fail(&debug, POWER_ERROR_SAMPLE);
+            if (debug.state != BENCH_IDLE) bench_fail(&debug, error);
 #endif
-            power_fail(&control, POWER_ERROR_SAMPLE);
+            power_fail(&control, error);
         }
         /* 仅限制启动准入，输出起始的首窗等待仍由POWER_ZERO管理。 */
         bool sample_ready = signal.reading.valid && now >= signal.reading.time_ms &&

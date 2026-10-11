@@ -81,7 +81,7 @@
     return "";
   }
   function image(file,item) {
-    const node=document.createElement("img"); node.src="../"+file+"?v=auto12"; node.alt="";
+    const node=document.createElement("img"); node.src="../"+file+"?v=startup13"; node.alt="";
     Object.assign(node.style,{left:item.x+"px",top:item.y+"px",width:item.width+"px",height:item.height+"px"});
     screen.append(node);
   }
@@ -118,7 +118,7 @@
     if(state.temperatureInvalid && state.page!==4 && !(state.page===3 && debug.choice[0]===0)) reasons.push(18);
     if(state.page===1 && state.power===0) reasons.push(29);
     values.reason=reasons.length?reasons[Math.floor(performance.now()/2000)%reasons.length]:0;
-    if(state.clearing) values.reason=39;
+    if(state.clearing) values.reason=41;
     const choiceFrequency=state.field===1?state.draft:state.frequency;
     const running=state.output&&!state.matching;
     const texts={range_choice:rangeText(state.field===0?state.draft:state.rangeChoice),current:running?Math.sqrt(state.power/ranges[state.range]).toFixed(3):"--",voltage:running?Math.sqrt(state.power*ranges[state.range]).toFixed(3):"--",range:state.output?String(ranges[state.range]):"--",

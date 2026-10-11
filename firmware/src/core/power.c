@@ -92,6 +92,8 @@ int power_init(struct power *p, const struct power_ops *ops)
 void power_fail(struct power *p, enum power_error error)
 {
     if (p->state == POWER_FAULT) return;
+    p->fault_state = p->state;
+    p->fault_ms = p->ops.now(p->ops.ctx);
     int rc = p->ops.mute(p->ops.ctx);
     int off = p->ops.select(p->ops.ctx, 0);
     if (off == 0) p->output = 0;
@@ -128,6 +130,9 @@ int power_start(struct power *p, uint8_t range, uint32_t frequency, uint32_t tar
         (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000)) return -1;
     if (p->ops.cancelled && p->ops.cancelled(p->ops.ctx)) return -1;
     p->automatic = range == POWER_RANGE_AUTO;
+    p->fault_state = POWER_IDLE;
+    p->fault_ms = 0;
+    p->last_reading = (struct power_reading){0};
     p->matching = p->automatic;
     p->range = p->automatic ? 0 : range;
     p->changes = p->rematches = p->stable = p->overload = 0;
@@ -331,6 +336,7 @@ static void regulate(struct power *p, const struct power_reading *r, bool load_v
 void power_poll(struct power *p, bool permitted, const struct power_reading *r, int64_t now)
 {
     if (p->state == POWER_IDLE || p->state == POWER_FAULT) return;
+    p->last_reading = r ? *r : (struct power_reading){0};
     if (cancel(p)) return;
     if (!permitted && p->state != POWER_STOPPING && p->state != POWER_RELEASE) {
         power_fail(p, POWER_ERROR_INTERLOCK);
@@ -342,7 +348,8 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
     if (p->state == POWER_ZERO || p->state == POWER_PROBING || p->state == POWER_RUNNING) {
         if (!r || !r->valid || now < r->time_ms || now - r->time_ms > 150 ||
             (p->state == POWER_ZERO && r->time_ms <= p->probe_after)) {
-            if (p->state != POWER_ZERO || now >= p->deadline) power_fail(p, POWER_ERROR_SAMPLE);
+            if (p->state != POWER_ZERO || now >= p->deadline)
+                power_fail(p, p->state == POWER_ZERO ? POWER_ERROR_FIRST_SAMPLE : POWER_ERROR_SAMPLE);
             return;
         }
         if (r->voltage_mv > volts[p->range] * 105u / 100u ||
@@ -352,7 +359,7 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
         }
         if (p->state == POWER_ZERO) {
             if (r->voltage_mv > 3000 || r->current_ma > 100) {
-                power_fail(p, POWER_ERROR_SAMPLE);
+                power_fail(p, POWER_ERROR_ZERO);
                 return;
             }
             p->state = p->automatic ? POWER_PROBING : POWER_RUNNING;
