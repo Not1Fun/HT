@@ -9,7 +9,8 @@ enum power_state { POWER_IDLE, POWER_MUTING, POWER_BREAK, POWER_TRANS,
     POWER_TAP, POWER_ZERO, POWER_PROBING, POWER_RUNNING, POWER_STOPPING, POWER_RELEASE, POWER_FAULT };
 enum power_error { POWER_ERROR_NONE, POWER_ERROR_IO, POWER_ERROR_INTERLOCK,
     POWER_ERROR_SAMPLE, POWER_ERROR_LIMIT, POWER_ERROR_OPEN, POWER_ERROR_SHORT, POWER_ERROR_MATCH,
-    POWER_ERROR_TARGET, POWER_ERROR_FEEDBACK, POWER_ERROR_ZERO, POWER_ERROR_FIRST_SAMPLE,
+    POWER_ERROR_TARGET, /* 历史故障8编号保留；目标达不到不再停机。 */
+    POWER_ERROR_FEEDBACK, POWER_ERROR_ZERO, POWER_ERROR_FIRST_SAMPLE,
     POWER_ERROR_COUNT };
 struct power_reading {
     uint32_t voltage_mv, current_ma, apparent_mva, sequence;
@@ -39,13 +40,12 @@ struct power {
     uint16_t amplitude;
     bool fault_stopped;
     bool automatic, matching;
-    uint8_t candidate, stable, changes, rematches, overload;
+    uint8_t candidate, stable, changes, rematches;
     uint16_t ramp_base;
     uint32_t noise_mv, noise_ma;
     uint32_t load_mohm;
     uint32_t impedance[3];
     uint8_t impedance_count, impedance_next;
-    int64_t limit_since;
     int64_t session_ms, match_deadline, probe_after, resident_since;
 };
 int power_init(struct power *power, const struct power_ops *ops);

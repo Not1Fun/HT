@@ -56,7 +56,7 @@ static uint32_t capacity(uint8_t range, uint32_t load)
 static bool attainable(uint8_t range, uint32_t load, uint32_t target)
 {
     uint32_t limit = capacity(range, load);
-    /* 容量与反馈统一使用目标值的容差，避免临界负载已达标仍报错。 */
+    /* 选挡采用目标容差；实际可达输出由反馈调幅决定。 */
     return target <= limit + tolerance(target);
 }
 
@@ -138,10 +138,9 @@ int power_start(struct power *p, uint8_t range, uint32_t frequency, uint32_t tar
     p->last_reading = (struct power_reading){0};
     p->matching = p->automatic;
     p->range = p->automatic ? 0 : range;
-    p->changes = p->rematches = p->stable = p->overload = 0;
+    p->changes = p->rematches = p->stable = 0;
     p->ramp_base = 0;
     p->load_mohm = p->automatic ? 0 : loads[range];
-    p->limit_since = 0;
     p->impedance_count = p->impedance_next = 0;
     p->session_ms = p->ops.now(p->ops.ctx);
     p->match_deadline = p->session_ms + 15000;
@@ -173,7 +172,7 @@ static void switch_range(struct power *p, uint8_t range)
     if (++p->changes > 10) { power_fail(p, POWER_ERROR_MATCH); return; }
     if (p->ops.mute(p->ops.ctx) != 0) { power_fail(p, POWER_ERROR_IO); return; }
     p->range = range;
-    p->amplitude = p->ramp_base = p->stable = p->overload = 0;
+    p->amplitude = p->ramp_base = p->stable = 0;
     p->level_milli = 0;
     p->matching = true;
     p->impedance_count = p->impedance_next = 0;
@@ -280,13 +279,12 @@ static void probe(struct power *p, const struct power_reading *r, int64_t now)
     (void)cancel(p);
 }
 
-static void regulate(struct power *p, const struct power_reading *r, bool load_valid, int64_t now)
+static void regulate(struct power *p, const struct power_reading *r, int64_t now)
 {
     uint16_t maximum_code = power_drive_limit();
     uint32_t min_mv = maximum(500, p->noise_mv * 3u);
     uint32_t min_ma = maximum(20, p->noise_ma * 3u);
     bool useful = r->voltage_mv >= min_mv && r->current_ma >= min_ma;
-    bool below = r->apparent_mva + tolerance(p->target_mva) < p->target_mva;
     if (r->current_ma > 200 && r->voltage_mv < maximum(100, p->noise_mv * 2u) && now - p->started > 200) {
         power_fail(p, POWER_ERROR_SHORT); return;
     }
@@ -296,15 +294,6 @@ static void regulate(struct power *p, const struct power_reading *r, bool load_v
         power_fail(p, r->voltage_mv >= min_mv && r->current_ma < min_ma ? POWER_ERROR_OPEN : POWER_ERROR_FEEDBACK);
         return;
     }
-    /* 硬限值已在采样入口检查；容量预测不能推翻已达标的反馈或阻止降幅。 */
-    if (below && load_valid && r->apparent_mva >= p->target_mva / 4u &&
-        !attainable(p->range, p->load_mohm, p->target_mva)) {
-        if (++p->overload >= 3) power_fail(p, POWER_ERROR_TARGET);
-        return;
-    } else if (load_valid) p->overload = 0;
-    if (p->amplitude + 2u < maximum_code || !below)
-        p->limit_since = now;
-    if (now - p->limit_since > 2000) { power_fail(p, POWER_ERROR_TARGET); return; }
     if (r->time_ms < p->probe_after) return;
     int64_t dt = now - p->feedback;
     p->feedback = now;
@@ -322,6 +311,13 @@ static void regulate(struct power *p, const struct power_reading *r, bool load_v
     if (next < p->level_milli - step) next = p->level_milli - step;
     int64_t ceiling = (int64_t)p->ramp_base * 1000 + (now - p->started) * maximum_code;
     if (ceiling > (int64_t)maximum_code * 1000) ceiling = (int64_t)maximum_code * 1000;
+    /* 按实测V/I限制下一次幅度；容量不足或DAC饱和时保持输出，不累计升幅。 */
+    if (useful && p->amplitude) {
+        int64_t voltage = (int64_t)p->amplitude * 1000 * volts[p->range] / r->voltage_mv;
+        int64_t current = (int64_t)p->amplitude * 1000 * amps[p->range] / r->current_ma;
+        if (ceiling > voltage) ceiling = voltage;
+        if (ceiling > current) ceiling = current;
+    }
     if (next < 0) next = 0;
     if (next > ceiling) next = ceiling;
     uint16_t amplitude = (uint16_t)(next / 1000);
@@ -370,7 +366,6 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
             p->started = now;
             p->feedback = now;
             p->low_since = now;
-            p->limit_since = now;
             p->sequence = r->sequence;
             return;
         }
@@ -394,7 +389,7 @@ void power_poll(struct power *p, bool permitted, const struct power_reading *r, 
             if (next == p->range) p->stable = 0;
             else return; /* 待选挡确认时保持幅度，避免在容量不足的旧挡上继续升幅。 */
         } else if (settled) p->stable = 0;
-        regulate(p, r, load_valid, now);
+        regulate(p, r, now);
         return;
     }
     if (now < p->deadline) return;

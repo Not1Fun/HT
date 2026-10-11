@@ -267,13 +267,25 @@ static void auto_noise_gain(void)
 }
 static void auto_capacity(void)
 {
+    delayed=true;
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
-    for(int n=0;n<300 && p.state!=POWER_FAULT;++n)plant_tick(&p,2);
-    assert(p.error==POWER_ERROR_TARGET && hw.amp==0);
-    gain=10; p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
+    seek(&p,2);
+    for(int n=0;n<1300;++n) {
+        plant_tick(&p,2);
+        assert(p.state==POWER_RUNNING && p.target_mva==50000);
+    }
+    assert(p.range==1 && p.last_reading.apparent_mva>32000 && p.last_reading.apparent_mva<34000);
+    assert(p.last_reading.current_ma<=4080 && hw.amp>0);
+    gain=10;p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
     seek(&p,30);
-    for(int n=0;n<300 && p.state!=POWER_FAULT;++n)plant_tick(&p,30);
-    assert(p.error==POWER_ERROR_TARGET && hw.amp==0);
+    for(int n=0;n<1300;++n) {
+        plant_tick(&p,30);
+        assert(p.state==POWER_RUNNING && p.target_mva==50000);
+    }
+    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>21000 && p.last_reading.apparent_mva<23000);
+    gain=15;
+    for(int n=0;n<200;++n)plant_tick(&p,30);
+    assert(p.state==POWER_RUNNING && p.last_reading.apparent_mva>=49000);
 }
 static void auto_quantized_regulation(void)
 {
@@ -304,8 +316,9 @@ static void saturation_tolerance(void)
     gain=14.7;delayed=true;
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
     seek(&p,30);
-    for(int n=0;n<180 && p.state!=POWER_FAULT;++n)plant_tick(&p,30);
-    assert(p.error==POWER_ERROR_TARGET && hw.amp==0 && p.output==0);
+    for(int n=0;n<1300;++n)plant_tick(&p,30);
+    assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.output!=0);
+    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>47000 && p.last_reading.apparent_mva<49000);
 }
 static void measured_target_tolerance(void)
 {
@@ -321,8 +334,8 @@ static void measured_target_tolerance(void)
         p.started=hw.now-5000;p.resident_since=p.started;
         struct power_reading r=readings[i];r.sequence=p.sequence;
         for(int n=0;n<40;++n)tick(&p,50,true,&r);
-        assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.amplitude==868);
-        assert(p.range==1 && p.rematches==0 && p.overload==0);
+        assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.amplitude>0 && p.amplitude<=868);
+        assert(p.range==1 && p.rematches==0);
     }
 }
 static void capacity_feedback_priority(void)
@@ -334,26 +347,52 @@ static void capacity_feedback_priority(void)
         struct power_reading r={.valid=true,.voltage_mv=12285,.current_ma=4010,
             .apparent_mva=49262,.sequence=p.sequence};
         for(int n=0;n<5;++n)tick(&p,50,true,&r);
-        p.overload=2;tick(&p,50,true,&r);
-        assert(p.state==POWER_RUNNING && p.overload==0);
+        assert(p.state==POWER_RUNNING);
         r.voltage_mv=12550;r.current_ma=4097;r.apparent_mva=51417;
-        uint16_t before=p.amplitude;tick(&p,50,true,&r);
+        uint16_t before=p.amplitude;tick(&p,100,true,&r);
         assert(p.state==POWER_RUNNING && p.amplitude<before);
     }
 }
 static void target_preserves_limits(void)
 {
-    for(int automatic=0;automatic<2;++automatic) for(int limit=0;limit<3;++limit) {
+    for(int automatic=0;automatic<2;++automatic) for(int limit=0;limit<2;++limit) {
         struct power p=running(1);p.automatic=automatic;p.target_mva=50000;
         p.amplitude=hw.amp=870;p.level_milli=870000;p.probe_after=0;
         p.started=hw.now-5000;p.resident_since=p.started;
         struct power_reading r={.valid=true,.sequence=p.sequence};
         if(limit==0) {r.voltage_mv=12900;r.current_ma=3837;r.apparent_mva=49497;}
         if(limit==1) {r.voltage_mv=11500;r.current_ma=4300;r.apparent_mva=49450;}
-        if(limit==2) {r.voltage_mv=12000;r.current_ma=3850;r.apparent_mva=46200;}
         for(int n=0;n<10 && p.state!=POWER_FAULT;++n)tick(&p,50,true,&r);
-        assert(p.error==(limit==2?POWER_ERROR_TARGET:POWER_ERROR_LIMIT));
+        assert(p.error==POWER_ERROR_LIMIT);
         assert(p.state==POWER_FAULT && p.output==0 && hw.amp==0);
+    }
+}
+static void best_effort_loads(void)
+{
+    const double loads[]={1.066,3.063,2.0};
+    const double gains[]={10,15,32};
+    const uint32_t volts[]={7070,12250},amps[]={7070,4080};
+    delayed=true;
+    for(int automatic=0;automatic<2;++automatic) for(size_t i=0;i<3;++i) for(size_t g=0;g<3;++g) {
+        gain=gains[g];struct power p=initialized();
+        assert(power_start(&p,automatic?POWER_RANGE_AUTO:0,2000,50000,0)==0);
+        seek(&p,loads[i]);
+        for(int n=0;n<1300;++n) {
+            plant_tick(&p,loads[i]);
+            assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE);
+            assert(hw.amp<=power_drive_limit());
+        }
+        assert(p.range<2 && p.target_mva==50000 && p.last_reading.apparent_mva>0);
+        assert(p.last_reading.voltage_mv<=volts[p.range] && p.last_reading.current_ma<=amps[p.range]);
+        double available=fmin(volts[p.range],power_drive_limit()*2900.0/4095/sqrt(2.0)*gain*volts[p.range]/14100);
+        double expected=fmin(available*available/(loads[i]*1000),
+            (double)amps[p.range]*amps[p.range]*loads[i]/1000);
+        assert(p.last_reading.apparent_mva>expected*.97 && p.last_reading.apparent_mva<=expected*1.01);
+        p.target_mva=5000;
+        for(int n=0;n<200;++n)plant_tick(&p,loads[i]);
+        assert(p.state==POWER_RUNNING && p.last_reading.apparent_mva>=4850 && p.last_reading.apparent_mva<=5150);
+        power_stop(&p,hw.now);tick(&p,30,true,NULL);tick(&p,30,true,NULL);
+        assert(p.state==POWER_IDLE && hw.amp==0 && p.output==0);
     }
 }
 static void unstable_impedance(void)
@@ -505,6 +544,7 @@ int main(int argc,char **argv)
         {"capacity_rematch",capacity_rematch},{"saturation_tolerance",saturation_tolerance},
         {"measured_target_tolerance",measured_target_tolerance},
         {"capacity_feedback_priority",capacity_feedback_priority},{"target_preserves_limits",target_preserves_limits},
+        {"best_effort_loads",best_effort_loads},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"startup_diagnosis",startup_diagnosis},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
