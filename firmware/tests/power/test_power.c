@@ -309,16 +309,51 @@ static void saturation_tolerance(void)
 }
 static void measured_target_tolerance(void)
 {
-    /* 实机故障记录：3.062Ω、49.190VA，已在50VA的2%控制容差内。 */
-    for(int automatic=0;automatic<2;++automatic) {
+    /* 两次实机记录及电流侧容量边界：反馈达标时不由估算容量判失败。 */
+    const struct power_reading readings[]={
+        {.valid=true,.voltage_mv=12273,.current_ma=4008,.apparent_mva=49190},
+        {.valid=true,.voltage_mv=12285,.current_ma=4010,.apparent_mva=49262},
+        {.valid=true,.voltage_mv=11940,.current_ma=4146,.apparent_mva=49503}
+    };
+    for(int automatic=0;automatic<2;++automatic) for(size_t i=0;i<3;++i) {
         struct power p=running(1);p.automatic=automatic;p.target_mva=50000;
         p.amplitude=hw.amp=868;p.level_milli=868000;p.probe_after=0;
         p.started=hw.now-5000;p.resident_since=p.started;
-        struct power_reading r={.valid=true,.voltage_mv=12273,.current_ma=4008,
-            .apparent_mva=49190,.sequence=p.sequence};
+        struct power_reading r=readings[i];r.sequence=p.sequence;
         for(int n=0;n<40;++n)tick(&p,50,true,&r);
         assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.amplitude==868);
-        assert(p.range==1 && p.rematches==0);
+        assert(p.range==1 && p.rematches==0 && p.overload==0);
+    }
+}
+static void capacity_feedback_priority(void)
+{
+    for(int automatic=0;automatic<2;++automatic) {
+        struct power p=running(1);p.automatic=automatic;p.target_mva=50000;
+        p.amplitude=hw.amp=870;p.level_milli=870000;p.probe_after=0;
+        p.started=hw.now-5000;p.resident_since=p.started;
+        struct power_reading r={.valid=true,.voltage_mv=12285,.current_ma=4010,
+            .apparent_mva=49262,.sequence=p.sequence};
+        for(int n=0;n<5;++n)tick(&p,50,true,&r);
+        p.overload=2;tick(&p,50,true,&r);
+        assert(p.state==POWER_RUNNING && p.overload==0);
+        r.voltage_mv=12550;r.current_ma=4097;r.apparent_mva=51417;
+        uint16_t before=p.amplitude;tick(&p,50,true,&r);
+        assert(p.state==POWER_RUNNING && p.amplitude<before);
+    }
+}
+static void target_preserves_limits(void)
+{
+    for(int automatic=0;automatic<2;++automatic) for(int limit=0;limit<3;++limit) {
+        struct power p=running(1);p.automatic=automatic;p.target_mva=50000;
+        p.amplitude=hw.amp=870;p.level_milli=870000;p.probe_after=0;
+        p.started=hw.now-5000;p.resident_since=p.started;
+        struct power_reading r={.valid=true,.sequence=p.sequence};
+        if(limit==0) {r.voltage_mv=12900;r.current_ma=3837;r.apparent_mva=49497;}
+        if(limit==1) {r.voltage_mv=11500;r.current_ma=4300;r.apparent_mva=49450;}
+        if(limit==2) {r.voltage_mv=12000;r.current_ma=3850;r.apparent_mva=46200;}
+        for(int n=0;n<10 && p.state!=POWER_FAULT;++n)tick(&p,50,true,&r);
+        assert(p.error==(limit==2?POWER_ERROR_TARGET:POWER_ERROR_LIMIT));
+        assert(p.state==POWER_FAULT && p.output==0 && hw.amp==0);
     }
 }
 static void unstable_impedance(void)
@@ -469,6 +504,7 @@ int main(int argc,char **argv)
         {"auto_quantized_regulation",auto_quantized_regulation},
         {"capacity_rematch",capacity_rematch},{"saturation_tolerance",saturation_tolerance},
         {"measured_target_tolerance",measured_target_tolerance},
+        {"capacity_feedback_priority",capacity_feedback_priority},{"target_preserves_limits",target_preserves_limits},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"startup_diagnosis",startup_diagnosis},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},

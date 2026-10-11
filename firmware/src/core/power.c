@@ -286,6 +286,7 @@ static void regulate(struct power *p, const struct power_reading *r, bool load_v
     uint32_t min_mv = maximum(500, p->noise_mv * 3u);
     uint32_t min_ma = maximum(20, p->noise_ma * 3u);
     bool useful = r->voltage_mv >= min_mv && r->current_ma >= min_ma;
+    bool below = r->apparent_mva + tolerance(p->target_mva) < p->target_mva;
     if (r->current_ma > 200 && r->voltage_mv < maximum(100, p->noise_mv * 2u) && now - p->started > 200) {
         power_fail(p, POWER_ERROR_SHORT); return;
     }
@@ -295,12 +296,13 @@ static void regulate(struct power *p, const struct power_reading *r, bool load_v
         power_fail(p, r->voltage_mv >= min_mv && r->current_ma < min_ma ? POWER_ERROR_OPEN : POWER_ERROR_FEEDBACK);
         return;
     }
-    if (load_valid && r->apparent_mva >= p->target_mva / 4u &&
+    /* 硬限值已在采样入口检查；容量预测不能推翻已达标的反馈或阻止降幅。 */
+    if (below && load_valid && r->apparent_mva >= p->target_mva / 4u &&
         !attainable(p->range, p->load_mohm, p->target_mva)) {
         if (++p->overload >= 3) power_fail(p, POWER_ERROR_TARGET);
         return;
     } else if (load_valid) p->overload = 0;
-    if (p->amplitude + 2u < maximum_code || r->apparent_mva + tolerance(p->target_mva) >= p->target_mva)
+    if (p->amplitude + 2u < maximum_code || !below)
         p->limit_since = now;
     if (now - p->limit_since > 2000) { power_fail(p, POWER_ERROR_TARGET); return; }
     if (r->time_ms < p->probe_after) return;
