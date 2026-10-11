@@ -213,7 +213,7 @@
       "path": "firmware/src/core/power.c",
       "module": "core",
       "brief": "稳定阻抗选挡与恒VA调幅；继电器先断后合，停止/故障优先。",
-      "sha256": "839c990ad7359a7f4309e2923b8915683165d464ae1172910f830334b5dd95d1",
+      "sha256": "df764abb45cfae8f41be291f03556168bbce8f2fdb7a696bbddc47004134002e",
       "includes": [
         "core/power.h",
         "config/analog.h",
@@ -1196,8 +1196,8 @@
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:15:root",
-      "name": "root",
+      "id": "firmware/src/core/power.c:15:maximum",
+      "name": "maximum",
       "path": "firmware/src/core/power.c",
       "line": 15,
       "linkage": "static",
@@ -1205,199 +1205,199 @@
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:27:primary_amplitude",
-      "name": "primary_amplitude",
-      "path": "firmware/src/core/power.c",
-      "line": 27,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:34:power_drive_limit",
-      "name": "power_drive_limit",
-      "path": "firmware/src/core/power.c",
-      "line": 34,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:36:power_feedforward",
-      "name": "power_feedforward",
-      "path": "firmware/src/core/power.c",
-      "line": 36,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:45:capacity",
-      "name": "capacity",
-      "path": "firmware/src/core/power.c",
-      "line": 45,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:53:attainable",
-      "name": "attainable",
-      "path": "firmware/src/core/power.c",
-      "line": 53,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:60:closest",
-      "name": "closest",
-      "path": "firmware/src/core/power.c",
-      "line": 60,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:67:stable_range",
-      "name": "stable_range",
-      "path": "firmware/src/core/power.c",
-      "line": 67,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:74:choose_range",
-      "name": "choose_range",
-      "path": "firmware/src/core/power.c",
-      "line": 74,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:85:power_init",
-      "name": "power_init",
-      "path": "firmware/src/core/power.c",
-      "line": 85,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:92:power_fail",
-      "name": "power_fail",
-      "path": "firmware/src/core/power.c",
-      "line": 92,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:107:cancel",
-      "name": "cancel",
-      "path": "firmware/src/core/power.c",
-      "line": 107,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:115:select_output",
-      "name": "select_output",
-      "path": "firmware/src/core/power.c",
-      "line": 115,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:126:power_start",
-      "name": "power_start",
-      "path": "firmware/src/core/power.c",
-      "line": 126,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:156:power_stop",
-      "name": "power_stop",
-      "path": "firmware/src/core/power.c",
-      "line": 156,
-      "linkage": "external",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:168:switch_range",
-      "name": "switch_range",
-      "path": "firmware/src/core/power.c",
-      "line": 168,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:182:consistent",
-      "name": "consistent",
-      "path": "firmware/src/core/power.c",
-      "line": 182,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:189:maximum",
-      "name": "maximum",
-      "path": "firmware/src/core/power.c",
-      "line": 189,
-      "linkage": "static",
-      "definition_form": "function",
-      "module": "core"
-    },
-    {
-      "id": "firmware/src/core/power.c:191:tolerance",
+      "id": "firmware/src/core/power.c:16:tolerance",
       "name": "tolerance",
       "path": "firmware/src/core/power.c",
-      "line": 191,
+      "line": 16,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:193:measure_load",
+      "id": "firmware/src/core/power.c:18:root",
+      "name": "root",
+      "path": "firmware/src/core/power.c",
+      "line": 18,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:30:primary_amplitude",
+      "name": "primary_amplitude",
+      "path": "firmware/src/core/power.c",
+      "line": 30,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:37:power_drive_limit",
+      "name": "power_drive_limit",
+      "path": "firmware/src/core/power.c",
+      "line": 37,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:39:power_feedforward",
+      "name": "power_feedforward",
+      "path": "firmware/src/core/power.c",
+      "line": 39,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:48:capacity",
+      "name": "capacity",
+      "path": "firmware/src/core/power.c",
+      "line": 48,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:56:attainable",
+      "name": "attainable",
+      "path": "firmware/src/core/power.c",
+      "line": 56,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:63:closest",
+      "name": "closest",
+      "path": "firmware/src/core/power.c",
+      "line": 63,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:70:stable_range",
+      "name": "stable_range",
+      "path": "firmware/src/core/power.c",
+      "line": 70,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:77:choose_range",
+      "name": "choose_range",
+      "path": "firmware/src/core/power.c",
+      "line": 77,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:88:power_init",
+      "name": "power_init",
+      "path": "firmware/src/core/power.c",
+      "line": 88,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:95:power_fail",
+      "name": "power_fail",
+      "path": "firmware/src/core/power.c",
+      "line": 95,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:110:cancel",
+      "name": "cancel",
+      "path": "firmware/src/core/power.c",
+      "line": 110,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:118:select_output",
+      "name": "select_output",
+      "path": "firmware/src/core/power.c",
+      "line": 118,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:129:power_start",
+      "name": "power_start",
+      "path": "firmware/src/core/power.c",
+      "line": 129,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:159:power_stop",
+      "name": "power_stop",
+      "path": "firmware/src/core/power.c",
+      "line": 159,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:171:switch_range",
+      "name": "switch_range",
+      "path": "firmware/src/core/power.c",
+      "line": 171,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:185:consistent",
+      "name": "consistent",
+      "path": "firmware/src/core/power.c",
+      "line": 185,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "core"
+    },
+    {
+      "id": "firmware/src/core/power.c:192:measure_load",
       "name": "measure_load",
       "path": "firmware/src/core/power.c",
-      "line": 193,
+      "line": 192,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:214:probe",
+      "id": "firmware/src/core/power.c:213:probe",
       "name": "probe",
       "path": "firmware/src/core/power.c",
-      "line": 214,
+      "line": 213,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:284:regulate",
+      "id": "firmware/src/core/power.c:283:regulate",
       "name": "regulate",
       "path": "firmware/src/core/power.c",
-      "line": 284,
+      "line": 283,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:336:power_poll",
+      "id": "firmware/src/core/power.c:335:power_poll",
       "name": "power_poll",
       "path": "firmware/src/core/power.c",
-      "line": 336,
+      "line": 335,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
@@ -3252,7 +3252,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:222:finish_clear",
-      "callee": "firmware/src/core/power.c:92:power_fail",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 227
     },
     {
@@ -3352,7 +3352,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:240:clear_poll",
-      "callee": "firmware/src/core/power.c:85:power_init",
+      "callee": "firmware/src/core/power.c:88:power_init",
       "line": 306
     },
     {
@@ -3392,7 +3392,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:316:run",
-      "callee": "firmware/src/core/power.c:92:power_fail",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 394
     },
     {
@@ -3417,17 +3417,17 @@
     },
     {
       "caller": "firmware/src/app/output.c:316:run",
-      "callee": "firmware/src/core/power.c:156:power_stop",
+      "callee": "firmware/src/core/power.c:159:power_stop",
       "line": 411
     },
     {
       "caller": "firmware/src/app/output.c:316:run",
-      "callee": "firmware/src/core/power.c:126:power_start",
+      "callee": "firmware/src/core/power.c:129:power_start",
       "line": 413
     },
     {
       "caller": "firmware/src/app/output.c:316:run",
-      "callee": "firmware/src/core/power.c:336:power_poll",
+      "callee": "firmware/src/core/power.c:335:power_poll",
       "line": 414
     },
     {
@@ -3472,7 +3472,7 @@
     },
     {
       "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/core/power.c:85:power_init",
+      "callee": "firmware/src/core/power.c:88:power_init",
       "line": 86
     },
     {
@@ -4226,404 +4226,409 @@
       "line": 91
     },
     {
-      "caller": "firmware/src/core/power.c:107:cancel",
-      "callee": "firmware/src/core/power.c:156:power_stop",
-      "line": 111
+      "caller": "firmware/src/core/power.c:110:cancel",
+      "callee": "firmware/src/core/power.c:159:power_stop",
+      "line": 114
     },
     {
-      "caller": "firmware/src/core/power.c:115:select_output",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 118
+      "caller": "firmware/src/core/power.c:118:select_output",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 121
     },
     {
-      "caller": "firmware/src/core/power.c:115:select_output",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 123
+      "caller": "firmware/src/core/power.c:118:select_output",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 126
     },
     {
-      "caller": "firmware/src/core/power.c:126:power_start",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 149
-    },
-    {
-      "caller": "firmware/src/core/power.c:126:power_start",
-      "callee": "firmware/src/core/power.c:107:cancel",
+      "caller": "firmware/src/core/power.c:129:power_start",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 152
     },
     {
-      "caller": "firmware/src/core/power.c:156:power_stop",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 161
+      "caller": "firmware/src/core/power.c:129:power_start",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 155
     },
     {
-      "caller": "firmware/src/core/power.c:168:switch_range",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 170
+      "caller": "firmware/src/core/power.c:159:power_stop",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 164
     },
     {
-      "caller": "firmware/src/core/power.c:168:switch_range",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 171
+      "caller": "firmware/src/core/power.c:16:tolerance",
+      "callee": "firmware/src/core/power.c:15:maximum",
+      "line": 16
     },
     {
-      "caller": "firmware/src/core/power.c:168:switch_range",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 179
+      "caller": "firmware/src/core/power.c:171:switch_range",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 173
     },
     {
-      "caller": "firmware/src/core/power.c:191:tolerance",
-      "callee": "firmware/src/core/power.c:189:maximum",
-      "line": 191
+      "caller": "firmware/src/core/power.c:171:switch_range",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 174
     },
     {
-      "caller": "firmware/src/core/power.c:193:measure_load",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:171:switch_range",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 182
+    },
+    {
+      "caller": "firmware/src/core/power.c:192:measure_load",
+      "callee": "firmware/src/core/power.c:15:maximum",
+      "line": 194
+    },
+    {
+      "caller": "firmware/src/core/power.c:192:measure_load",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 195
     },
     {
-      "caller": "firmware/src/core/power.c:193:measure_load",
-      "callee": "firmware/src/core/power.c:189:maximum",
-      "line": 196
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:15:maximum",
+      "line": 215
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 216
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 217
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 218
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:189:maximum",
-      "line": 219
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 222
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 223
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:192:measure_load",
+      "line": 227
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:193:measure_load",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 228
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:92:power_fail",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:77:choose_range",
       "line": 229
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:74:choose_range",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:185:consistent",
       "line": 230
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:182:consistent",
-      "line": 231
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:171:switch_range",
+      "line": 232
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:168:switch_range",
-      "line": 233
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:37:power_drive_limit",
+      "line": 242
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:34:power_drive_limit",
-      "line": 243
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:70:stable_range",
+      "line": 251
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:67:stable_range",
-      "line": 252
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:70:stable_range",
+      "line": 256
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:67:stable_range",
-      "line": 257
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:171:switch_range",
+      "line": 260
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:168:switch_range",
-      "line": 261
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:185:consistent",
+      "line": 260
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:182:consistent",
-      "line": 261
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 262
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 263
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:39:power_feedforward",
+      "line": 273
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:36:power_feedforward",
-      "line": 274
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 276
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:92:power_fail",
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 277
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 278
+      "caller": "firmware/src/core/power.c:213:probe",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 280
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 281
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:37:power_drive_limit",
+      "line": 285
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:34:power_drive_limit",
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 286
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 287
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:189:maximum",
-      "line": 288
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:15:maximum",
+      "line": 289
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:189:maximum",
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 290
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 291
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:39:power_feedforward",
+      "line": 292
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:36:power_feedforward",
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:15:maximum",
       "line": 293
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:189:maximum",
-      "line": 294
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 295
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 296
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:56:attainable",
+      "line": 299
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:53:attainable",
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 300
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 301
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:16:tolerance",
+      "line": 303
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:191:tolerance",
-      "line": 304
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 305
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 306
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:18:root",
+      "line": 313
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:15:root",
-      "line": 314
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:16:tolerance",
+      "line": 316
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:191:tolerance",
-      "line": 317
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 328
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 329
+      "caller": "firmware/src/core/power.c:283:regulate",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 331
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 332
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 339
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 340
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 341
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 342
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 345
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 346
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 351
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 352
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 356
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 357
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 361
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 362
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:213:probe",
+      "line": 377
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:214:probe",
-      "line": 378
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:192:measure_load",
+      "line": 380
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:193:measure_load",
-      "line": 381
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:56:attainable",
+      "line": 383
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:53:attainable",
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:77:choose_range",
       "line": 384
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:74:choose_range",
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:185:consistent",
       "line": 385
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:182:consistent",
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
       "line": 386
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 387
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:171:switch_range",
+      "line": 389
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:168:switch_range",
-      "line": 390
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:283:regulate",
+      "line": 395
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:284:regulate",
-      "line": 396
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:118:select_output",
+      "line": 401
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:115:select_output",
-      "line": 402
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:118:select_output",
+      "line": 404
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:115:select_output",
-      "line": 405
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:118:select_output",
+      "line": 407
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:115:select_output",
-      "line": 408
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:95:power_fail",
+      "line": 411
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:92:power_fail",
-      "line": 412
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:110:cancel",
+      "line": 416
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:107:cancel",
-      "line": 417
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:118:select_output",
+      "line": 420
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:115:select_output",
-      "line": 421
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "callee": "firmware/src/core/power.c:118:select_output",
+      "line": 423
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
-      "callee": "firmware/src/core/power.c:115:select_output",
-      "line": 424
+      "caller": "firmware/src/core/power.c:37:power_drive_limit",
+      "callee": "firmware/src/core/power.c:30:primary_amplitude",
+      "line": 37
     },
     {
-      "caller": "firmware/src/core/power.c:34:power_drive_limit",
-      "callee": "firmware/src/core/power.c:27:primary_amplitude",
-      "line": 34
-    },
-    {
-      "caller": "firmware/src/core/power.c:36:power_feedforward",
-      "callee": "firmware/src/core/power.c:15:root",
-      "line": 39
-    },
-    {
-      "caller": "firmware/src/core/power.c:36:power_feedforward",
-      "callee": "firmware/src/core/power.c:27:primary_amplitude",
+      "caller": "firmware/src/core/power.c:39:power_feedforward",
+      "callee": "firmware/src/core/power.c:18:root",
       "line": 42
     },
     {
-      "caller": "firmware/src/core/power.c:53:attainable",
-      "callee": "firmware/src/core/power.c:45:capacity",
-      "line": 55
+      "caller": "firmware/src/core/power.c:39:power_feedforward",
+      "callee": "firmware/src/core/power.c:30:primary_amplitude",
+      "line": 45
     },
     {
-      "caller": "firmware/src/core/power.c:67:stable_range",
-      "callee": "firmware/src/core/power.c:60:closest",
-      "line": 70
+      "caller": "firmware/src/core/power.c:56:attainable",
+      "callee": "firmware/src/core/power.c:48:capacity",
+      "line": 58
     },
     {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:53:attainable",
-      "line": 76
+      "caller": "firmware/src/core/power.c:56:attainable",
+      "callee": "firmware/src/core/power.c:16:tolerance",
+      "line": 60
     },
     {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:60:closest",
-      "line": 77
+      "caller": "firmware/src/core/power.c:70:stable_range",
+      "callee": "firmware/src/core/power.c:63:closest",
+      "line": 73
     },
     {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:67:stable_range",
-      "line": 77
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:56:attainable",
+      "line": 79
     },
     {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:53:attainable",
-      "line": 78
-    },
-    {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:45:capacity",
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:63:closest",
       "line": 80
     },
     {
-      "caller": "firmware/src/core/power.c:74:choose_range",
-      "callee": "firmware/src/core/power.c:45:capacity",
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:70:stable_range",
       "line": 80
+    },
+    {
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:56:attainable",
+      "line": 81
+    },
+    {
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:48:capacity",
+      "line": 83
+    },
+    {
+      "caller": "firmware/src/core/power.c:77:choose_range",
+      "callee": "firmware/src/core/power.c:48:capacity",
+      "line": 83
     },
     {
       "caller": "firmware/src/drivers/tca9539_safe.c:104:tca9539_read_panel",
@@ -7422,141 +7427,141 @@
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:107:cancel",
+      "caller": "firmware/src/core/power.c:110:cancel",
       "name": "cancelled",
-      "line": 110,
+      "line": 113,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:107:cancel",
+      "caller": "firmware/src/core/power.c:110:cancel",
       "name": "now",
-      "line": 111,
+      "line": 114,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:115:select_output",
+      "caller": "firmware/src/core/power.c:118:select_output",
       "name": "select",
-      "line": 117,
+      "line": 120,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:115:select_output",
+      "caller": "firmware/src/core/power.c:118:select_output",
       "name": "now",
-      "line": 122,
+      "line": 125,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:126:power_start",
+      "caller": "firmware/src/core/power.c:129:power_start",
       "name": "cancelled",
-      "line": 131,
+      "line": 134,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:126:power_start",
+      "caller": "firmware/src/core/power.c:129:power_start",
       "name": "now",
-      "line": 143,
+      "line": 146,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:126:power_start",
+      "caller": "firmware/src/core/power.c:129:power_start",
       "name": "mute",
-      "line": 149,
+      "line": 152,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:126:power_start",
+      "caller": "firmware/src/core/power.c:129:power_start",
       "name": "now",
-      "line": 151,
+      "line": 154,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:156:power_stop",
+      "caller": "firmware/src/core/power.c:159:power_stop",
       "name": "mute",
-      "line": 161,
+      "line": 164,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:156:power_stop",
+      "caller": "firmware/src/core/power.c:159:power_stop",
       "name": "now",
-      "line": 165,
+      "line": 168,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:15:root",
+      "caller": "firmware/src/core/power.c:171:switch_range",
+      "name": "mute",
+      "line": 174,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/core/power.c:171:switch_range",
+      "name": "now",
+      "line": 181,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/core/power.c:18:root",
       "name": "UINT64_C",
-      "line": 17,
+      "line": 20,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/core/power.c:168:switch_range",
-      "name": "mute",
-      "line": 171,
-      "kind": "indirect"
-    },
-    {
-      "caller": "firmware/src/core/power.c:168:switch_range",
-      "name": "now",
-      "line": 178,
-      "kind": "indirect"
-    },
-    {
-      "caller": "firmware/src/core/power.c:214:probe",
+      "caller": "firmware/src/core/power.c:213:probe",
       "name": "level",
-      "line": 278,
+      "line": 277,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:214:probe",
+      "caller": "firmware/src/core/power.c:213:probe",
       "name": "now",
-      "line": 280,
+      "line": 279,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
+      "caller": "firmware/src/core/power.c:283:regulate",
       "name": "level",
-      "line": 329,
+      "line": 328,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:284:regulate",
+      "caller": "firmware/src/core/power.c:283:regulate",
       "name": "now",
-      "line": 331,
+      "line": 330,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
+      "caller": "firmware/src/core/power.c:335:power_poll",
       "name": "start",
-      "line": 412,
+      "line": 411,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
+      "caller": "firmware/src/core/power.c:335:power_poll",
+      "name": "now",
+      "line": 414,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/core/power.c:335:power_poll",
       "name": "now",
       "line": 415,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:336:power_poll",
+      "caller": "firmware/src/core/power.c:95:power_fail",
       "name": "now",
-      "line": 416,
+      "line": 99,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:92:power_fail",
-      "name": "now",
-      "line": 96,
-      "kind": "indirect"
-    },
-    {
-      "caller": "firmware/src/core/power.c:92:power_fail",
+      "caller": "firmware/src/core/power.c:95:power_fail",
       "name": "mute",
-      "line": 97,
+      "line": 100,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:92:power_fail",
+      "caller": "firmware/src/core/power.c:95:power_fail",
       "name": "select",
-      "line": 98,
+      "line": 101,
       "kind": "indirect"
     },
     {

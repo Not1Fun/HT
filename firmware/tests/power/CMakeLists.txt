@@ -8,7 +8,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(power_tests PRIVATE -Wall -Wextra -Werror -pedantic)
   target_link_libraries(power_tests PRIVATE m)
 endif()
-foreach(case IN ITEMS startup_diagnosis capacity_rematch saturation_tolerance unstable_impedance zero_requires_new_window
+foreach(case IN ITEMS measured_target_tolerance startup_diagnosis capacity_rematch saturation_tolerance unstable_impedance zero_requires_new_window
     gain_conversion auto_power_matrix auto_noise_gain auto_capacity auto_quantized_regulation sequence timing all_ranges stop_stages interlock_stages io_failure stale
     regulation limits open_short continuous rms_scaling rms_clipping relay_mutex
     auto_nominal auto_quantized auto_boundaries auto_no_signal auto_timeout auto_stop auto_rematch auto_stale

@@ -12,6 +12,9 @@ static const uint32_t amps[] = {7070, 4080, 2240, 1290, 710, 408, 224};
 static const uint32_t boundaries[] = {1732, 5477, 17321, 54772, 173205, 547723}; /* mΩ */
 static const uint32_t loads[] = {1000, 3000, 10000, 30000, 100000, 300000, 1000000};
 
+static uint32_t maximum(uint32_t a, uint32_t b) { return a > b ? a : b; }
+static uint32_t tolerance(uint32_t target) { return maximum(10, target / 50u); }
+
 static uint32_t root(uint64_t value)
 {
     uint64_t result = 0, bit = UINT64_C(1) << 62;
@@ -53,8 +56,8 @@ static uint32_t capacity(uint8_t range, uint32_t load)
 static bool attainable(uint8_t range, uint32_t load, uint32_t target)
 {
     uint32_t limit = capacity(range, load);
-    /* 规格表电流取整；保留2%数值余量，运行硬限值不变。 */
-    return target <= limit + limit / 50u;
+    /* 容量与反馈统一使用目标值的容差，避免临界负载已达标仍报错。 */
+    return target <= limit + tolerance(target);
 }
 
 static uint8_t closest(uint32_t impedance)
@@ -185,10 +188,6 @@ static bool consistent(struct power *p, uint8_t candidate)
     else if (p->stable < 3) ++p->stable;
     return p->stable == 3;
 }
-
-static uint32_t maximum(uint32_t a, uint32_t b) { return a > b ? a : b; }
-
-static uint32_t tolerance(uint32_t target) { return maximum(10, target / 50u); }
 
 static bool measure_load(struct power *p, const struct power_reading *r, uint32_t *load)
 {

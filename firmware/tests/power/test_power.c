@@ -307,6 +307,20 @@ static void saturation_tolerance(void)
     for(int n=0;n<180 && p.state!=POWER_FAULT;++n)plant_tick(&p,30);
     assert(p.error==POWER_ERROR_TARGET && hw.amp==0 && p.output==0);
 }
+static void measured_target_tolerance(void)
+{
+    /* 实机故障记录：3.062Ω、49.190VA，已在50VA的2%控制容差内。 */
+    for(int automatic=0;automatic<2;++automatic) {
+        struct power p=running(1);p.automatic=automatic;p.target_mva=50000;
+        p.amplitude=hw.amp=868;p.level_milli=868000;p.probe_after=0;
+        p.started=hw.now-5000;p.resident_since=p.started;
+        struct power_reading r={.valid=true,.voltage_mv=12273,.current_ma=4008,
+            .apparent_mva=49190,.sequence=p.sequence};
+        for(int n=0;n<40;++n)tick(&p,50,true,&r);
+        assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.amplitude==868);
+        assert(p.range==1 && p.rematches==0);
+    }
+}
 static void unstable_impedance(void)
 {
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
@@ -454,6 +468,7 @@ int main(int argc,char **argv)
         {"auto_noise_gain",auto_noise_gain},{"auto_capacity",auto_capacity},
         {"auto_quantized_regulation",auto_quantized_regulation},
         {"capacity_rematch",capacity_rematch},{"saturation_tolerance",saturation_tolerance},
+        {"measured_target_tolerance",measured_target_tolerance},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"startup_diagnosis",startup_diagnosis},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
