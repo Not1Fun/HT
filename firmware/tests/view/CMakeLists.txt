@@ -21,3 +21,4 @@ foreach(case IN ITEMS reasons mapping numbers time choices power_choice manual_r
 endforeach()
 
 add_test(NAME view_debug COMMAND view_tests debug)
+add_test(NAME view_current_choice COMMAND view_tests current_choice)

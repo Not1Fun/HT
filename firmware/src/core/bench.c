@@ -1,6 +1,7 @@
 /* @brief 静音后先断抽头再切变压器；试波10秒、继电器30秒后自动释放。 */
 #include "bench.h"
 #include "config/analog.h"
+#include "config/output.h"
 
 uint8_t bench_mask(uint8_t relay)
 {
@@ -70,8 +71,10 @@ int bench_start(struct bench *b, uint8_t relay, uint32_t frequency,
 
 bool bench_amplitude_valid(uint8_t relay, uint16_t millivolts_pp, bool wave)
 {
-    return millivolts_pp == 10 || millivolts_pp == 25 || millivolts_pp == 50 ||
-        millivolts_pp == 100 || (relay == 0 && wave && millivolts_pp == 1000);
+    static const uint16_t values[] = HT_DAC_TEST_LEVELS;
+    for (unsigned int i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+        if (millivolts_pp == values[i]) return i < 4 || (relay == 0 && wave);
+    return false;
 }
 
 void bench_poll(struct bench *b, bool permitted, const struct power_reading *r, int64_t now)

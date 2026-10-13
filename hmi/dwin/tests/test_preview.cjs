@@ -42,19 +42,19 @@ function page(value) { assert.equal(ids.screen.dataset.page, String(value)); }
 function advance(ms) { now += ms; tick(); }
 function text(name) { return ids.screen.children.find(node => node.dataset.field === name)?.children[0].textContent; }
 function field(index) {
-  click('up'); click('up'); click('up');
+  click('up'); click('up'); click('up'); click('up');
   for (let count = 0; count < index; count++) click('down');
   assert.equal(icon('focus'), index);
 }
-function start() { field(3); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
+function start() { field(4); click('cw'); click('ok'); output(true); matching(false); assert.equal(icon('state'), 1); }
 function clear() {
-  field(3); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),41);
+  field(4); click('ok'); assert.equal(icon('output'),6); assert.equal(icon('reason'),41);
   click('ok'); advance(600); output(false); click('ok'); output(false);
 }
 
 (async () => {
-  assert.equal(ui.version, 13);
-  assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'power', 'output']);
+  assert.equal(ui.version, 14);
+  assert.deepEqual(ui.icons.find(item => item.name === 'focus').values, ['range', 'frequency', 'mode', 'power', 'output']);
   assert.equal(ui.fields.some(item => item.vp === 0x1150 || item.name === 'range_choice'), true);
   for (const [name, vp] of Object.entries({range_choice: 0x1150, current: 0x1100, voltage: 0x1110, range: 0x1120, frequency: 0x1130,
     elapsed: 0x1140, frequency_choice: 0x1160, ntc1: 0x1170, ntc2: 0x1180, ntc3: 0x1190, power_choice: 0x11a0})) {
@@ -62,16 +62,16 @@ function clear() {
   }
   await vm.runInNewContext(fs.readFileSync(path.join(root, 'preview/preview.js'), 'utf8'), context);
   output(false); matching(false); page(0); click('right'); page(1); assert.equal(icon('output'), 3);
-  field(3); click('down'); assert.equal(icon('focus'), 3); click('cw'); click('ok'); output(false);
+  field(4); click('down'); assert.equal(icon('focus'), 4); click('cw'); click('ok'); output(false);
   field(0); assert.equal(text('range_choice'),'AUTO');
   click('ccw'); assert.equal(text('range_choice'),'1000'); click('cw'); assert.equal(text('range_choice'),'AUTO');
   click('cw'); assert.equal(text('range_choice'),'1'); click('ok');
   field(1); click('ccw'); assert.equal(text('frequency_choice'), '10'); click('cw'); assert.equal(text('frequency_choice'), '2');
-  field(2); assert.equal(text('power_choice'), '0'); click('ccw'); assert.equal(text('power_choice'), '0');
+  field(3); assert.equal(text('power_choice'), '0 VA'); click('ccw'); assert.equal(text('power_choice'), '0 VA');
   for (let count = 0; count < 55; count++) click('cw');
-  assert.equal(text('power_choice'), '50'); click('press');
+  assert.equal(text('power_choice'), '50 VA'); click('press');
   field(0); click('cw'); click('cw'); click('cw'); click('ok'); assert.equal(text('range_choice'),'30');
-  field(3); click('cw'); assert.equal(icon('output'), 1); output(false); click('ok'); output(true); matching(false);
+  field(4); click('cw'); assert.equal(icon('output'), 1); output(false); click('ok'); output(true); matching(false);
   click('left'); page(0); assert.equal(text('range'), '30'); assert.equal(text('current'), '1.291');
   advance(800); assert.equal(text('range'), '30'); matching(false);
   click('right'); click('right'); page(2); advance(800); output(true); matching(false); assert.equal(icon('state'), 1);
@@ -80,21 +80,21 @@ function clear() {
   matching(false); output(true); assert.equal(icon('state'), 1); assert.equal(text('range'), '30');
   assert.equal(text('current'), '1.291'); assert.equal(text('voltage'), '38.730');
   advance(65000); assert.equal(text('elapsed'), '00:01:07'); output(true);
-  click('down'); output(false); matching(false); click('right'); field(3); click('press'); output(false);
+  click('down'); output(false); matching(false); click('right'); field(4); click('press'); output(false);
   start(); click('press'); output(false); advance(5000); output(false); matching(false);
   click('cw'); click('left'); click('right'); assert.equal(icon('output'), 0); output(false);
   start(); field(0); click('cw'); click('left'); page(0); output(true); assert.equal(text('range'),'30');
   click('right'); assert.equal(text('range_choice'),'30'); click('cw'); click('ok'); output(false);
   assert.equal(text('range_choice'),'100'); click('ccw'); click('ok');
-  start(); field(2); click('ccw'); click('ok'); output(false); matching(false); assert.match(ids.feedback.textContent, /49 VA/);
+  start(); field(3); click('ccw'); click('ok'); output(false); matching(false); assert.match(ids.feedback.textContent, /49 VA/);
   advance(5000); output(false); start(); field(1); click('cw'); click('ok'); output(false); matching(false);
-  start(); advance(2400); matching(false); field(2); click('ok'); output(false);
+  start(); advance(2400); matching(false); field(3); click('ok'); output(false);
   start(); checked('temperature-invalid', true); output(false); matching(false); assert.equal(icon('output'), 4);
   checked('temperature-invalid', false); clear(); start(); scene('fault'); output(false); matching(false); assert.equal(icon('output'), 4);
-  field(3); click('ok'); advance(600); assert.equal(icon('output'),4); output(false);
+  field(4); click('ok'); advance(600); assert.equal(icon('output'),4); output(false);
   scene('idle'); assert.equal(icon('output'),4); clear(); start(); scene('offline'); output(false); assert.equal(icon('output'), 3); scene('idle');
   checked('bench-disabled', true); assert.equal(icon('output'), 5); click('cw'); click('ok'); output(false);
-  checked('bench-disabled', false); field(2); click('ccw'); click('left'); click('right'); assert.equal(text('power_choice'), '49');
+  checked('bench-disabled', false); field(3); click('ccw'); click('left'); click('right'); assert.equal(text('power_choice'), '49 VA');
   start(); click('left'); click('down'); output(false); advance(5000); output(false); matching(false);
   click('right');
   for (const item of ui.fields.filter(item => item.pages.includes(1))) assert.notEqual(text(item.name), undefined);
@@ -118,11 +118,20 @@ function clear() {
   field(0);
   for(let i=0;i<8 && text('range_choice')!=='AUTO';++i)click('cw');
   assert.equal(text('range_choice'),'AUTO');click('ok');
-  field(1);const frequency=text('frequency_choice');field(3);click('cw');click('ok');
+  field(1);const frequency=text('frequency_choice');field(4);click('cw');click('ok');
   output(true);matching(true);assert.equal(icon('state'),2);
   advance(800);matching(false);output(true);click('left');page(0);
   assert.equal(text('range'),'30');assert.equal(text('frequency'),frequency);
   click('down');advance(2000);output(false);click('right');field(0);
   assert.equal(text('range_choice'),'AUTO');
-  console.log('PASS: Bench relay/wave navigation, timeout/leave cancellation; v13 automatic and manual range, frequency retained; reason rotation and DAC NTC exemption; VP contract, four fields, frequency wrap, VA bounds/draft, explicit start, fixed-range output, page continuity, stop cancellation, continuous over 60s, parameter confirmation, fault/NTC/offline/disabled.');
+  field(2);assert.equal(text('mode_choice'),'VA');click('cw');assert.equal(text('mode_choice'),'CC');click('ok');
+  field(3);assert.equal(text('power_choice'),'0.000 A');
+  for(let i=0;i<125;++i)click('cw');click('ok');assert.equal(text('power_choice'),'1.250 A');
+  field(4);click('cw');click('ok');output(true);advance(800);click('left');
+  assert.equal(text('current'),'1.250');click('right');field(2);click('cw');click('ok');output(false);
+  assert.equal(text('mode_choice'),'VA');field(3);assert.equal(text('power_choice'),'49 VA');
+  click('right');click('right');click('right');page(4);click('down');click('ccw');
+  assert.equal(text('debug_amplitude'),'2800');click('ok');click('down');click('cw');click('ok');
+  assert.equal(text('debug_wave'),'ON');advance(10001);assert.equal(text('debug_wave'),'OFF');
+  console.log('PASS: v14 CC/VA mode and independent targets, explicit restart, target units, 2.8Vpp DAC, timeout and prior navigation/stop/VP cases.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

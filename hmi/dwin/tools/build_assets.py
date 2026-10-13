@@ -30,7 +30,7 @@ REASONS = ["", "输出模块未初始化，检查启动日志", "输出服务已
     "NTC2 短路或测量无效", "NTC3 短路或测量无效",
     "NTC1 温度达到 80℃", "NTC2 温度达到 80℃", "NTC3 温度达到 80℃",
     "故障已锁存，在输出或试波开关项按确认清除", "整机输出忙，请先停止输出",
-    "继电器尚未全部释放", "目标功率为 0 VA，请设置并确认",
+    "继电器尚未全部释放", "目标值为 0，请设置并确认",
     "继电器或输出驱动操作失败（故障 1）", "运行期间互锁或保护输入失效（故障 2）",
     "采样外设异常或反馈超时（故障 3）", "电压、电流或功率超过软件限值（故障 4）",
     "检测到负载开路（故障 5）", "检测到负载短路（故障 6）",
@@ -113,6 +113,7 @@ def status_page():
 def settings_page():
     art = Art(800, 480, COLORS["bg"])
     header(art, 1)
+    art.text((24, 76), "CC 恒流 · VA 恒视在功率", 16, COLORS["muted"])
     footer(art, "← / → 切页    ↑ / ↓ 选项    旋钮预选    OK / 下压确认或停止")
     return art
 
@@ -218,14 +219,14 @@ def settings_focus_icon(selected):
 def manual_focus_icon(selected):
     art = Art(752, 276, COLORS["bg"])
     for index, (label, unit) in enumerate([("阻抗挡位 / Ω", ""), ("频率挡位", "kHz"),
-                                         ("目标视在功率", "VA"), ("输出控制", "")]):
-        top = index * 70
+                                         ("输出模式", ""), ("目标值", ""), ("输出控制", "")]):
+        top = index * 54
         focused = selected == index
         color = COLORS["accent"] if focused else COLORS["ink"]
-        art.rect((0, top, 751, top + 65), COLORS["pale"] if focused else COLORS["surface"],
+        art.rect((0, top, 751, top + 49), COLORS["pale"] if focused else COLORS["surface"],
                  4, COLORS["accent"] if focused else COLORS["line"])
-        art.text((24, top + 20), label, 22, color, focused)
-        if unit: art.text((664, top + 22), unit, 20, COLORS["muted"], mono=unit != "Ω")
+        art.text((24, top + 13), label, 22, color, focused)
+        if unit: art.text((664, top + 15), unit, 20, COLORS["muted"], mono=unit != "Ω")
     return art
 
 
@@ -297,7 +298,7 @@ def build():
         art = Art(752, 28, COLORS["bg"])
         if label: art.text((0, 4), label, 17, COLORS["red"], True)
         icons.append(art)
-    icons += [manual_focus_icon(index) for index in range(4)]
+    icons += [manual_focus_icon(index) for index in range(5)]
     for index, icon in enumerate(icons):
         icon.save(ROOT / f"assets/icons/{index:03d}.png")
 
@@ -308,7 +309,7 @@ def build():
         ("range", "当前阻抗挡位", 0x1120, "ohm", 0, 1, 200, 246, 112, 36, 32, 0),
         ("frequency", "当前频率挡位", 0x1130, "kHz", 0, 1000, 600, 246, 88, 36, 32, 0),
         ("elapsed", "运行时间", 0x1140, "HHH:MM:SS", 0, 1, 146, 407, 144, 32, 28, 0),
-        ("frequency_choice", "预选频率挡位", 0x1160, "kHz", 0, 1000, 458, 186, 216, 36, 32, 1),
+        ("frequency_choice", "预选频率挡位", 0x1160, "kHz", 0, 1000, 458, 164, 216, 36, 32, 1),
     ]
     for name, label, vp, unit, decimals, scale, x, y, width, height, size, page in specs:
         fields.append(text_field(name, label, vp, page, x, y, width, height, size,
@@ -325,8 +326,9 @@ def build():
         fields.append(text_field(f"log_value_{index}", "事件数值", 0x1210 + index * 0x20,
                                  2, 626, y, 126, 32, 28))
     fields.append(text_field("log_position", "日志位置", 0x1280, 2, 626, 402, 126, 32, 28))
-    fields.append(text_field("power_choice", "目标视在功率", 0x11a0, 1, 458, 256, 216, 36, 32, "VA", 0, 1000))
-    fields.append(text_field("range_choice", "预选阻抗挡位或AUTO", 0x1150, 1, 458, 116, 216, 36, 32, ""))
+    fields.append(text_field("power_choice", "目标电流或视在功率（含单位）", 0x11a0, 1, 458, 272, 216, 36, 32, "", 0, 1000))
+    fields.append(text_field("range_choice", "预选阻抗挡位或AUTO", 0x1150, 1, 458, 110, 216, 36, 32, ""))
+    fields.append(text_field("mode_choice", "输出模式CC或VA", 0x11b0, 1, 458, 218, 216, 36, 32))
     debug_fields = [
         ("debug_relay", "继电器预选", 278, 112, 168, ""),
         ("debug_frequency", "试波频率预选", 278, 176, 112, "kHz"),
@@ -347,11 +349,11 @@ def build():
              initial=4, values=["standby", "running", "switching", "fault", "offline"], pages=[0, 1, 2]),
         dict(name="battery", vp=0x1001, x=568, y=408, width=208, height=28, first=5, last=7,
              initial=2, values=["normal", "low_or_abnormal", "unknown"], pages=[0]),
-        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=107, last=110,
-             initial=0, values=["range", "frequency", "power", "output"], pages=[1]),
+        dict(name="focus", vp=0x1002, x=24, y=100, width=752, height=276, first=107, last=111,
+             initial=0, values=["range", "frequency", "mode", "power", "output"], pages=[1]),
         dict(name="edit", vp=0x1003, x=24, y=382, width=752, height=32, first=10, last=11,
              initial=0, values=["confirmed", "pending"], pages=[1]),
-        dict(name="output", vp=0x1004, x=346, y=320, width=400, height=44, first=36, last=42,
+        dict(name="output", vp=0x1004, x=346, y=318, width=400, height=44, first=36, last=42,
              initial=5, values=["off", "pending", "running", "unavailable", "fault", "disabled", "clearing"], pages=[1]),
     ]
     for index in range(4):
@@ -370,7 +372,7 @@ def build():
     ]
     variable_icons.append(dict(name="reason", vp=0x1005, x=24, y=416, width=752, height=28,
         first=62, last=62 + len(REASONS) - 1, initial=1, values=REASONS, pages=[1, 3, 4]))
-    spec = dict(version=13, name="HT", width=800, height=480, touch=False, colors=COLORS,
+    spec = dict(version=14, name="HT", width=800, height=480, touch=False, colors=COLORS,
                 page_register=0x0084, background_library=32, icon_library=42,
                 pages=[dict(id=index, name=name, image=f"assets/pages/{index:03d}.png")
                        for index, name in enumerate(["status", "settings", "logs", "debug", "dac"])],

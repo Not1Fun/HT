@@ -117,7 +117,7 @@ static struct service ready(void)
 {
     struct service s = {.link.crc = DGUS_CRC_NONE};
     const struct panel_config limits = {7070, 50000};
-    assert(panel_init(&s.panel, &limits, PANEL_CC, false, false) == 0);
+    assert(panel_init(&s.panel, &limits, PANEL_VA, false, false) == 0);
     s.panel.field = PANEL_FREQUENCY;
     event_log_init(&s.log);
     update_digital(&s, BIT(BOARD_BAT));
@@ -218,6 +218,8 @@ static void four_fields(void)
     assert(s.panel.field == PANEL_RANGE);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_FREQUENCY);
+    press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.field == PANEL_MODE);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_POWER);
     press(&s, PANEL_KEY_DOWN);
@@ -322,6 +324,8 @@ static void power_cancel(void)
     struct service s = ready();
     press(&s, PANEL_KEY_RIGHT);
     press(&s, PANEL_KEY_DOWN);
+    assert(s.panel.field == PANEL_MODE);
+    press(&s, PANEL_KEY_DOWN);
     assert(s.panel.field == PANEL_POWER);
     assert(panel_rotate(&s.panel, 25) == 0);
     struct view_snapshot value;
@@ -329,7 +333,7 @@ static void power_cancel(void)
     assert(value.values[VIEW_POWER_CHOICE].value == 25000 && s.panel.apparent_mva == 0);
     press(&s, PANEL_KEY_UP);
     snapshot(&s, &value);
-    assert(s.panel.field == PANEL_FREQUENCY && value.values[VIEW_POWER_CHOICE].value == 0);
+    assert(s.panel.field == PANEL_MODE && value.values[VIEW_POWER_CHOICE].value == 0);
     press(&s, PANEL_KEY_DOWN);
     assert(s.panel.draft_index == 0);
     assert(panel_rotate(&s.panel, 50) == 0);

@@ -435,11 +435,24 @@ static void clear_io(void) {
     assert(published.fault && published.clear_result==-EIO && !signal_active && !relay_value);
     assert(output_clear()==0);advance(300);assert(!published.fault && starts==0);
 }
+static void current_output(void) {
+    setup();
+    assert(output_start_current(3,2000,0)==-EINVAL && output_start_current(3,2000,7071)==-EINVAL);
+    assert(output_start_current(3,2000,500)==0);
+    output_stop();advance(200);assert(!published.active && !starts && !relay_value);
+    assert(output_start_current(3,2000,500)==0);advance(4000);
+    assert(published.running && published.target_ma==500 && control.target_ma==500);
+    assert(published.signal.reading.current_ma>=485 && published.signal.reading.current_ma<=515);
+    assert(output_start(3,2000,1000)==-EBUSY);
+    digital|=BIT(BOARD_OC);advance(1);
+    assert(published.fault && !signal_active && !relay_value && !amplitude);
+}
 int main(int argc,char **argv) {
     assert(argc==2);
 #define RUN(name) if(!strcmp(argv[1],#name)){name();return 0;}
     RUN(clear_fault) RUN(clear_blocked) RUN(clear_cancel) RUN(clear_sample) RUN(clear_io)
     RUN(automatic_range)
+    RUN(current_output)
     RUN(automatic_interlocks)
     RUN(protection_origin)
 #if defined(CONFIG_HT_OUTPUT_BENCH)

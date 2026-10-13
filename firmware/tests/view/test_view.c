@@ -24,9 +24,9 @@ static int receive(void *ctx, const uint8_t *data, size_t length)
 }
 static struct view_snapshot sample(void)
 {
-    struct view_snapshot s = {.page=PANEL_PAGE_STATUS, .state=VIEW_RUNNING,
+    struct view_snapshot s = {.page=PANEL_PAGE_STATUS, .state=VIEW_RUNNING, .mode=PANEL_VA,
         .battery=VIEW_POWER_NORMAL, .selected=PANEL_FREQUENCY, .output=VIEW_OUTPUT_RUNNING, .fresh=true};
-    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 5000, 251, -125, 1200, 25000, 300};
+    const int64_t values[] = {2240, 22360, 10, 2000, 3723, 5000, 251, -125, 1200, 25000, 300, PANEL_VA};
     _Static_assert(sizeof(values)/sizeof(values[0]) == VIEW_FIELD_COUNT, "Sample must cover every VP field");
     for (size_t i=0; i<VIEW_FIELD_COUNT; ++i) s.values[i]=(struct view_value){values[i],true};
     return s;
@@ -41,7 +41,7 @@ static void text_is(const struct capture *c, enum view_field field, const char *
     const struct dgus_frame *f=&c->frames[1u+field];
     char text[VIEW_TEXT_BYTES];
     static const uint16_t addresses[] = {0x1100,0x1110,0x1120,0x1130,0x1140,
-        0x1160,0x1170,0x1180,0x1190,0x11a0,0x1150};
+        0x1160,0x1170,0x1180,0x1190,0x11a0,0x1150,0x11b0};
     _Static_assert(sizeof(addresses)/sizeof(addresses[0]) == VIEW_FIELD_COUNT, "Keep all physical VPs fixed");
     CHECK(f->vp==addresses[field] && f->count==16);
     for(size_t i=0;i<16;++i) {
@@ -53,7 +53,7 @@ static void text_is(const struct capture *c, enum view_field field, const char *
 }
 static void test_mapping(void)
 {
-    const char *expected[]={"2.240","22.360","10","2","01:02:03","5","25.1","-12.5","120.0","25","300"};
+    const char *expected[]={"2.240","22.360","10","2","01:02:03","5","25.1","-12.5","120.0","25 VA","300","VA"};
     _Static_assert(sizeof(expected)/sizeof(expected[0]) == VIEW_FIELD_COUNT, "Expected text must cover every VP field");
     for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
         struct view v={0}; struct capture c; struct view_snapshot s=sample();
@@ -165,7 +165,7 @@ static void test_choices(void)
 static void test_power_choice(void)
 {
     const int64_t values[]={0,1000,25000,49000,50000,50001,-1,INT64_MIN,INT64_MAX};
-    const char *expected[]={"0","1","25","49","50","--","--","--","--"};
+    const char *expected[]={"0 VA","1 VA","25 VA","49 VA","50 VA","--","--","--","--"};
     struct view v={0}; struct capture c; struct view_snapshot s=sample();
     s.page=PANEL_PAGE_SETTINGS; s.selected=PANEL_POWER; s.editing=true;
     for(int crc=DGUS_CRC_NONE;crc<=DGUS_CRC_MODBUS;++crc) {
@@ -181,12 +181,12 @@ static void test_power_choice(void)
     s.fresh=false; s.state=VIEW_OFFLINE; s.editing=false;
     s.values[VIEW_POWER_CHOICE]=(struct view_value){50000,true};
     refresh(&v,&c,&s,DGUS_CRC_NONE);
-    text_is(&c,VIEW_POWER_CHOICE,"50"); text_is(&c,VIEW_CURRENT,"--");
+    text_is(&c,VIEW_POWER_CHOICE,"50 VA"); text_is(&c,VIEW_CURRENT,"--");
     CHECK(c.frames[0].words[3]==0);
     s.values[VIEW_POWER_CHOICE].valid=false;
     refresh(&v,&c,&s,DGUS_CRC_NONE); text_is(&c,VIEW_POWER_CHOICE,"--");
     s.values[VIEW_POWER_CHOICE]=(struct view_value){0,true};
-    refresh(&v,&c,&s,DGUS_CRC_NONE); text_is(&c,VIEW_POWER_CHOICE,"0");
+    refresh(&v,&c,&s,DGUS_CRC_NONE); text_is(&c,VIEW_POWER_CHOICE,"0 VA");
 }
 static void test_manual_range(void)
 {
@@ -199,12 +199,12 @@ static void test_manual_range(void)
     CHECK(c.frames[0].words[0]==VIEW_SWITCHING);
     text_is(&c,VIEW_RANGE,"1000"); text_is(&c,VIEW_FREQUENCY,"2");
     text_is(&c,VIEW_CURRENT,"2.240"); text_is(&c,VIEW_VOLTAGE,"22.360");
-    text_is(&c,VIEW_FREQUENCY_CHOICE,"10"); text_is(&c,VIEW_POWER_CHOICE,"5");
+    text_is(&c,VIEW_FREQUENCY_CHOICE,"10"); text_is(&c,VIEW_POWER_CHOICE,"5 VA");
     text_is(&c,VIEW_RANGE_CHOICE,"300");
     s.state=VIEW_RUNNING; s.values[VIEW_RANGE].value=30;
     refresh(&v,&c,&s,DGUS_CRC_MODBUS);
     text_is(&c,VIEW_RANGE,"30"); text_is(&c,VIEW_FREQUENCY_CHOICE,"10");
-    text_is(&c,VIEW_POWER_CHOICE,"5");
+    text_is(&c,VIEW_POWER_CHOICE,"5 VA");
     s.values[VIEW_RANGE].valid=false;
     refresh(&v,&c,&s,DGUS_CRC_NONE);
     text_is(&c,VIEW_RANGE,"--");
@@ -442,12 +442,25 @@ static void test_reasons(void)
     s.reason=VIEW_REASON_COUNT;
     CHECK(view_refresh(&v,&s,DGUS_CRC_NONE,receive,&c)==VIEW_ERR_ARG);
 }
+static void test_current_choice(void)
+{
+    struct view v={0};struct capture c;struct view_snapshot s=sample();
+    s.mode=PANEL_CC;s.page=PANEL_PAGE_SETTINGS;s.selected=PANEL_POWER;
+    s.values[VIEW_MODE_CHOICE]=(struct view_value){PANEL_CC,true};
+    const int64_t values[]={0,10,1250,7070,7071,-1};
+    const char *expected[]={"0.000 A","0.010 A","1.250 A","7.070 A","--","--"};
+    for(size_t i=0;i<sizeof(values)/sizeof(values[0]);++i) {
+        s.values[VIEW_POWER_CHOICE]=(struct view_value){values[i],true};
+        refresh(&v,&c,&s,DGUS_CRC_NONE);
+        text_is(&c,VIEW_POWER_CHOICE,expected[i]);text_is(&c,VIEW_MODE_CHOICE,"CC");
+    }
+}
 int main(int argc,char **argv)
 {
     CHECK(argc==2);
     struct { const char *name; void (*run)(void); } cases[]={
         {"reasons",test_reasons}, {"debug",test_debug}, {"mapping",test_mapping},{"numbers",test_numbers},{"time",test_time},{"choices",test_choices},
-        {"power_choice",test_power_choice},{"manual_range",test_manual_range},
+        {"power_choice",test_power_choice},{"current_choice",test_current_choice},{"manual_range",test_manual_range},
         {"temperature",test_temperature},{"logs",test_logs},
         {"output_states",test_output_states},{"output_stale",test_output_stale},{"dds_logs",test_dds_logs},
         {"invalid_readings",test_invalid_readings},{"transitions",test_transitions},

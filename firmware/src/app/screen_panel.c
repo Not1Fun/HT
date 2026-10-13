@@ -131,7 +131,9 @@ static int request_start(struct service *service)
 {
 #if defined(CONFIG_HT_OUTPUT)
 	uint8_t range = service->panel.range == PANEL_RANGE_AUTO ? POWER_RANGE_AUTO : service->panel.range;
-	return output_start(range, service->panel.frequency_hz, service->panel.apparent_mva);
+	return service->panel.mode == PANEL_CC ?
+		output_start_current(range, service->panel.frequency_hz, service->panel.current_ma) :
+		output_start(range, service->panel.frequency_hz, service->panel.apparent_mva);
 #elif defined(CONFIG_HT_DDS_BENCH)
 	return dds_bench_request_start(service->panel.frequency_hz, BENCH_MVPP, BENCH_SECONDS);
 #else
@@ -183,7 +185,7 @@ static void update_output(struct service *service, bool io_ok)
     service->panel.debug.wave = value.debug.trial;
 #endif
 	(void)panel_set_output_state(&service->panel, value.running || value.switching,
-		value.available && service->panel.apparent_mva > 0);
+		value.available && (service->panel.mode == PANEL_CC ? service->panel.current_ma : service->panel.apparent_mva) > 0);
 }
 #endif
 
@@ -477,7 +479,7 @@ static int update_keys(struct service *service, uint8_t raw, int64_t now)
 				record_event(service, EVENT_FREQUENCY, (int32_t)service->panel.frequency_hz);
 				LOG_INF("Saved frequency request: %u Hz", service->panel.frequency_hz);
 			}
-			if (action == PANEL_ACTION_OUTPUT_STOP || action == PANEL_ACTION_POWER || action == PANEL_ACTION_RANGE) {
+			if (action == PANEL_ACTION_OUTPUT_STOP || action == PANEL_ACTION_POWER || action == PANEL_ACTION_RANGE || action == PANEL_ACTION_MODE) {
 				request_stop();
 				stopping = true;
 			} else if (action == PANEL_ACTION_OUTPUT_START && !stopping) {
@@ -530,7 +532,7 @@ static int update_inputs(struct service *service)
 	}
 #endif
 	/* 目标值由面板保存，输出请求单独提交给输出服务。 */
-	(void)panel_inputs(&service->panel, PANEL_VA, !(raw & BIT(6)),
+	(void)panel_inputs(&service->panel, service->panel.mode, !(raw & BIT(6)),
 		(service->digital & (BIT(BOARD_OC) | BIT(BOARD_OV))) != 0);
 	rc = update_keys(service, raw, k_uptime_get());
 	if (rc == 0) {
@@ -682,7 +684,7 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		.page = panel->page, .state = fault ? VIEW_FAULT : VIEW_STANDBY,
 		.battery = !service->digital_valid ? VIEW_POWER_UNKNOWN :
 			(service->digital & BIT(BOARD_BAT)) ? VIEW_POWER_NORMAL : VIEW_POWER_ALARM,
-		.selected = panel->field,
+		.selected = panel->field, .mode = panel->mode,
 		.output = VIEW_OUTPUT_DISABLED,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
@@ -692,7 +694,10 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 		panel->field == PANEL_FREQUENCY ? panel_frequency_hz(panel->draft_index) :
 		panel->frequency_hz, true};
 	out->values[VIEW_POWER_CHOICE] = (struct view_value){
-		panel->field == PANEL_POWER ? (uint32_t)panel->draft_index * 1000u : panel->apparent_mva, true};
+		panel->field == PANEL_POWER ? (uint32_t)panel->draft_index * (panel->mode == PANEL_CC ? 10u : 1000u) :
+		panel->mode == PANEL_CC ? panel->current_ma : panel->apparent_mva, true};
+	out->values[VIEW_MODE_CHOICE] = (struct view_value){
+		panel->field == PANEL_MODE ? panel->draft_index : (uint16_t)panel->mode, true};
 	out->log_count = (uint8_t)event_log_count(&service->log);
 	out->log_offset = service->log_offset;
 	for (size_t row = 0; row < VIEW_LOG_ROWS; ++row) {
@@ -762,7 +767,7 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
     if (panel->page >= PANEL_PAGE_DEBUG && out->debug.relay == 0) blocked = value.debug.blocked;
 #endif
     if (!value.ready) blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_INIT);
-    if (panel->page == PANEL_PAGE_SETTINGS && panel->apparent_mva == 0)
+    if (panel->page == PANEL_PAGE_SETTINGS && (panel->mode == PANEL_CC ? panel->current_ma : panel->apparent_mva) == 0)
         blocked |= OUTPUT_REASON_BIT(OUTPUT_REASON_TARGET);
     out->reason = blocking_reason(blocked, value.error, k_uptime_get());
     if (value.clearing) out->reason = VIEW_REASON_CLEARING;

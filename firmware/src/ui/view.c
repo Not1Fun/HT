@@ -81,6 +81,8 @@ static void format_value(char text[VIEW_TEXT_BYTES], enum view_field field, int6
     }
     if (field == VIEW_ELAPSED) {
         format_time(text, value);
+    } else if (field == VIEW_MODE_CHOICE) {
+        if (value == PANEL_CC || value == PANEL_VA) strcpy(text, value == PANEL_CC ? "CC" : "VA");
     } else if (field == VIEW_POWER_CHOICE) {
         if (value >= 0 && value <= 50000) format_number(text, value / 1000, 0);
     } else if (field == VIEW_FREQUENCY || field == VIEW_FREQUENCY_CHOICE) {
@@ -121,11 +123,11 @@ static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
         [VIEW_FREQUENCY] = 0x1130, [VIEW_ELAPSED] = 0x1140,
         [VIEW_FREQUENCY_CHOICE] = 0x1160, [VIEW_NTC1] = 0x1170,
         [VIEW_NTC2] = 0x1180, [VIEW_NTC3] = 0x1190, [VIEW_POWER_CHOICE] = 0x11a0,
-        [VIEW_RANGE_CHOICE] = 0x1150
+        [VIEW_RANGE_CHOICE] = 0x1150, [VIEW_MODE_CHOICE] = 0x11b0
     };
     for (size_t field = 0; field < VIEW_FIELD_COUNT; ++field) {
         char text[VIEW_TEXT_BYTES];
-        bool setting = field == VIEW_FREQUENCY_CHOICE || field == VIEW_POWER_CHOICE || field == VIEW_RANGE_CHOICE;
+        bool setting = field == VIEW_FREQUENCY_CHOICE || field == VIEW_POWER_CHOICE || field == VIEW_RANGE_CHOICE || field == VIEW_MODE_CHOICE;
         bool valid = snapshot->values[field].valid &&
                      (setting || (snapshot->fresh && snapshot->state != VIEW_OFFLINE));
         int result;
@@ -133,6 +135,13 @@ static int send_values(const struct view_snapshot *snapshot, enum dgus_crc crc,
             valid = false;
         }
         format_value(text, (enum view_field)field, snapshot->values[field].value, valid);
+        if (field == VIEW_POWER_CHOICE && valid) {
+            int64_t value = snapshot->values[field].value;
+            if (snapshot->mode == PANEL_CC) {
+                memset(text, 0, sizeof(text)); strcpy(text, "--");
+                if (value >= 0 && value <= 7070) { format_number(text, value, 3); strcat(text, " A"); }
+            } else if (value >= 0 && value <= 50000) strcat(text, " VA");
+        }
         result = send_text(crc, send, ctx, addresses[field], text);
         if (result != VIEW_OK) {
             return result;
@@ -272,6 +281,7 @@ int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum d
         (unsigned int)snapshot->state > VIEW_OFFLINE ||
         (unsigned int)snapshot->battery > VIEW_POWER_UNKNOWN ||
         (unsigned int)snapshot->selected > PANEL_OUTPUT ||
+        (unsigned int)snapshot->mode > PANEL_VA ||
         (unsigned int)snapshot->output > VIEW_OUTPUT_CLEARING || snapshot->reason >= VIEW_REASON_COUNT ||
         snapshot->debug.field > 3 || snapshot->debug.relay > 8 || snapshot->debug.state > 5 ||
         (snapshot->page == PANEL_PAGE_DAC && (snapshot->debug.field == 0 || snapshot->debug.relay != 0)) ||

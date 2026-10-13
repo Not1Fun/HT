@@ -224,10 +224,10 @@ static void auto_no_signal(void)
 }
 static void gain_conversion(void)
 {
-    assert(power_drive_limit()==1877);
+    assert(power_drive_limit()==1976);
     /* 1Ω/1VA需要1Vrms次级：15倍功放、0.5014匝比，DAC约376mVpp。 */
     assert(power_feedforward(0,1000,1000)>=264 && power_feedforward(0,1000,1000)<=266);
-    assert(power_feedforward(6,50000,1000000)==power_drive_limit());
+    assert(power_feedforward(6,50000,1000000)==1877);
     assert(power_feedforward(7,1000,1000)==0 && power_feedforward(0,1000,0)==0);
 }
 static void auto_power_matrix(void)
@@ -282,8 +282,8 @@ static void auto_capacity(void)
         plant_tick(&p,30);
         assert(p.state==POWER_RUNNING && p.target_mva==50000);
     }
-    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>21000 && p.last_reading.apparent_mva<23000);
-    gain=15;
+    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>24000 && p.last_reading.apparent_mva<26000);
+    for(int n=1;n<=500;++n) {gain=10+5.0*n/500;plant_tick(&p,30);}
     for(int n=0;n<200;++n)plant_tick(&p,30);
     assert(p.state==POWER_RUNNING && p.last_reading.apparent_mva>=49000);
 }
@@ -313,12 +313,12 @@ static void capacity_rematch(void)
 }
 static void saturation_tolerance(void)
 {
-    gain=14.7;delayed=true;
+    gain=13.5;delayed=true;
     struct power p=initialized();assert(power_start(&p,POWER_RANGE_AUTO,2000,50000,0)==0);
     seek(&p,30);
     for(int n=0;n<1300;++n)plant_tick(&p,30);
     assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.output!=0);
-    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>47000 && p.last_reading.apparent_mva<49000);
+    assert(hw.amp==power_drive_limit() && p.last_reading.apparent_mva>44000 && p.last_reading.apparent_mva<46000);
 }
 static void measured_target_tolerance(void)
 {
@@ -394,6 +394,43 @@ static void best_effort_loads(void)
         power_stop(&p,hw.now);tick(&p,30,true,NULL);tick(&p,30,true,NULL);
         assert(p.state==POWER_IDLE && hw.amp==0 && p.output==0);
     }
+}
+static void constant_current(void)
+{
+    const double loads[]={1,3,10,30,100,300,1000};
+    const uint32_t targets[]={1000,700,500,300,100,100,50};
+    const uint32_t frequencies[]={2000,5000,8000,10000};
+    delayed=true;
+    for(int automatic=0;automatic<2;++automatic) for(size_t i=0;i<7;++i) for(size_t f=0;f<4;++f) {
+        struct power p=initialized();
+        uint32_t target=automatic?1000:targets[i];
+        assert(power_start_current(&p,automatic?POWER_RANGE_AUTO:(uint8_t)i,frequencies[f],target,0)==0);
+        seek(&p,loads[i]);
+        for(int n=0;n<200;++n)plant_tick(&p,loads[i]);
+        if(p.state!=POWER_RUNNING)fprintf(stderr,"CC load=%g target=%u error=%d\n",loads[i],targets[i],p.error);
+        assert(p.state==POWER_RUNNING && p.target_ma==target && p.frequency==frequencies[f]);
+        double expected=fmin(target,sqrt(50/loads[i])*1000);
+        assert(fabs(p.last_reading.current_ma-expected)<=2+expected*.03);
+        assert(p.last_reading.apparent_mva<=51000);
+        power_stop(&p,hw.now);tick(&p,30,true,NULL);tick(&p,30,true,NULL);
+        assert(p.state==POWER_IDLE && !hw.amp && !p.output);
+    }
+}
+static void current_limits(void)
+{
+    delayed=true;
+    struct power p=initialized();
+    assert(power_start_current(&p,0,2000,0,0)<0 && power_start_current(&p,0,2000,7071,0)<0);
+    assert(power_start_current(&p,POWER_RANGE_AUTO,2000,2000,0)==0);seek(&p,30);
+    for(int n=0;n<1300;++n)plant_tick(&p,30);
+    assert(p.state==POWER_RUNNING && p.target_ma==2000 && p.last_reading.current_ma<=1290);
+    assert(p.last_reading.apparent_mva>47000 && p.last_reading.apparent_mva<=50000);
+    tick(&p,1,false,&p.last_reading);assert(p.error==POWER_ERROR_INTERLOCK && !hw.amp && !p.output);
+    p=initialized();assert(power_start_current(&p,0,2000,100,0)==0);seek(&p,1);
+    for(int n=0;n<150;++n)plant_tick(&p,1);
+    assert(p.state==POWER_RUNNING && p.last_reading.current_ma>=98 && p.last_reading.current_ma<=102);
+    struct power_reading r={.valid=true,.voltage_mv=7500,.current_ma=100,.apparent_mva=750,.sequence=p.sequence};
+    tick(&p,50,true,&r);assert(p.error==POWER_ERROR_LIMIT && !hw.amp && !p.output);
 }
 static void unstable_impedance(void)
 {
@@ -545,6 +582,7 @@ int main(int argc,char **argv)
         {"measured_target_tolerance",measured_target_tolerance},
         {"capacity_feedback_priority",capacity_feedback_priority},{"target_preserves_limits",target_preserves_limits},
         {"best_effort_loads",best_effort_loads},
+        {"constant_current",constant_current},{"current_limits",current_limits},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"startup_diagnosis",startup_diagnosis},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},

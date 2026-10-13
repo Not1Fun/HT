@@ -43,6 +43,14 @@ static void setup(void)
 }
 int main(void)
 {
+    const uint16_t high[]={500,1000,1500,2000,2500,2800};
+    for(unsigned int i=0;i<sizeof(high)/sizeof(high[0]);++i) {
+        setup();assert(bench_start(&b,0,2000,high[i],true,0)==0);step(400);
+        assert(b.state==BENCH_ON && port==0 && amplitude==high[i]*4095u/5800u);
+        step(10000);assert(!signal_on && port==0);
+        for(uint8_t relay=1;relay<=8;++relay)assert(bench_start(&b,relay,2000,high[i],true,clock_ms)<0);
+    }
+    assert(!bench_amplitude_valid(0,2801,true) && !bench_amplitude_valid(0,3300,true));
     setup(); assert(bench_start(&b,2,2000,1000,true,0)<0);
     assert(bench_start(&b,0,2000,1000,false,0)<0);
     assert(bench_start(&b,0,2000,1000,true,0)==0);step(400);

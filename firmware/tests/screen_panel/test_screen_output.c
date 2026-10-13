@@ -11,6 +11,7 @@ static unsigned int starts, stops;
 static unsigned int clear_requests;
 int output_clear(void) { ++clear_requests; return 0; }
 static uint8_t requested_range;
+static uint32_t requested_current;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
 static unsigned int debug_starts;
 static uint8_t debug_relay;
@@ -55,6 +56,8 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
 { (void)raw; (void)connected; (void)io_ok; }
 int output_start(uint8_t range, uint32_t frequency, uint32_t target_mva)
 { requested_range=range; (void)frequency; (void)target_mva; ++starts; return 0; }
+int output_start_current(uint8_t range, uint32_t frequency, uint32_t target_ma)
+{ requested_range=range; requested_current=target_ma; (void)frequency; ++starts; return 0; }
 void output_stop(void) { ++stops; }
 void output_snapshot(struct output_snapshot *value) { *value = measured; }
 void output_shutdown(void) { }
@@ -222,11 +225,11 @@ static void manual_selection(void)
     struct view_snapshot v; snapshot(&s,&v);
     assert(v.values[VIEW_RANGE_CHOICE].value==10 && !v.values[VIEW_RANGE].valid);
     press(&s,PANEL_KEY_ENCODER); assert(stops==1 && starts==0 && s.panel.range==2);
-    for(unsigned int i=0;i<3;++i) press(&s,PANEL_KEY_DOWN);
+    for(unsigned int i=0;i<4;++i) press(&s,PANEL_KEY_DOWN);
     assert(s.panel.field==PANEL_OUTPUT && panel_rotate(&s.panel,1)==0);
     press(&s,PANEL_KEY_OK); assert(starts==1 && requested_range==2);
     measured.active=measured.running=true; measured.range=2; update_output(&s,true);
-    for(unsigned int i=0;i<3;++i) press(&s,PANEL_KEY_UP);
+    for(unsigned int i=0;i<4;++i) press(&s,PANEL_KEY_UP);
     assert(panel_rotate(&s.panel,1)==0); snapshot(&s,&v);
     assert(v.values[VIEW_RANGE].value==10 && v.values[VIEW_RANGE_CHOICE].value==30);
     press(&s,PANEL_KEY_OK); assert(stops==2 && starts==1 && s.panel.range==3);
@@ -264,7 +267,7 @@ static void automatic_selection(void)
     assert(s.panel.range==PANEL_RANGE_AUTO);
     struct view_snapshot v;snapshot(&s,&v);assert(v.values[VIEW_RANGE_CHOICE].value==0);
     press(&s,PANEL_KEY_DOWN);assert(panel_rotate(&s.panel,2)==0);press(&s,PANEL_KEY_OK);
-    press(&s,PANEL_KEY_DOWN);press(&s,PANEL_KEY_DOWN);
+    press(&s,PANEL_KEY_DOWN);press(&s,PANEL_KEY_DOWN);press(&s,PANEL_KEY_DOWN);
     assert(panel_rotate(&s.panel,1)==0);press(&s,PANEL_KEY_OK);
     assert(starts==1 && requested_range==POWER_RANGE_AUTO && s.panel.frequency_hz==8000);
     measured.running=measured.active=true;measured.range=5;measured.frequency=8000;
@@ -297,9 +300,30 @@ static void clear_controls(void)
     press(&s, PANEL_KEY_OK); assert(clear_requests == 2 && debug_starts == 0);
 #endif
 }
+static void current_mode(void)
+{
+    struct service s=setup();measured.available=true;
+    press(&s,PANEL_KEY_RIGHT);
+    while(s.panel.field!=PANEL_MODE)press(&s,PANEL_KEY_DOWN);
+    assert(panel_rotate(&s.panel,1)==0);press(&s,PANEL_KEY_OK);
+    assert(s.panel.mode==PANEL_CC && stops==1 && starts==0);
+    press(&s,PANEL_KEY_DOWN);assert(panel_rotate(&s.panel,125)==0);press(&s,PANEL_KEY_OK);
+    assert(s.panel.current_ma==1250 && s.panel.apparent_mva==0 && stops==2);
+    update_output(&s,true);assert(s.panel.output_available);
+    struct view_snapshot v;snapshot(&s,&v);
+    assert(v.mode==PANEL_CC && v.values[VIEW_POWER_CHOICE].value==1250 && v.reason==0);
+    press(&s,PANEL_KEY_DOWN);assert(panel_rotate(&s.panel,1)==0);press(&s,PANEL_KEY_OK);
+    assert(starts==1 && requested_current==1250 && requested_range==POWER_RANGE_AUTO);
+    measured.active=measured.running=true;update_output(&s,true);
+    while(s.panel.field!=PANEL_MODE)press(&s,PANEL_KEY_UP);
+    assert(panel_rotate(&s.panel,1)==0);press(&s,PANEL_KEY_OK);
+    assert(s.panel.mode==PANEL_VA && stops==3 && starts==1);
+}
+
 int main(int argc, char **argv)
 {
     assert(argc == 2);
+    if (!strcmp(argv[1], "current_mode")) { current_mode(); return 0; }
     if (!strcmp(argv[1], "automatic_selection")) { automatic_selection(); return 0; }
     if (!strcmp(argv[1], "clear_controls")) { clear_controls(); return 0; }
     if (!strcmp(argv[1], "manual_selection")) { manual_selection(); return 0; }

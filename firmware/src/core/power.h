@@ -1,4 +1,4 @@
-/* @brief 恒VA输出状态机；所有硬件动作经单一所有者的回调执行。 */
+/* @brief 恒VA/恒流输出状态机；所有硬件动作经单一所有者的回调执行。 */
 #ifndef HT_POWER_H
 #define HT_POWER_H
 #include <stdbool.h>
@@ -34,7 +34,7 @@ struct power {
     int64_t fault_ms;
     struct power_reading last_reading;
     uint8_t range, output;
-    uint32_t frequency, target_mva, sequence;
+    uint32_t frequency, target_mva, target_ma, sequence;
     int64_t deadline, started, feedback, low_since;
     int64_t level_milli;
     uint16_t amplitude;
@@ -55,6 +55,8 @@ uint16_t power_drive_limit(void);
 /* AUTO先探测负载再选挡；0..6为手动挡。频率由用户选择，控制器不改频率。 */
 int power_start(struct power *power, uint8_t range, uint32_t frequency,
                 uint32_t target_mva, int64_t now);
+int power_start_current(struct power *power, uint8_t range, uint32_t frequency,
+                        uint32_t target_ma, int64_t now);
 void power_stop(struct power *power, int64_t now);
 void power_fail(struct power *power, enum power_error error);
 void power_poll(struct power *power, bool permitted, const struct power_reading *reading, int64_t now);

@@ -26,7 +26,7 @@ static struct power control;
 static struct output_snapshot published = {.blocked = OUTPUT_REASON_BIT(OUTPUT_REASON_INIT)};
 static struct { uint8_t raw; bool connected, okay; int64_t time; } inputs;
 static struct {
-    bool pending, stop, clear;
+    bool pending, stop, clear, current;
     uint8_t range;
     uint32_t frequency, target, epoch;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -132,9 +132,9 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
     k_spin_unlock(&guard, key);
 }
 
-int output_start(uint8_t range, uint32_t frequency, uint32_t target)
+static int queue_start(uint8_t range, uint32_t frequency, uint32_t target, bool current)
 {
-    if ((range >= 7 && range != POWER_RANGE_AUTO) || target == 0 || target > 50000 ||
+    if ((range >= 7 && range != POWER_RANGE_AUTO) || target == 0 || target > (current ? 7070u : 50000u) ||
         (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
@@ -146,10 +146,20 @@ int output_start(uint8_t range, uint32_t frequency, uint32_t target)
         request.debug = false;
 #endif
         request.pending = true; request.range = range; request.frequency = frequency;
-        request.target = target; request.epoch = stop_epoch;
+        request.target = target; request.current = current; request.epoch = stop_epoch;
     }
     k_spin_unlock(&guard, key);
     return rc;
+}
+
+int output_start(uint8_t range, uint32_t frequency, uint32_t target)
+{
+    return queue_start(range, frequency, target, false);
+}
+
+int output_start_current(uint8_t range, uint32_t frequency, uint32_t target)
+{
+    return queue_start(range, frequency, target, true);
 }
 
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -344,6 +354,7 @@ static void run(void *a, void *b, void *c)
         if (start || clear) active_epoch = request.epoch;
         uint8_t range = request.range;
         uint32_t frequency = request.frequency, target = request.target;
+        bool current = request.current;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
         bool debug_start = start && request.debug;
         if (debug_start) start = false;
@@ -409,8 +420,10 @@ static void run(void *a, void *b, void *c)
                    &signal.reading, k_uptime_get());
 #endif
         if (stop) power_stop(&control, now);
-        else if (start && permitted && sample_ready)
-            (void)power_start(&control, range, frequency, target, now);
+        else if (start && permitted && sample_ready) {
+            if (current) (void)power_start_current(&control, range, frequency, target, now);
+            else (void)power_start(&control, range, frequency, target, now);
+        }
         power_poll(&control, permitted, &signal.reading, k_uptime_get());
         uint8_t applied = POWER_RANGE_AUTO;
         if (control.state != POWER_FAULT)
@@ -429,6 +442,7 @@ static void run(void *a, void *b, void *c)
             .frequency = control.state == POWER_ZERO || control.state == POWER_PROBING ||
                          control.state == POWER_RUNNING ? control.frequency : 0,
             .target_mva = control.target_mva,
+            .target_ma = control.target_ma,
             .elapsed_seconds = control.state == POWER_RUNNING ? (uint32_t)((now-control.session_ms)/1000) : 0,
             .blocked = blocked | (sample_ready ? 0 : OUTPUT_REASON_BIT(OUTPUT_REASON_SAMPLE_STALE)) |
                 (control.state == POWER_FAULT ? OUTPUT_REASON_BIT(OUTPUT_REASON_FAULT) : 0),

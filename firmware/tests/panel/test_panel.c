@@ -132,7 +132,7 @@ static void test_cancel(void)
     CHECK(panel_key(&panel, PANEL_KEY_ENCODER) == PANEL_ACTION_FREQUENCY);
     CHECK(panel_rotate(&panel, 1) == PANEL_OK && panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
-    CHECK(panel.field == PANEL_POWER && panel.frequency_hz == 8000 && !panel_draft_changed(&panel));
+    CHECK(panel.field == PANEL_MODE && panel.frequency_hz == 8000 && !panel_draft_changed(&panel));
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE && panel.draft_index == 2);
     CHECK(panel_rotate(&panel, 1) == PANEL_OK);
     CHECK(panel_key(&panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
@@ -144,15 +144,15 @@ static void test_field_selection(void)
 {
     struct panel panel;
     CHECK(panel_init(&panel,&config,PANEL_VA,false,false)==0);
-    CHECK(PANEL_RANGE==0 && PANEL_FREQUENCY==1 && PANEL_POWER==2 && PANEL_OUTPUT==3);
+    CHECK(PANEL_RANGE==0 && PANEL_FREQUENCY==1 && PANEL_MODE==2 && PANEL_POWER==3 && PANEL_OUTPUT==4);
     CHECK(panel_key(&panel,PANEL_KEY_RIGHT)==PANEL_ACTION_NONE);
     CHECK(panel_key(&panel,PANEL_KEY_UP)==PANEL_ACTION_NONE && panel.field==PANEL_RANGE);
-    for(int i=1;i<=3;++i) {
+    for(int i=1;i<=4;++i) {
         CHECK(panel_key(&panel,PANEL_KEY_DOWN)==PANEL_ACTION_NONE);
-        CHECK(panel.field==(enum panel_field)i && panel.draft_index==0);
+        CHECK(panel.field==(enum panel_field)i && panel.draft_index==(i==PANEL_MODE?PANEL_VA:0));
     }
     CHECK(panel_key(&panel,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && panel.field==PANEL_OUTPUT);
-    for(int i=2;i>=0;--i) {
+    for(int i=3;i>=0;--i) {
         CHECK(panel_key(&panel,PANEL_KEY_UP)==PANEL_ACTION_NONE);
         CHECK(panel.field==(enum panel_field)i);
     }
@@ -179,8 +179,7 @@ static void test_manual_range(void)
 static void select_output(struct panel *panel)
 {
     CHECK(panel_key(panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
-    CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
-    CHECK(panel_key(panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
+    while(panel->field<PANEL_OUTPUT) CHECK(panel_key(panel,PANEL_KEY_DOWN)==PANEL_ACTION_NONE);
     CHECK(panel->page == PANEL_PAGE_SETTINGS && panel->field == PANEL_OUTPUT);
 }
 
@@ -270,9 +269,11 @@ static void test_output_rotation(void)
     CHECK(panel_rotate(&panel, INT32_MIN) == PANEL_OK && panel.draft_index == 0);
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
     CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
+    CHECK(panel_key(&panel, PANEL_KEY_UP) == PANEL_ACTION_NONE);
     CHECK(panel_rotate(&panel, 2) == PANEL_OK);
     CHECK(panel_set_output_state(&panel, true, false) == PANEL_OK);
     CHECK(panel.field == PANEL_FREQUENCY && panel.draft_index == 2);
+    CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel_key(&panel, PANEL_KEY_DOWN) == PANEL_ACTION_NONE);
     CHECK(panel.field == PANEL_OUTPUT && panel.draft_index == 1);
@@ -280,6 +281,7 @@ static void test_output_rotation(void)
 
 static void select_power(struct panel *panel)
 {
+    panel->mode = PANEL_VA;
     CHECK(panel_key(panel, PANEL_KEY_RIGHT) == PANEL_ACTION_NONE);
     while(panel->field<PANEL_POWER) CHECK(panel_key(panel,PANEL_KEY_DOWN)==0);
     CHECK(panel->field == PANEL_POWER);
@@ -610,7 +612,7 @@ static void test_debug_page(void)
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
     CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==2);
     CHECK(panel_debug_mvpp(p.debug.draft)==10);
-    CHECK(panel_rotate(&p,4)==PANEL_OK && panel_debug_mvpp(p.debug.draft)==1000);
+    CHECK(panel_rotate(&p,9)==PANEL_OK && panel_debug_mvpp(p.debug.draft)==2800);
     CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_DEBUG_PARAMS);
     CHECK(panel_key(&p,PANEL_KEY_DOWN)==PANEL_ACTION_NONE && p.debug.field==3);
     p.debug.wave=false;
@@ -619,6 +621,25 @@ static void test_debug_page(void)
     CHECK(panel_key(&p,PANEL_KEY_RIGHT)==PANEL_ACTION_OUTPUT_STOP && p.page==PANEL_PAGE_STATUS);
     CHECK(p.debug.choice[0]==0 && p.debug.draft==0);
     CHECK(p.debug.choice[2]==0);
+}
+
+static void test_current_setting(void)
+{
+    struct panel p;
+    CHECK(panel_init(&p,&config,PANEL_VA,true,false)==PANEL_OK);
+    CHECK(panel_key(&p,PANEL_KEY_RIGHT)==0);
+    while(p.field!=PANEL_MODE) CHECK(panel_key(&p,PANEL_KEY_DOWN)==0);
+    CHECK(panel_rotate(&p,1)==0 && p.draft_index==PANEL_CC && p.mode==PANEL_VA);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_MODE && p.mode==PANEL_CC && !p.armed);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==0 && p.field==PANEL_POWER);
+    CHECK(panel_rotate(&p,125)==0 && p.current_ma==0);
+    CHECK(panel_key(&p,PANEL_KEY_ENCODER)==PANEL_ACTION_POWER && p.current_ma==1250);
+    CHECK(panel_rotate(&p,INT32_MAX)==0 && p.draft_index==707);
+    CHECK(panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_POWER && p.current_ma==7070);
+    CHECK(panel_key(&p,PANEL_KEY_UP)==0 && p.field==PANEL_MODE);
+    CHECK(panel_rotate(&p,1)==0 && panel_key(&p,PANEL_KEY_OK)==PANEL_ACTION_MODE);
+    CHECK(p.mode==PANEL_VA && p.apparent_mva==0 && p.current_ma==7070);
+    CHECK(panel_key(&p,PANEL_KEY_DOWN)==0 && p.draft_index==0);
 }
 
 int main(int argc, char **argv)
@@ -635,7 +656,7 @@ int main(int argc, char **argv)
         {"output_requests", test_output_requests}, {"output_cancel", test_output_cancel},
         {"output_stop_priority", test_output_stop_priority}, {"output_rotation", test_output_rotation},
         {"power_confirmation", test_power_confirmation}, {"power_cancel", test_power_cancel},
-        {"power_bounds", test_power_bounds},
+        {"power_bounds", test_power_bounds}, {"current_setting", test_current_setting},
         {"startup_enabled", test_startup_enabled}, {"zero_target", test_zero_target},
         {"fault_rearm", test_fault_rearm}, {"mode_change_stop", test_mode_change_stop},
         {"stop_priority", test_stop_priority}, {"invalid_config", test_invalid_config},

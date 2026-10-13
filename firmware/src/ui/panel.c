@@ -1,15 +1,16 @@
 /* @brief 选档先编辑草稿再提交，导航与输出许可相互独立。 */
 #include "panel.h"
+#include "config/output.h"
 
 #include <stddef.h>
 
 static const uint32_t ranges[PANEL_RANGE_COUNT] = {1, 3, 10, 30, 100, 300, 1000};
 static const uint32_t frequencies[PANEL_FREQUENCY_COUNT] = {2000, 5000, 8000, 10000};
+static const uint16_t debug_amplitudes[] = HT_DAC_TEST_LEVELS;
 
 uint16_t panel_debug_mvpp(uint8_t index)
 {
-    static const uint16_t values[] = {10, 25, 50, 100, 1000};
-    return index < sizeof(values) / sizeof(values[0]) ? values[index] : 0;
+    return index < sizeof(debug_amplitudes) / sizeof(debug_amplitudes[0]) ? debug_amplitudes[index] : 0;
 }
 
 static uint8_t debug_index(const struct panel *panel)
@@ -30,13 +31,15 @@ static int check_ready(const struct panel *panel)
     return panel->ready ? PANEL_OK : PANEL_ERR_NOT_READY;
 }
 
-static uint8_t selected_index(const struct panel *panel)
+static uint16_t selected_index(const struct panel *panel)
 {
     if (panel->field == PANEL_RANGE) return panel->range;
     if (panel->field == PANEL_OUTPUT) {
         return panel->output_running ? 1u : 0u;
     }
-    if (panel->field == PANEL_POWER) return (uint8_t)(panel->apparent_mva / 1000u);
+    if (panel->field == PANEL_MODE) return panel->mode;
+    if (panel->field == PANEL_POWER) return panel->mode == PANEL_CC ?
+        (uint16_t)(panel->current_ma / 10u) : (uint16_t)(panel->apparent_mva / 1000u);
     for (uint8_t index = 0; index < PANEL_FREQUENCY_COUNT; ++index) {
         if (frequencies[index] == panel->frequency_hz) {
             return index;
@@ -177,8 +180,14 @@ int panel_key(struct panel *panel, enum panel_key key)
             return PANEL_ACTION_RANGE;
         }
         if (panel->field == PANEL_POWER) {
-            panel->apparent_mva = (uint32_t)panel->draft_index * 1000u;
+            if (panel->mode == PANEL_CC) panel->current_ma = (uint32_t)panel->draft_index * 10u;
+            else panel->apparent_mva = (uint32_t)panel->draft_index * 1000u;
             return PANEL_ACTION_POWER;
+        }
+        if (panel->field == PANEL_MODE) {
+            panel->mode = (enum panel_mode)panel->draft_index;
+            panel->armed = false;
+            return PANEL_ACTION_MODE;
         }
         if (panel->field == PANEL_OUTPUT) {
             if (panel->clear_needed || panel->clearing) {
@@ -210,7 +219,7 @@ int panel_rotate(struct panel *panel, int32_t detents)
     if (panel->page >= PANEL_PAGE_DEBUG && panel->debug_enabled) {
         unsigned int field = panel->debug.field;
         count = field == 0 ? 9 : field == 3 ? 2 :
-            field == 2 && panel->page == PANEL_PAGE_DAC ? 5 : 4;
+            field == 2 && panel->page == PANEL_PAGE_DAC ? sizeof(debug_amplitudes) / sizeof(debug_amplitudes[0]) : 4;
         next = (int64_t)panel->debug.draft + detents;
         if (field == 3) panel->debug.draft = next <= 0 ? 0 : 1;
         else panel->debug.draft = (uint8_t)((next % count + count) % count);
@@ -226,12 +235,13 @@ int panel_rotate(struct panel *panel, int32_t detents)
     }
     if (panel->field == PANEL_POWER) {
         next = (int64_t)panel->draft_index + detents;
-        uint32_t limit = panel->config.apparent_max_mva / 1000u;
-        if (limit > 50) limit = 50;
-        panel->draft_index = next < 0 ? 0u : next > limit ? (uint8_t)limit : (uint8_t)next;
+        uint32_t limit = panel->mode == PANEL_CC ? panel->config.current_max_ma / 10u : panel->config.apparent_max_mva / 1000u;
+        uint32_t maximum = panel->mode == PANEL_CC ? 707u : 50u;
+        if (limit > maximum) limit = maximum;
+        panel->draft_index = next < 0 ? 0u : next > limit ? (uint16_t)limit : (uint16_t)next;
         return PANEL_OK;
     }
-    count = panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT + 1u : PANEL_FREQUENCY_COUNT;
+    count = panel->field == PANEL_MODE ? 2u : panel->field == PANEL_RANGE ? PANEL_RANGE_COUNT + 1u : PANEL_FREQUENCY_COUNT;
     next = ((int64_t)panel->draft_index + detents) % count;
     panel->draft_index = (uint8_t)(next < 0 ? next + count : next);
     return PANEL_OK;

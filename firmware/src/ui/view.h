@@ -35,14 +35,14 @@ enum view_output {
 };
 
 /* VP1100..1140：电流mA、电压mV、实际阻抗挡Ω、实际频率Hz、本次运行秒数。
- * VP1160：候选频率Hz；VP1170..1190：NTC1..3（0.1°C）；VP11A0：目标mVA。
+ * VP1160：候选频率Hz；VP1170..1190：NTC1..3（0.1°C）；VP11A0：目标值（按模式为mVA或mA，文本含单位）；VP11B0：CC/VA。
  * VP1150：AUTO或手动阻抗候选Ω；状态页仍显示实际已切入挡位。
  * 频率仅2000/5000/8000/10000；温度显示范围-20.0..120.0°C。
  */
 enum view_field {
     VIEW_CURRENT, VIEW_VOLTAGE, VIEW_RANGE, VIEW_FREQUENCY, VIEW_ELAPSED,
     VIEW_FREQUENCY_CHOICE,
-    VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_POWER_CHOICE, VIEW_RANGE_CHOICE, VIEW_FIELD_COUNT
+    VIEW_NTC1, VIEW_NTC2, VIEW_NTC3, VIEW_POWER_CHOICE, VIEW_RANGE_CHOICE, VIEW_MODE_CHOICE, VIEW_FIELD_COUNT
 };
 struct view_value { int64_t value; bool valid; };
 
@@ -57,6 +57,7 @@ struct view_snapshot {
     enum view_state state;
     enum view_power battery;
     enum panel_field selected;
+    enum panel_mode mode;
     enum view_output output;
     uint8_t reason;
     struct {
@@ -79,7 +80,7 @@ struct view { bool synced; enum panel_page page; };
 typedef int (*view_send_fn)(void *ctx, const uint8_t *data, size_t length);
 /* 每块屏独立上下文；首次、屏复位、重连或CRC配置变化时清同步状态。 */
 void view_reset(struct view *view);
-/* ui.json v13：Bench独立DAC页复用VP1300..1370，VP1030/1031为选项和试波状态；VP1005为具体阻止原因。
+/* ui.json v14：Bench独立DAC页复用VP1300..1370，VP1030/1031为选项和试波状态；VP1005为具体阻止原因。
  * 发送失败后下次完整重建。调用者串行调用并处理新鲜度、超时和屏应答。
  */
 int view_refresh(struct view *view, const struct view_snapshot *snapshot, enum dgus_crc crc,
