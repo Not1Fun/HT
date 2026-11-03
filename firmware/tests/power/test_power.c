@@ -24,7 +24,7 @@ static struct power initialized(void)
 {
     memset(&hw,0,sizeof(hw));
     struct power p;
-    const struct power_ops ops={NULL,mute,select_port,start_signal,set_level,clock_ms,NULL};
+    const struct power_ops ops={.mute=mute,.select=select_port,.start=start_signal,.level=set_level,.now=clock_ms};
     assert(power_init(&p,&ops)==0);
     return p;
 }

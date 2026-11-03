@@ -8,6 +8,7 @@ param(
     [switch]$Dds,
     [switch]$Output,
     [switch]$Bench,
+    [switch]$LegacyInterlock,
     [switch]$Bootloader,
     [string]$SdkPath = $env:ZEPHYR_SDK_INSTALL_DIR
 )
@@ -36,6 +37,7 @@ try {
     if ($Bench -and -not $Output) {
         throw '-Bench requires -Output.'
     }
+    if ($LegacyInterlock -and -not $Output) { throw '-LegacyInterlock requires -Output.' }
     if ($Output -and ($ScreenMode -ne 'Panel' -or $Temperature -or $Dds)) {
         throw '-Output requires -ScreenMode Panel; it owns ADC temperature sampling and cannot combine with -Temperature or -Dds.'
     }
@@ -110,6 +112,10 @@ try {
         $buildDir += '-bench'
         $conf += ';output-bench.conf'
     }
+    if ($Output -and -not $LegacyInterlock) {
+        $buildDir += '-ksafe'
+        $overlays += 'boards/ht_main_ksafe.overlay'
+    }
     if ($Bootloader) {
         if (-not (Test-Path -LiteralPath '.tools/bootloader/mcuboot/boot/zephyr/CMakeLists.txt') -or
             -not (Test-Path -LiteralPath '.tools/modules/lib/zcbor/zephyr/module.yml')) {
@@ -134,6 +140,7 @@ try {
     if ($Bootloader) {
         $firmwareDir = (Join-Path $root 'firmware').Replace('\', '/')
         $bootOverlays = @("$firmwareDir/sysbuild/mcuboot.overlay")
+        if ($Output -and -not $LegacyInterlock) { $bootOverlays += "$firmwareDir/boards/ht_main_ksafe.overlay" }
         if ($InternalClock) { $bootOverlays += "$firmwareDir/boards/ht_main_hsi.overlay" }
         $buildArgs += @("-DBOARD_ROOT:PATH=$firmwareDir", "-DDTS_ROOT:PATH=$firmwareDir",
             "-Dmcuboot_CONF_FILE:FILEPATH=$firmwareDir/sysbuild/mcuboot.conf",

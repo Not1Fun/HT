@@ -3,6 +3,7 @@
 #define HT_BOARD_IO_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 enum board_input {
 	BOARD_OC = 0,
@@ -17,6 +18,8 @@ enum board_input {
 };
 
 int board_io_init(void);
+/* 改线板两路 KSAFE 同步命令；GPIO 电平不是触点反馈。可在保护 ISR 中调用。 */
+void board_io_ksafe(bool on);
 #if defined(CONFIG_HT_SCREEN_BRINGUP)
 /* Screen bring-up only: leave the analog reference disabled and high impedance. */
 int board_io_init_digital(void);

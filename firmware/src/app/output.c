@@ -47,15 +47,32 @@ static struct {
     int64_t began, sampled, healthy;
 } recovery;
 
-static int mute(void *ctx) { ARG_UNUSED(ctx); return signal_io_stop(); }
-static int select_range(void *ctx, uint8_t value)
+static int mute(void *ctx)
 {
     ARG_UNUSED(ctx);
-    if (value && signal_io_failed()) return -EIO;
-    int rc = relay_io_select(value);
-    if (value && signal_io_failed()) { (void)relay_io_select(0); return -EIO; }
+    int rc = signal_io_stop();
+    board_io_ksafe(false);
     return rc;
 }
+static int select_path(uint8_t value, bool connect_load)
+{
+    bool close = connect_load && (value & 0xfeu);
+    if (!close) board_io_ksafe(false);
+    if (value && signal_io_failed()) return -EIO;
+    int rc = relay_io_select(value);
+    if (rc != 0) { board_io_ksafe(false); return rc; }
+    k_spinlock_key_t key = k_spin_lock(&guard);
+    bool tripped = value && (signal_io_failed() || protection_reason);
+    if (close)
+        board_io_ksafe(!tripped && !shut_down && active_epoch == stop_epoch);
+    k_spin_unlock(&guard, key);
+    if (tripped) { (void)relay_io_select(0); return -EIO; }
+    return rc;
+}
+static int select_range(void *ctx, uint8_t value) { ARG_UNUSED(ctx); return select_path(value, true); }
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+static int select_debug(void *ctx, uint8_t value) { ARG_UNUSED(ctx); return select_path(value, debug.wave); }
+#endif
 static int start_signal(void *ctx, uint32_t frequency) { ARG_UNUSED(ctx); return signal_io_start(frequency); }
 static int level(void *ctx, uint16_t amplitude) { ARG_UNUSED(ctx); return dds_io_set_amplitude(amplitude); }
 static int64_t now_ms(void *ctx) { ARG_UNUSED(ctx); return k_uptime_get(); }
@@ -75,6 +92,7 @@ static void protection(const struct device *port, struct gpio_callback *cb, gpio
     if (cb == &oc_callback) protection_reason |= OUTPUT_REASON_BIT(OUTPUT_REASON_OC);
     if (cb == &ov_callback) protection_reason |= OUTPUT_REASON_BIT(OUTPUT_REASON_OV);
     signal_io_fault();
+    board_io_ksafe(false);
 }
 
 int output_init(void)
@@ -82,9 +100,12 @@ int output_init(void)
     if (initialized) return -EALREADY;
     initialized = true;
     struct power_ops ops = {.mute=mute, .select=select_range, .start=start_signal,
-                            .level=level, .now=now_ms, .cancelled=cancelled};
+                            .level=level, .now=now_ms, .cancelled=cancelled,
+                            .tap_settle_ms=DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios) ? 50 : 30};
+    board_io_ksafe(false);
     int rc = power_init(&control, &ops);
 #if defined(CONFIG_HT_OUTPUT_BENCH)
+    ops.select = select_debug;
     if (rc == 0) rc = bench_init(&debug, &ops);
 #endif
     if (rc == 0) rc = signal_io_init();
@@ -227,12 +248,13 @@ void output_shutdown(void)
     request.stop = true;
     k_spin_unlock(&guard, key);
     signal_io_fault();
+    board_io_ksafe(false);
 }
 
 static void finish_clear(int result)
 {
     if (result != 0) {
-        int quiet = signal_io_stop();
+        int quiet = mute(NULL);
         int off = relay_io_select(0);
         power_fail(&control, POWER_ERROR_SAMPLE);
         if (off == 0) control.output = 0;
@@ -266,7 +288,7 @@ static void clear_poll(bool begin, bool stop, uint32_t blocked,
         idle = idle && (debug.state == BENCH_IDLE || debug.state == BENCH_FAULT);
 #endif
         if (!idle) { finish_clear(-EBUSY); return; }
-        int quiet = signal_io_stop();
+        int quiet = mute(NULL);
         int off = relay_io_select(0);
         if (quiet != 0 || off != 0 || relay_io_check() != 0) { finish_clear(-EIO); return; }
         control.output = 0;
@@ -315,6 +337,7 @@ static void clear_poll(bool begin, bool stop, uint32_t blocked,
             struct power_ops ops = control.ops;
             (void)power_init(&control, &ops);
 #if defined(CONFIG_HT_OUTPUT_BENCH)
+            ops.select = select_debug;
             (void)bench_init(&debug, &ops);
 #endif
         }
@@ -345,7 +368,7 @@ static void run(void *a, void *b, void *c)
         BLOCK_IF(now < inputs.time || now - inputs.time >= 100, OUTPUT_REASON_INPUT_STALE);
         BLOCK_IF(!inputs.connected, OUTPUT_REASON_SCREEN);
         BLOCK_IF(inputs.raw & BIT(6), OUTPUT_REASON_ENABLE);
-#if !defined(CONFIG_HT_OUTPUT_BENCH)
+#if !defined(CONFIG_HT_OUTPUT_BENCH) && !DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
         BLOCK_IF(inputs.raw & BIT(7), OUTPUT_REASON_DOOR);
 #endif
         bool stop = request.stop;

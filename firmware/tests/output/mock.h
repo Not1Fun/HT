@@ -9,6 +9,7 @@
 #define BIT(n) (1u << (n))
 #define DT_PATH(x) 0
 #define DT_NODELABEL(x) 0
+#define DT_NODE_HAS_PROP(node, prop) HT_TEST_KSAFE
 #define DEVICE_DT_GET(x) (&device)
 #define GPIO_DT_SPEC_GET(node, pin) {&device, 0}
 #define GPIO_INT_EDGE_TO_ACTIVE 1

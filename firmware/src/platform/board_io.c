@@ -29,6 +29,31 @@ static const struct gpio_dt_spec buzzer = GPIO_DT_SPEC_GET(BOARD_NODE, buzzer_gp
 static const struct gpio_dt_spec wdi = GPIO_DT_SPEC_GET(BOARD_NODE, wdi_gpios);
 static bool ready;
 
+#if DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
+static const struct gpio_dt_spec ksafe[] = {
+	GPIO_DT_SPEC_GET_BY_IDX(BOARD_NODE, ksafe_gpios, 0),
+	GPIO_DT_SPEC_GET_BY_IDX(BOARD_NODE, ksafe_gpios, 1),
+};
+#define KSAFE_PORT(i) DT_GPIO_CTLR_BY_IDX(BOARD_NODE, ksafe_gpios, i)
+#define KSAFE_PIN(i) DT_GPIO_PIN_BY_IDX(BOARD_NODE, ksafe_gpios, i)
+BUILD_ASSERT(DT_PROP_LEN(BOARD_NODE, ksafe_gpios) == 2);
+BUILD_ASSERT(DT_SAME_NODE(KSAFE_PORT(0), KSAFE_PORT(1)) && KSAFE_PIN(0) != KSAFE_PIN(1));
+BUILD_ASSERT(DT_GPIO_FLAGS_BY_IDX(BOARD_NODE, ksafe_gpios, 0) == GPIO_ACTIVE_HIGH &&
+	     DT_GPIO_FLAGS_BY_IDX(BOARD_NODE, ksafe_gpios, 1) == GPIO_ACTIVE_HIGH);
+#endif
+
+void board_io_ksafe(bool on)
+{
+#if DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
+	/* STM32 BSRR 一次置/清两位；保护中断不等待 I2C 或调度。 */
+	GPIO_TypeDef *port = (GPIO_TypeDef *)DT_REG_ADDR(KSAFE_PORT(0));
+	uint32_t mask = BIT(KSAFE_PIN(0)) | BIT(KSAFE_PIN(1));
+	port->BSRR = on ? mask : (mask << 16);
+#else
+	ARG_UNUSED(on);
+#endif
+}
+
 BUILD_ASSERT(ARRAY_SIZE(inputs) == BOARD_INPUT_COUNT);
 BUILD_ASSERT(HT_VREF_MV == 2900U, "VREFBUF SCALE2 requires the 2.9 V configuration");
 
@@ -87,6 +112,11 @@ static int start_vref(void)
 static int init_board(bool enable_vref)
 {
 	ready = false;
+#if DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
+	int a = setup_pin(&ksafe[0], GPIO_OUTPUT_INACTIVE | GPIO_PULL_DOWN);
+	int b = setup_pin(&ksafe[1], GPIO_OUTPUT_INACTIVE | GPIO_PULL_DOWN);
+	if (a || b) return a ? a : b;
+#endif
 	if (!enable_vref) {
 		LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
 		LL_VREFBUF_Disable();

@@ -130,7 +130,8 @@ static bool select_output(struct power *p, uint8_t output)
         return false;
     }
     p->output = output;
-    p->deadline = p->ops.now(p->ops.ctx) + 30;
+    p->deadline = p->ops.now(p->ops.ctx) + ((output & 0xfeu) && p->ops.tap_settle_ms ?
+                                            p->ops.tap_settle_ms : 30);
     return !cancel(p);
 }
 

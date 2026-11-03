@@ -38,7 +38,8 @@ static bool select_output(struct bench *b, uint8_t value)
         return false;
     }
     b->output = value;
-    b->deadline = b->ops.now(b->ops.ctx) + 30;
+    b->deadline = b->ops.now(b->ops.ctx) + ((value & 0xfeu) && b->ops.tap_settle_ms ?
+                                            b->ops.tap_settle_ms : 30);
     return true;
 }
 

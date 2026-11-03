@@ -1,0 +1,6 @@
+/* Rev23 rework: separate active-high logic inputs on a dual 12 V coil driver. */
+/ {
+	zephyr,user {
+		ksafe-gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>, <&gpioc 5 GPIO_ACTIVE_HIGH>;
+	};
+};

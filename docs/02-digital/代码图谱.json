@@ -57,7 +57,7 @@
       "path": "firmware/src/app/output.c",
       "module": "app",
       "brief": "独立输出线程执行控制；STOP取消待启动，硬件保护ISR直接静音。",
-      "sha256": "9f265b418eeec89170dc7424232023cd8caf3491b6de371e5d0e0955246a4479",
+      "sha256": "51383517f59451ac8f4a326f21a77603857da08bdcf286a3c00a9d6af2930c52",
       "includes": [
         "app/output.h",
         "core/bench.h",
@@ -139,7 +139,7 @@
       "path": "firmware/src/core/bench.c",
       "module": "core",
       "brief": "静音后先断抽头再切变压器；试波10秒、继电器30秒后自动释放。",
-      "sha256": "717d1409e8489efd7025e16b20714ffdad8277aa0caacccd3f51646e8c987c30",
+      "sha256": "6194e86cc71466314b787371794094dba81a30c0e6e12f637d981accc678f1ea",
       "includes": [
         "bench.h",
         "config/analog.h",
@@ -214,7 +214,7 @@
       "path": "firmware/src/core/power.c",
       "module": "core",
       "brief": "稳定阻抗选挡与恒VA/恒流调幅；继电器先断后合，停止/故障优先。",
-      "sha256": "f9d3f9b596a7072769a4022d48f656bfdd7ed01109588df53468f9134fd96091",
+      "sha256": "e306ce3250bd81d107f38784c6fcd3404035c9f8fca8456ba2be00a00b0cd290",
       "includes": [
         "core/power.h",
         "config/analog.h",
@@ -225,7 +225,7 @@
       "path": "firmware/src/core/power.h",
       "module": "core",
       "brief": "恒VA/恒流输出状态机；所有硬件动作经单一所有者的回调执行。",
-      "sha256": "5dd5ac01973fd0d1b7f5105e964320287d73493bb63c0866eb7329bbc2b339aa",
+      "sha256": "6ed1a9b63786f5fa9689dd504bbaffa103b6d88b690d1628b1e45ed8920d1a29",
       "includes": []
     },
     {
@@ -280,7 +280,7 @@
       "path": "firmware/src/platform/board_io.c",
       "module": "platform",
       "brief": "Initialize HT safe pins and check the clock and internal reference.",
-      "sha256": "3151d766af3a0aec4f2fd80b23ebf38655616454f4a1594fbeaec0f8531b77ca",
+      "sha256": "ac29421f3dc3bf0f4575c3c6f159c6a9d112a28599c654486da687272b153aed",
       "includes": [
         "platform/board_io.h",
         "config/analog.h"
@@ -290,7 +290,7 @@
       "path": "firmware/src/platform/board_io.h",
       "module": "platform",
       "brief": "HT board safe GPIO setup and diagnostic input snapshot.",
-      "sha256": "0c2c589d5d092419bcb80c3eb52f759666466a4aced7d327c97a14597ebede98",
+      "sha256": "ab19ccfd000dcd27300333ba39c97c3338d90a667bf990ebda4ad879726a9aca",
       "includes": []
     },
     {
@@ -685,172 +685,190 @@
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:51:select_range",
+      "id": "firmware/src/app/output.c:57:select_path",
+      "name": "select_path",
+      "path": "firmware/src/app/output.c",
+      "line": 57,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "app"
+    },
+    {
+      "id": "firmware/src/app/output.c:72:select_range",
       "name": "select_range",
       "path": "firmware/src/app/output.c",
-      "line": 51,
+      "line": 72,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:59:start_signal",
+      "id": "firmware/src/app/output.c:74:select_debug",
+      "name": "select_debug",
+      "path": "firmware/src/app/output.c",
+      "line": 74,
+      "linkage": "static",
+      "definition_form": "function",
+      "module": "app"
+    },
+    {
+      "id": "firmware/src/app/output.c:76:start_signal",
       "name": "start_signal",
       "path": "firmware/src/app/output.c",
-      "line": 59,
+      "line": 76,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:60:level",
+      "id": "firmware/src/app/output.c:77:level",
       "name": "level",
       "path": "firmware/src/app/output.c",
-      "line": 60,
+      "line": 77,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:61:now_ms",
+      "id": "firmware/src/app/output.c:78:now_ms",
       "name": "now_ms",
       "path": "firmware/src/app/output.c",
-      "line": 61,
+      "line": 78,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:62:cancelled",
+      "id": "firmware/src/app/output.c:79:cancelled",
       "name": "cancelled",
       "path": "firmware/src/app/output.c",
-      "line": 62,
+      "line": 79,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:71:protection",
+      "id": "firmware/src/app/output.c:88:protection",
       "name": "protection",
       "path": "firmware/src/app/output.c",
-      "line": 71,
+      "line": 88,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:80:output_init",
+      "id": "firmware/src/app/output.c:98:output_init",
       "name": "output_init",
       "path": "firmware/src/app/output.c",
-      "line": 80,
+      "line": 98,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:124:output_inputs",
+      "id": "firmware/src/app/output.c:145:output_inputs",
       "name": "output_inputs",
       "path": "firmware/src/app/output.c",
-      "line": 124,
+      "line": 145,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:135:queue_start",
+      "id": "firmware/src/app/output.c:156:queue_start",
       "name": "queue_start",
       "path": "firmware/src/app/output.c",
-      "line": 135,
+      "line": 156,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:155:output_start",
+      "id": "firmware/src/app/output.c:176:output_start",
       "name": "output_start",
       "path": "firmware/src/app/output.c",
-      "line": 155,
+      "line": 176,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:160:output_start_current",
+      "id": "firmware/src/app/output.c:181:output_start_current",
       "name": "output_start_current",
       "path": "firmware/src/app/output.c",
-      "line": 160,
+      "line": 181,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:166:output_debug",
+      "id": "firmware/src/app/output.c:187:output_debug",
       "name": "output_debug",
       "path": "firmware/src/app/output.c",
-      "line": 166,
+      "line": 187,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:185:output_clear",
+      "id": "firmware/src/app/output.c:206:output_clear",
       "name": "output_clear",
       "path": "firmware/src/app/output.c",
-      "line": 185,
+      "line": 206,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:205:output_stop",
+      "id": "firmware/src/app/output.c:226:output_stop",
       "name": "output_stop",
       "path": "firmware/src/app/output.c",
-      "line": 205,
+      "line": 226,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:214:output_snapshot",
+      "id": "firmware/src/app/output.c:235:output_snapshot",
       "name": "output_snapshot",
       "path": "firmware/src/app/output.c",
-      "line": 214,
+      "line": 235,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:221:output_shutdown",
+      "id": "firmware/src/app/output.c:242:output_shutdown",
       "name": "output_shutdown",
       "path": "firmware/src/app/output.c",
-      "line": 221,
+      "line": 242,
       "linkage": "external",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:232:finish_clear",
+      "id": "firmware/src/app/output.c:254:finish_clear",
       "name": "finish_clear",
       "path": "firmware/src/app/output.c",
-      "line": 232,
+      "line": 254,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:250:clear_poll",
+      "id": "firmware/src/app/output.c:272:clear_poll",
       "name": "clear_poll",
       "path": "firmware/src/app/output.c",
-      "line": 250,
+      "line": 272,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
     },
     {
-      "id": "firmware/src/app/output.c:326:run",
+      "id": "firmware/src/app/output.c:349:run",
       "name": "run",
       "path": "firmware/src/app/output.c",
-      "line": 326,
+      "line": 349,
       "linkage": "static",
       "definition_form": "function",
       "module": "app"
@@ -1108,37 +1126,37 @@
       "module": "core"
     },
     {
-      "id": "firmware/src/core/bench.c:45:bench_stop",
+      "id": "firmware/src/core/bench.c:46:bench_stop",
       "name": "bench_stop",
       "path": "firmware/src/core/bench.c",
-      "line": 45,
+      "line": 46,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/bench.c:55:bench_start",
+      "id": "firmware/src/core/bench.c:56:bench_start",
       "name": "bench_start",
       "path": "firmware/src/core/bench.c",
-      "line": 55,
+      "line": 56,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/bench.c:72:bench_amplitude_valid",
+      "id": "firmware/src/core/bench.c:73:bench_amplitude_valid",
       "name": "bench_amplitude_valid",
       "path": "firmware/src/core/bench.c",
-      "line": 72,
+      "line": 73,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/bench.c:80:bench_poll",
+      "id": "firmware/src/core/bench.c:81:bench_poll",
       "name": "bench_poll",
       "path": "firmware/src/core/bench.c",
-      "line": 80,
+      "line": 81,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
@@ -1360,91 +1378,91 @@
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:137:begin",
+      "id": "firmware/src/core/power.c:138:begin",
       "name": "begin",
       "path": "firmware/src/core/power.c",
-      "line": 137,
+      "line": 138,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:167:power_start",
+      "id": "firmware/src/core/power.c:168:power_start",
       "name": "power_start",
       "path": "firmware/src/core/power.c",
-      "line": 167,
+      "line": 168,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:172:power_start_current",
+      "id": "firmware/src/core/power.c:173:power_start_current",
       "name": "power_start_current",
       "path": "firmware/src/core/power.c",
-      "line": 172,
+      "line": 173,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:177:power_stop",
+      "id": "firmware/src/core/power.c:178:power_stop",
       "name": "power_stop",
       "path": "firmware/src/core/power.c",
-      "line": 177,
+      "line": 178,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:189:switch_range",
+      "id": "firmware/src/core/power.c:190:switch_range",
       "name": "switch_range",
       "path": "firmware/src/core/power.c",
-      "line": 189,
+      "line": 190,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:203:consistent",
+      "id": "firmware/src/core/power.c:204:consistent",
       "name": "consistent",
       "path": "firmware/src/core/power.c",
-      "line": 203,
+      "line": 204,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:210:measure_load",
+      "id": "firmware/src/core/power.c:211:measure_load",
       "name": "measure_load",
       "path": "firmware/src/core/power.c",
-      "line": 210,
+      "line": 211,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:231:probe",
+      "id": "firmware/src/core/power.c:232:probe",
       "name": "probe",
       "path": "firmware/src/core/power.c",
-      "line": 231,
+      "line": 232,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:306:regulate",
+      "id": "firmware/src/core/power.c:307:regulate",
       "name": "regulate",
       "path": "firmware/src/core/power.c",
-      "line": 306,
+      "line": 307,
       "linkage": "static",
       "definition_form": "function",
       "module": "core"
     },
     {
-      "id": "firmware/src/core/power.c:366:power_poll",
+      "id": "firmware/src/core/power.c:367:power_poll",
       "name": "power_poll",
       "path": "firmware/src/core/power.c",
-      "line": 366,
+      "line": 367,
       "linkage": "external",
       "definition_form": "function",
       "module": "core"
@@ -1567,82 +1585,91 @@
       "module": "."
     },
     {
-      "id": "firmware/src/platform/board_io.c:35:setup_pin",
+      "id": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "board_io_ksafe",
+      "path": "firmware/src/platform/board_io.c",
+      "line": 45,
+      "linkage": "external",
+      "definition_form": "function",
+      "module": "platform"
+    },
+    {
+      "id": "firmware/src/platform/board_io.c:60:setup_pin",
       "name": "setup_pin",
       "path": "firmware/src/platform/board_io.c",
-      "line": 35,
+      "line": 60,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:43:check_clock",
+      "id": "firmware/src/platform/board_io.c:68:check_clock",
       "name": "check_clock",
       "path": "firmware/src/platform/board_io.c",
-      "line": 43,
+      "line": 68,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:65:start_vref",
+      "id": "firmware/src/platform/board_io.c:90:start_vref",
       "name": "start_vref",
       "path": "firmware/src/platform/board_io.c",
-      "line": 65,
+      "line": 90,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:87:init_board",
+      "id": "firmware/src/platform/board_io.c:112:init_board",
       "name": "init_board",
       "path": "firmware/src/platform/board_io.c",
-      "line": 87,
+      "line": 112,
       "linkage": "static",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:125:board_io_init",
+      "id": "firmware/src/platform/board_io.c:155:board_io_init",
       "name": "board_io_init",
       "path": "firmware/src/platform/board_io.c",
-      "line": 125,
+      "line": 155,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
+      "id": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
       "name": "board_io_clear_protection",
       "path": "firmware/src/platform/board_io.c",
-      "line": 130,
+      "line": 160,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:143:board_io_start_reference",
+      "id": "firmware/src/platform/board_io.c:173:board_io_start_reference",
       "name": "board_io_start_reference",
       "path": "firmware/src/platform/board_io.c",
-      "line": 143,
+      "line": 173,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:150:board_io_init_digital",
+      "id": "firmware/src/platform/board_io.c:180:board_io_init_digital",
       "name": "board_io_init_digital",
       "path": "firmware/src/platform/board_io.c",
-      "line": 150,
+      "line": 180,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
     },
     {
-      "id": "firmware/src/platform/board_io.c:156:board_io_read",
+      "id": "firmware/src/platform/board_io.c:186:board_io_read",
       "name": "board_io_read",
       "path": "firmware/src/platform/board_io.c",
-      "line": 156,
+      "line": 186,
       "linkage": "external",
       "definition_form": "function",
       "module": "platform"
@@ -3019,7 +3046,7 @@
     },
     {
       "caller": "firmware/bootloader/src/safe.c:49:mcuboot_status_change",
-      "callee": "firmware/src/platform/board_io.c:150:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:180:board_io_init_digital",
       "line": 52
     },
     {
@@ -3288,304 +3315,349 @@
       "line": 56
     },
     {
-      "caller": "firmware/src/app/output.c:155:output_start",
-      "callee": "firmware/src/app/output.c:135:queue_start",
-      "line": 157
+      "caller": "firmware/src/app/output.c:176:output_start",
+      "callee": "firmware/src/app/output.c:156:queue_start",
+      "line": 178
     },
     {
-      "caller": "firmware/src/app/output.c:160:output_start_current",
-      "callee": "firmware/src/app/output.c:135:queue_start",
-      "line": 162
+      "caller": "firmware/src/app/output.c:181:output_start_current",
+      "callee": "firmware/src/app/output.c:156:queue_start",
+      "line": 183
     },
     {
-      "caller": "firmware/src/app/output.c:166:output_debug",
-      "callee": "firmware/src/core/bench.c:72:bench_amplitude_valid",
-      "line": 169
+      "caller": "firmware/src/app/output.c:187:output_debug",
+      "callee": "firmware/src/core/bench.c:73:bench_amplitude_valid",
+      "line": 190
     },
     {
-      "caller": "firmware/src/app/output.c:221:output_shutdown",
+      "caller": "firmware/src/app/output.c:242:output_shutdown",
       "callee": "firmware/src/platform/signal_io.c:52:signal_io_fault",
-      "line": 229
+      "line": 250
     },
     {
-      "caller": "firmware/src/app/output.c:232:finish_clear",
-      "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
-      "line": 235
+      "caller": "firmware/src/app/output.c:242:output_shutdown",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "line": 251
     },
     {
-      "caller": "firmware/src/app/output.c:232:finish_clear",
+      "caller": "firmware/src/app/output.c:254:finish_clear",
+      "callee": "firmware/src/app/output.c:50:mute",
+      "line": 257
+    },
+    {
+      "caller": "firmware/src/app/output.c:254:finish_clear",
       "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
-      "line": 236
+      "line": 258
     },
     {
-      "caller": "firmware/src/app/output.c:232:finish_clear",
+      "caller": "firmware/src/app/output.c:254:finish_clear",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 237
+      "line": 259
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 261
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:62:cancelled",
-      "line": 261
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 262
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 268
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
-      "line": 269
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
-      "line": 270
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 271
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/relay_io.c:58:relay_io_check",
-      "line": 271
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
-      "line": 282
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/board_io.c:156:board_io_read",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
       "line": 283
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:62:cancelled",
-      "line": 285
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:79:cancelled",
+      "line": 283
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/signal_io.c:286:signal_io_recover",
-      "line": 285
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 284
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 287
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 290
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:50:mute",
+      "line": 291
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
       "line": 292
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 298
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 293
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
-      "line": 298
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 310
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
       "callee": "firmware/src/platform/relay_io.c:58:relay_io_check",
-      "line": 310
+      "line": 293
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "line": 304
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/board_io.c:186:board_io_read",
+      "line": 305
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:79:cancelled",
+      "line": 307
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/signal_io.c:286:signal_io_recover",
+      "line": 307
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 309
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 314
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 320
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
       "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
-      "line": 313
+      "line": 320
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/core/power.c:96:power_init",
-      "line": 316
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 332
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/core/bench.c:12:bench_init",
-      "line": 318
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/relay_io.c:58:relay_io_check",
+      "line": 332
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 322
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "callee": "firmware/src/app/output.c:232:finish_clear",
-      "line": 323
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/platform/board_io.c:156:board_io_read",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
       "line": 335
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/core/power.c:96:power_init",
+      "line": 338
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/core/bench.c:12:bench_init",
+      "line": 341
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 345
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "callee": "firmware/src/app/output.c:254:finish_clear",
+      "line": 346
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/platform/board_io.c:186:board_io_read",
+      "line": 358
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "callee": "firmware/src/platform/signal_io.c:338:signal_io_poll",
-      "line": 337
+      "line": 360
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
-      "line": 379
+      "line": 402
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 403
+      "line": 426
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 405
+      "line": 428
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/app/output.c:250:clear_poll",
-      "line": 410
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/app/output.c:272:clear_poll",
+      "line": 433
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/bench.c:45:bench_stop",
-      "line": 414
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/bench.c:46:bench_stop",
+      "line": 437
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/bench.c:55:bench_start",
-      "line": 417
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/bench.c:56:bench_start",
+      "line": 440
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/bench.c:80:bench_poll",
-      "line": 419
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/bench.c:81:bench_poll",
+      "line": 442
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/power.c:177:power_stop",
-      "line": 422
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/power.c:178:power_stop",
+      "line": 445
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/power.c:172:power_start_current",
-      "line": 424
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/power.c:173:power_start_current",
+      "line": 447
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/power.c:167:power_start",
-      "line": 425
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/power.c:168:power_start",
+      "line": 448
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "callee": "firmware/src/core/power.c:366:power_poll",
-      "line": 427
+      "caller": "firmware/src/app/output.c:349:run",
+      "callee": "firmware/src/core/power.c:367:power_poll",
+      "line": 450
     },
     {
       "caller": "firmware/src/app/output.c:50:mute",
       "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
-      "line": 50
+      "line": 53
     },
     {
-      "caller": "firmware/src/app/output.c:51:select_range",
-      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
+      "caller": "firmware/src/app/output.c:50:mute",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
       "line": 54
     },
     {
-      "caller": "firmware/src/app/output.c:51:select_range",
-      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
-      "line": 55
-    },
-    {
-      "caller": "firmware/src/app/output.c:51:select_range",
-      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
-      "line": 56
-    },
-    {
-      "caller": "firmware/src/app/output.c:51:select_range",
-      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
-      "line": 56
-    },
-    {
-      "caller": "firmware/src/app/output.c:59:start_signal",
-      "callee": "firmware/src/platform/signal_io.c:263:signal_io_start",
-      "line": 59
-    },
-    {
-      "caller": "firmware/src/app/output.c:60:level",
-      "callee": "firmware/src/platform/dds_io.c:461:dds_io_set_amplitude",
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
       "line": 60
     },
     {
-      "caller": "firmware/src/app/output.c:71:protection",
-      "callee": "firmware/src/platform/signal_io.c:52:signal_io_fault",
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
+      "line": 61
+    },
+    {
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
+      "line": 62
+    },
+    {
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "line": 63
+    },
+    {
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/signal_io.c:67:signal_io_failed",
+      "line": 65
+    },
+    {
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "line": 67
+    },
+    {
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
+      "line": 69
+    },
+    {
+      "caller": "firmware/src/app/output.c:72:select_range",
+      "callee": "firmware/src/app/output.c:57:select_path",
+      "line": 72
+    },
+    {
+      "caller": "firmware/src/app/output.c:74:select_debug",
+      "callee": "firmware/src/app/output.c:57:select_path",
+      "line": 74
+    },
+    {
+      "caller": "firmware/src/app/output.c:76:start_signal",
+      "callee": "firmware/src/platform/signal_io.c:263:signal_io_start",
+      "line": 76
+    },
+    {
+      "caller": "firmware/src/app/output.c:77:level",
+      "callee": "firmware/src/platform/dds_io.c:461:dds_io_set_amplitude",
       "line": 77
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/core/power.c:96:power_init",
-      "line": 86
-    },
-    {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/core/bench.c:12:bench_init",
-      "line": 88
-    },
-    {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/signal_io.c:215:signal_io_init",
-      "line": 90
-    },
-    {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
-      "line": 92
-    },
-    {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
-      "line": 93
-    },
-    {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/relay_io.c:58:relay_io_check",
+      "caller": "firmware/src/app/output.c:88:protection",
+      "callee": "firmware/src/platform/signal_io.c:52:signal_io_fault",
       "line": 94
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
+      "caller": "firmware/src/app/output.c:88:protection",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
       "line": 95
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "callee": "firmware/src/platform/signal_io.c:52:signal_io_fault",
-      "line": 112
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "line": 105
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/core/power.c:96:power_init",
+      "line": 106
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/core/bench.c:12:bench_init",
+      "line": 109
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/signal_io.c:215:signal_io_init",
+      "line": 111
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
       "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
       "line": 113
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/relay_io.c:79:relay_io_select",
+      "line": 114
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/relay_io.c:58:relay_io_check",
+      "line": 115
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "line": 116
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/signal_io.c:52:signal_io_fault",
+      "line": 133
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "callee": "firmware/src/platform/signal_io.c:278:signal_io_stop",
+      "line": 134
     },
     {
       "caller": "firmware/src/app/screen_bridge.c:21:screen_bridge_run",
@@ -3634,7 +3706,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:121:request_stop",
-      "callee": "firmware/src/app/output.c:205:output_stop",
+      "callee": "firmware/src/app/output.c:226:output_stop",
       "line": 124
     },
     {
@@ -3644,12 +3716,12 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:130:request_start",
-      "callee": "firmware/src/app/output.c:160:output_start_current",
+      "callee": "firmware/src/app/output.c:181:output_start_current",
       "line": 135
     },
     {
       "caller": "firmware/src/app/screen_panel.c:130:request_start",
-      "callee": "firmware/src/app/output.c:155:output_start",
+      "callee": "firmware/src/app/output.c:176:output_start",
       "line": 136
     },
     {
@@ -3659,12 +3731,12 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:146:update_output",
-      "callee": "firmware/src/app/output.c:124:output_inputs",
+      "callee": "firmware/src/app/output.c:145:output_inputs",
       "line": 148
     },
     {
       "caller": "firmware/src/app/screen_panel.c:146:update_output",
-      "callee": "firmware/src/app/output.c:214:output_snapshot",
+      "callee": "firmware/src/app/output.c:235:output_snapshot",
       "line": 151
     },
     {
@@ -3809,7 +3881,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:404:update_keys",
-      "callee": "firmware/src/app/output.c:185:output_clear",
+      "callee": "firmware/src/app/output.c:206:output_clear",
       "line": 460
     },
     {
@@ -3824,7 +3896,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:404:update_keys",
-      "callee": "firmware/src/app/output.c:166:output_debug",
+      "callee": "firmware/src/app/output.c:187:output_debug",
       "line": 471
     },
     {
@@ -3869,7 +3941,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:501:update_inputs",
-      "callee": "firmware/src/platform/board_io.c:156:board_io_read",
+      "callee": "firmware/src/platform/board_io.c:186:board_io_read",
       "line": 521
     },
     {
@@ -4014,7 +4086,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:678:snapshot",
-      "callee": "firmware/src/app/output.c:214:output_snapshot",
+      "callee": "firmware/src/app/output.c:235:output_snapshot",
       "line": 738
     },
     {
@@ -4094,7 +4166,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:817:screen_panel_run",
-      "callee": "firmware/src/app/output.c:80:output_init",
+      "callee": "firmware/src/app/output.c:98:output_init",
       "line": 843
     },
     {
@@ -4159,7 +4231,7 @@
     },
     {
       "caller": "firmware/src/app/screen_panel.c:817:screen_panel_run",
-      "callee": "firmware/src/app/output.c:221:output_shutdown",
+      "callee": "firmware/src/app/output.c:242:output_shutdown",
       "line": 903
     },
     {
@@ -4188,114 +4260,114 @@
       "line": 37
     },
     {
-      "caller": "firmware/src/core/bench.c:45:bench_stop",
+      "caller": "firmware/src/core/bench.c:46:bench_stop",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 49
+      "line": 50
     },
     {
-      "caller": "firmware/src/core/bench.c:55:bench_start",
-      "callee": "firmware/src/core/bench.c:72:bench_amplitude_valid",
-      "line": 59
-    },
-    {
-      "caller": "firmware/src/core/bench.c:55:bench_start",
-      "callee": "firmware/src/core/bench.c:29:cancelled",
+      "caller": "firmware/src/core/bench.c:56:bench_start",
+      "callee": "firmware/src/core/bench.c:73:bench_amplitude_valid",
       "line": 60
     },
     {
-      "caller": "firmware/src/core/bench.c:55:bench_start",
-      "callee": "firmware/src/core/bench.c:19:bench_fail",
+      "caller": "firmware/src/core/bench.c:56:bench_start",
+      "callee": "firmware/src/core/bench.c:29:cancelled",
       "line": 61
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:56:bench_start",
+      "callee": "firmware/src/core/bench.c:19:bench_fail",
+      "line": 62
+    },
+    {
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:29:cancelled",
-      "line": 83
+      "line": 84
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:45:bench_stop",
-      "line": 83
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:46:bench_stop",
+      "line": 84
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:34:select_output",
-      "line": 87
-    },
-    {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:34:select_output",
       "line": 88
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 94
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:34:select_output",
+      "line": 89
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 96
+      "line": 95
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:19:bench_fail",
+      "line": 97
+    },
+    {
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:6:bench_mask",
-      "line": 98
+      "line": 99
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:34:select_output",
-      "line": 101
+      "line": 102
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:34:select_output",
-      "line": 104
+      "line": 105
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:34:select_output",
-      "line": 107
+      "line": 108
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 111
+      "line": 112
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:19:bench_fail",
-      "line": 116
-    },
-    {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
       "line": 117
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:29:cancelled",
-      "line": 118
-    },
-    {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:45:bench_stop",
-      "line": 118
-    },
-    {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "callee": "firmware/src/core/bench.c:19:bench_fail",
+      "line": 118
+    },
+    {
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:29:cancelled",
       "line": 119
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:29:cancelled",
-      "line": 124
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:46:bench_stop",
+      "line": 119
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
-      "callee": "firmware/src/core/bench.c:45:bench_stop",
-      "line": 124
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:19:bench_fail",
+      "line": 120
+    },
+    {
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:29:cancelled",
+      "line": 125
+    },
+    {
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
+      "callee": "firmware/src/core/bench.c:46:bench_stop",
+      "line": 125
     },
     {
       "caller": "firmware/src/core/ntc.c:64:ntc_convert",
@@ -4304,7 +4376,7 @@
     },
     {
       "caller": "firmware/src/core/power.c:118:cancel",
-      "callee": "firmware/src/core/power.c:177:power_stop",
+      "callee": "firmware/src/core/power.c:178:power_stop",
       "line": 122
     },
     {
@@ -4315,32 +4387,32 @@
     {
       "caller": "firmware/src/core/power.c:126:select_output",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 134
+      "line": 135
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 160
+      "line": 161
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 163
+      "line": 164
     },
     {
-      "caller": "firmware/src/core/power.c:167:power_start",
-      "callee": "firmware/src/core/power.c:137:begin",
-      "line": 169
+      "caller": "firmware/src/core/power.c:168:power_start",
+      "callee": "firmware/src/core/power.c:138:begin",
+      "line": 170
     },
     {
-      "caller": "firmware/src/core/power.c:172:power_start_current",
-      "callee": "firmware/src/core/power.c:137:begin",
-      "line": 174
+      "caller": "firmware/src/core/power.c:173:power_start_current",
+      "callee": "firmware/src/core/power.c:138:begin",
+      "line": 175
     },
     {
-      "caller": "firmware/src/core/power.c:177:power_stop",
+      "caller": "firmware/src/core/power.c:178:power_stop",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 182
+      "line": 183
     },
     {
       "caller": "firmware/src/core/power.c:17:tolerance",
@@ -4348,334 +4420,334 @@
       "line": 17
     },
     {
-      "caller": "firmware/src/core/power.c:189:switch_range",
-      "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 191
-    },
-    {
-      "caller": "firmware/src/core/power.c:189:switch_range",
+      "caller": "firmware/src/core/power.c:190:switch_range",
       "callee": "firmware/src/core/power.c:103:power_fail",
       "line": 192
     },
     {
-      "caller": "firmware/src/core/power.c:189:switch_range",
+      "caller": "firmware/src/core/power.c:190:switch_range",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 193
+    },
+    {
+      "caller": "firmware/src/core/power.c:190:switch_range",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 200
+      "line": 201
     },
     {
-      "caller": "firmware/src/core/power.c:210:measure_load",
-      "callee": "firmware/src/core/power.c:16:maximum",
-      "line": 212
-    },
-    {
-      "caller": "firmware/src/core/power.c:210:measure_load",
+      "caller": "firmware/src/core/power.c:211:measure_load",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 213
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:211:measure_load",
       "callee": "firmware/src/core/power.c:16:maximum",
-      "line": 233
+      "line": 214
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 234
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 235
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 236
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:40:requested_power",
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:16:maximum",
       "line": 237
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 241
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:40:requested_power",
+      "line": 238
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:210:measure_load",
-      "line": 246
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 242
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:103:power_fail",
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:211:measure_load",
       "line": 247
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 248
+    },
+    {
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:40:requested_power",
-      "line": 248
-    },
-    {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:85:choose_range",
-      "line": 248
-    },
-    {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:203:consistent",
       "line": 249
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:189:switch_range",
-      "line": 251
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:85:choose_range",
+      "line": 249
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:204:consistent",
+      "line": 250
+    },
+    {
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:190:switch_range",
+      "line": 252
+    },
+    {
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:38:power_drive_limit",
-      "line": 261
+      "line": 262
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:78:stable_range",
-      "line": 270
+      "line": 271
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:78:stable_range",
-      "line": 275
+      "line": 276
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:189:switch_range",
-      "line": 279
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:190:switch_range",
+      "line": 280
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:203:consistent",
-      "line": 279
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:204:consistent",
+      "line": 280
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 281
+      "line": 282
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:47:power_feedforward",
-      "line": 292
+      "line": 293
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
-      "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 299
-    },
-    {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:103:power_fail",
       "line": 300
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 301
+    },
+    {
+      "caller": "firmware/src/core/power.c:232:probe",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 303
+      "line": 304
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:38:power_drive_limit",
-      "line": 308
-    },
-    {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:16:maximum",
       "line": 309
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 310
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:16:maximum",
-      "line": 312
+      "line": 311
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:16:maximum",
       "line": 313
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:103:power_fail",
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:16:maximum",
       "line": 314
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:47:power_feedforward",
-      "line": 316
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 315
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:40:requested_power",
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:47:power_feedforward",
       "line": 317
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:16:maximum",
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:40:requested_power",
       "line": 318
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 320
-    },
-    {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:19:root",
-      "line": 332
-    },
-    {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:16:maximum",
-      "line": 337
+      "line": 319
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
-      "callee": "firmware/src/core/power.c:17:tolerance",
-      "line": 337
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 321
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:19:root",
-      "line": 349
+      "line": 333
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:16:maximum",
+      "line": 338
+    },
+    {
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:17:tolerance",
+      "line": 338
+    },
+    {
+      "caller": "firmware/src/core/power.c:307:regulate",
+      "callee": "firmware/src/core/power.c:19:root",
+      "line": 350
+    },
+    {
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 359
+      "line": 360
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 362
+      "line": 363
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 370
+      "line": 371
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 372
+      "line": 373
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 376
+      "line": 377
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 382
+      "line": 383
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 387
+      "line": 388
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 392
+      "line": 393
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:231:probe",
-      "line": 407
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:232:probe",
+      "line": 408
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:210:measure_load",
-      "line": 410
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:211:measure_load",
+      "line": 411
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:40:requested_power",
-      "line": 413
+      "line": 414
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:64:attainable",
-      "line": 413
+      "line": 414
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:40:requested_power",
-      "line": 414
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:85:choose_range",
-      "line": 414
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:203:consistent",
       "line": 415
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:103:power_fail",
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:85:choose_range",
+      "line": 415
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:204:consistent",
       "line": 416
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:189:switch_range",
-      "line": 419
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:306:regulate",
-      "line": 425
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:126:select_output",
-      "line": 431
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:126:select_output",
-      "line": 434
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "callee": "firmware/src/core/power.c:126:select_output",
-      "line": 437
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:103:power_fail",
-      "line": 441
+      "line": 417
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:190:switch_range",
+      "line": 420
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:307:regulate",
+      "line": 426
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:126:select_output",
+      "line": 432
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:126:select_output",
+      "line": 435
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:126:select_output",
+      "line": 438
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "callee": "firmware/src/core/power.c:103:power_fail",
+      "line": 442
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:118:cancel",
-      "line": 446
+      "line": 447
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:126:select_output",
-      "line": 450
+      "line": 451
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "callee": "firmware/src/core/power.c:126:select_output",
-      "line": 453
+      "line": 454
     },
     {
       "caller": "firmware/src/core/power.c:40:requested_power",
@@ -4854,7 +4926,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:150:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:180:board_io_init_digital",
       "line": 19
     },
     {
@@ -4879,7 +4951,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:125:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:155:board_io_init",
       "line": 39
     },
     {
@@ -4899,7 +4971,7 @@
     },
     {
       "caller": "firmware/src/main.c:16:main",
-      "callee": "firmware/src/platform/board_io.c:156:board_io_read",
+      "callee": "firmware/src/platform/board_io.c:186:board_io_read",
       "line": 64
     },
     {
@@ -4908,49 +4980,59 @@
       "line": 67
     },
     {
-      "caller": "firmware/src/platform/board_io.c:125:board_io_init",
-      "callee": "firmware/src/platform/board_io.c:87:init_board",
-      "line": 127
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:143:board_io_start_reference",
-      "callee": "firmware/src/platform/board_io.c:65:start_vref",
-      "line": 145
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:150:board_io_init_digital",
-      "callee": "firmware/src/platform/board_io.c:87:init_board",
-      "line": 152
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 95
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 101
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 106
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:35:setup_pin",
-      "line": 111
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:43:check_clock",
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
       "line": 116
     },
     {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "callee": "firmware/src/platform/board_io.c:65:start_vref",
-      "line": 120
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
+      "line": 117
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
+      "line": 125
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
+      "line": 131
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
+      "line": 136
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:60:setup_pin",
+      "line": 141
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:68:check_clock",
+      "line": 146
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "callee": "firmware/src/platform/board_io.c:90:start_vref",
+      "line": 150
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:155:board_io_init",
+      "callee": "firmware/src/platform/board_io.c:112:init_board",
+      "line": 157
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:173:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:90:start_vref",
+      "line": 175
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:180:board_io_init_digital",
+      "callee": "firmware/src/platform/board_io.c:112:init_board",
+      "line": 182
     },
     {
       "caller": "firmware/src/platform/dds_io.c:118:fail",
@@ -5334,7 +5416,7 @@
     },
     {
       "caller": "firmware/src/platform/signal_io.c:215:signal_io_init",
-      "callee": "firmware/src/platform/board_io.c:143:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:173:board_io_start_reference",
       "line": 222
     },
     {
@@ -5634,7 +5716,7 @@
     },
     {
       "caller": "firmware/src/platform/temperature_io.c:96:temperature_io_init",
-      "callee": "firmware/src/platform/board_io.c:143:board_io_start_reference",
+      "callee": "firmware/src/platform/board_io.c:173:board_io_start_reference",
       "line": 115
     },
     {
@@ -6285,651 +6367,675 @@
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:124:output_inputs",
+      "caller": "firmware/src/app/output.c:145:output_inputs",
       "name": "k_spin_lock",
-      "line": 126,
+      "line": 147,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:124:output_inputs",
+      "caller": "firmware/src/app/output.c:145:output_inputs",
       "name": "k_uptime_get",
-      "line": 130,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:124:output_inputs",
-      "name": "k_spin_unlock",
-      "line": 132,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:135:queue_start",
-      "name": "k_spin_lock",
-      "line": 139,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:135:queue_start",
-      "name": "k_spin_unlock",
-      "line": 145,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:135:queue_start",
-      "name": "k_spin_unlock",
       "line": 151,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:166:output_debug",
-      "name": "k_spin_lock",
-      "line": 170,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:166:output_debug",
+      "caller": "firmware/src/app/output.c:145:output_inputs",
       "name": "k_spin_unlock",
-      "line": 180,
+      "line": 153,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:185:output_clear",
+      "caller": "firmware/src/app/output.c:156:queue_start",
       "name": "k_spin_lock",
-      "line": 187,
+      "line": 160,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:185:output_clear",
+      "caller": "firmware/src/app/output.c:156:queue_start",
+      "name": "k_spin_unlock",
+      "line": 166,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:156:queue_start",
+      "name": "k_spin_unlock",
+      "line": 172,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:187:output_debug",
+      "name": "k_spin_lock",
+      "line": 191,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:187:output_debug",
       "name": "k_spin_unlock",
       "line": 201,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:205:output_stop",
+      "caller": "firmware/src/app/output.c:206:output_clear",
       "name": "k_spin_lock",
-      "line": 207,
+      "line": 208,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:205:output_stop",
+      "caller": "firmware/src/app/output.c:206:output_clear",
       "name": "k_spin_unlock",
-      "line": 211,
+      "line": 222,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:214:output_snapshot",
+      "caller": "firmware/src/app/output.c:226:output_stop",
       "name": "k_spin_lock",
-      "line": 216,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:214:output_snapshot",
-      "name": "k_spin_unlock",
-      "line": 218,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:221:output_shutdown",
-      "name": "k_spin_lock",
-      "line": 223,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:221:output_shutdown",
-      "name": "k_spin_unlock",
       "line": 228,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "BIT",
-      "line": 284,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "BIT",
-      "line": 284,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "k_spin_lock",
-      "line": 288,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
+      "caller": "firmware/src/app/output.c:226:output_stop",
       "name": "k_spin_unlock",
-      "line": 291,
+      "line": 232,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "k_uptime_get",
-      "line": 294,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 300,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 302,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 303,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 303,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
+      "caller": "firmware/src/app/output.c:235:output_snapshot",
       "name": "k_spin_lock",
-      "line": 311,
+      "line": 237,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:250:clear_poll",
+      "caller": "firmware/src/app/output.c:235:output_snapshot",
       "name": "k_spin_unlock",
-      "line": 321,
+      "line": 239,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "ARG_UNUSED",
-      "line": 328,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "ARG_UNUSED",
-      "line": 328,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "ARG_UNUSED",
-      "line": 328,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_sem_take",
-      "line": 329,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_uptime_get",
-      "line": 338,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:242:output_shutdown",
       "name": "k_spin_lock",
-      "line": 339,
+      "line": 244,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 343,
-      "kind": "macro"
+      "caller": "firmware/src/app/output.c:242:output_shutdown",
+      "name": "k_spin_unlock",
+      "line": 249,
+      "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "BIT",
+      "line": 306,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "BIT",
+      "line": 306,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "k_spin_lock",
+      "line": 310,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "k_spin_unlock",
+      "line": 313,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "k_uptime_get",
+      "line": 316,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 322,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 324,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 325,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 325,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "k_spin_lock",
+      "line": 333,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:272:clear_poll",
+      "name": "k_spin_unlock",
       "line": 344,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 345,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 346,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 347,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 347,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 349,
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "ARG_UNUSED",
+      "line": 351,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "ARG_UNUSED",
+      "line": 351,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "ARG_UNUSED",
+      "line": 351,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_sem_take",
+      "line": 352,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_uptime_get",
+      "line": 361,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_spin_lock",
+      "line": 362,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BLOCK_IF",
-      "line": 349,
+      "line": 366,
       "kind": "macro"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_spin_unlock",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 367,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
       "line": 368,
-      "kind": "external_or_unknown"
+      "kind": "macro"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 369,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BIT",
       "line": 370,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BLOCK_IF",
       "line": 370,
       "kind": "macro"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BIT",
-      "line": 371,
+      "line": 372,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BLOCK_IF",
-      "line": 371,
+      "line": 372,
       "kind": "macro"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 373,
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_spin_unlock",
+      "line": 391,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 373,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BIT",
-      "line": 375,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 375,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 376,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 376,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 377,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BIT",
-      "line": 377,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 377,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 380,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 381,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 385,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 386,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "BLOCK_IF",
-      "line": 387,
-      "kind": "macro"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "OUTPUT_REASON_BIT",
       "line": 393,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 394,
-      "kind": "external_or_unknown"
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 393,
+      "kind": "macro"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 394,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_uptime_get",
-      "line": 420,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_uptime_get",
-      "line": 427,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "BIT",
-      "line": 430,
+      "line": 394,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 394,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 396,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 396,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 398,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 398,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 399,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 399,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 400,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 400,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 400,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 403,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 404,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 408,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 409,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BLOCK_IF",
+      "line": 410,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 447,
+      "line": 416,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 448,
+      "line": 417,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 458,
+      "line": 417,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_uptime_get",
+      "line": 443,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_uptime_get",
+      "line": 450,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "BIT",
+      "line": 453,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 459,
+      "line": 470,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 460,
+      "line": 471,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 461,
+      "line": 481,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "OUTPUT_REASON_BIT",
-      "line": 467,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 473,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 474,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_spin_lock",
-      "line": 475,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "k_spin_unlock",
-      "line": 478,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "wdt_feed",
-      "line": 480,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:326:run",
-      "name": "gpio_pin_set_dt",
       "line": 482,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:326:run",
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 483,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 484,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 490,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 496,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 497,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_spin_lock",
+      "line": 498,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "k_spin_unlock",
+      "line": 501,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "wdt_feed",
+      "line": 503,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
+      "name": "gpio_pin_set_dt",
+      "line": 505,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:349:run",
       "name": "k_msleep",
-      "line": 485,
+      "line": 508,
       "kind": "external_or_unknown"
     },
     {
       "caller": "firmware/src/app/output.c:50:mute",
       "name": "ARG_UNUSED",
-      "line": 50,
+      "line": 52,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:51:select_range",
-      "name": "ARG_UNUSED",
-      "line": 53,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:59:start_signal",
-      "name": "ARG_UNUSED",
-      "line": 59,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:60:level",
-      "name": "ARG_UNUSED",
-      "line": 60,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:61:now_ms",
-      "name": "ARG_UNUSED",
-      "line": 61,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:61:now_ms",
-      "name": "k_uptime_get",
-      "line": 61,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:62:cancelled",
-      "name": "ARG_UNUSED",
+      "caller": "firmware/src/app/output.c:57:select_path",
+      "name": "k_spin_lock",
       "line": 64,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:62:cancelled",
-      "name": "k_spin_lock",
-      "line": 65,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:62:cancelled",
+      "caller": "firmware/src/app/output.c:57:select_path",
       "name": "k_spin_unlock",
-      "line": 67,
+      "line": 68,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:71:protection",
+      "caller": "firmware/src/app/output.c:72:select_range",
       "name": "ARG_UNUSED",
-      "line": 73,
+      "line": 72,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:71:protection",
+      "caller": "firmware/src/app/output.c:74:select_debug",
       "name": "ARG_UNUSED",
-      "line": 73,
+      "line": 74,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:71:protection",
+      "caller": "firmware/src/app/output.c:76:start_signal",
       "name": "ARG_UNUSED",
-      "line": 73,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:71:protection",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 75,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/app/output.c:71:protection",
-      "name": "OUTPUT_REASON_BIT",
       "line": 76,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "BIT",
-      "line": 97,
+      "caller": "firmware/src/app/output.c:77:level",
+      "name": "ARG_UNUSED",
+      "line": 77,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_init_callback",
-      "line": 97,
+      "caller": "firmware/src/app/output.c:78:now_ms",
+      "name": "ARG_UNUSED",
+      "line": 78,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "BIT",
-      "line": 98,
+      "caller": "firmware/src/app/output.c:78:now_ms",
+      "name": "k_uptime_get",
+      "line": 78,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_init_callback",
-      "line": 98,
+      "caller": "firmware/src/app/output.c:79:cancelled",
+      "name": "ARG_UNUSED",
+      "line": 81,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_add_callback",
-      "line": 99,
+      "caller": "firmware/src/app/output.c:79:cancelled",
+      "name": "k_spin_lock",
+      "line": 82,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_add_callback",
-      "line": 100,
+      "caller": "firmware/src/app/output.c:79:cancelled",
+      "name": "k_spin_unlock",
+      "line": 84,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_pin_interrupt_configure_dt",
-      "line": 101,
+      "caller": "firmware/src/app/output.c:88:protection",
+      "name": "ARG_UNUSED",
+      "line": 90,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_pin_interrupt_configure_dt",
-      "line": 102,
+      "caller": "firmware/src/app/output.c:88:protection",
+      "name": "ARG_UNUSED",
+      "line": 90,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "gpio_pin_configure_dt",
+      "caller": "firmware/src/app/output.c:88:protection",
+      "name": "ARG_UNUSED",
+      "line": 90,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:88:protection",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 92,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:88:protection",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 93,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "DT_NODE_HAS_PROP",
       "line": 104,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "device_is_ready",
-      "line": 105,
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "BIT",
+      "line": 118,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "wdt_install_timeout",
-      "line": 108,
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_init_callback",
+      "line": 118,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "wdt_setup",
-      "line": 109,
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "BIT",
+      "line": 119,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "OUTPUT_REASON_BIT",
-      "line": 116,
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_init_callback",
+      "line": 119,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/app/output.c:80:output_init",
-      "name": "k_sem_give",
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_add_callback",
       "line": 120,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_add_callback",
+      "line": 121,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_pin_interrupt_configure_dt",
+      "line": 122,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_pin_interrupt_configure_dt",
+      "line": 123,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "gpio_pin_configure_dt",
+      "line": 125,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "device_is_ready",
+      "line": 126,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "wdt_install_timeout",
+      "line": 129,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "wdt_setup",
+      "line": 130,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "OUTPUT_REASON_BIT",
+      "line": 137,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/app/output.c:98:output_init",
+      "name": "k_sem_give",
+      "line": 141,
       "kind": "external_or_unknown"
     },
     {
@@ -7497,45 +7603,45 @@
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:45:bench_stop",
+      "caller": "firmware/src/core/bench.c:46:bench_stop",
       "name": "mute",
-      "line": 49,
+      "line": 50,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:45:bench_stop",
+      "caller": "firmware/src/core/bench.c:46:bench_stop",
       "name": "now",
-      "line": 51,
+      "line": 52,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:55:bench_start",
+      "caller": "firmware/src/core/bench.c:56:bench_start",
       "name": "mute",
-      "line": 61,
+      "line": 62,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:55:bench_start",
+      "caller": "firmware/src/core/bench.c:56:bench_start",
       "name": "now",
-      "line": 67,
+      "line": 68,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "name": "start",
-      "line": 111,
+      "line": 112,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "name": "now",
-      "line": 113,
+      "line": 114,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/bench.c:80:bench_poll",
+      "caller": "firmware/src/core/bench.c:81:bench_poll",
       "name": "level",
-      "line": 119,
+      "line": 120,
       "kind": "indirect"
     },
     {
@@ -7581,51 +7687,51 @@
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "name": "cancelled",
-      "line": 142,
+      "line": 143,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "name": "now",
-      "line": 153,
+      "line": 154,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "name": "mute",
-      "line": 160,
+      "line": 161,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:137:begin",
+      "caller": "firmware/src/core/power.c:138:begin",
       "name": "now",
-      "line": 162,
+      "line": 163,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:177:power_stop",
+      "caller": "firmware/src/core/power.c:178:power_stop",
       "name": "mute",
-      "line": 182,
+      "line": 183,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:177:power_stop",
+      "caller": "firmware/src/core/power.c:178:power_stop",
       "name": "now",
-      "line": 186,
+      "line": 187,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:189:switch_range",
+      "caller": "firmware/src/core/power.c:190:switch_range",
       "name": "mute",
-      "line": 192,
+      "line": 193,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:189:switch_range",
+      "caller": "firmware/src/core/power.c:190:switch_range",
       "name": "now",
-      "line": 199,
+      "line": 200,
       "kind": "indirect"
     },
     {
@@ -7635,51 +7741,51 @@
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "name": "level",
-      "line": 300,
+      "line": 301,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:231:probe",
+      "caller": "firmware/src/core/power.c:232:probe",
       "name": "now",
-      "line": 302,
+      "line": 303,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "name": "UINT64_C",
-      "line": 349,
+      "line": 350,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "name": "level",
-      "line": 359,
+      "line": 360,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:306:regulate",
+      "caller": "firmware/src/core/power.c:307:regulate",
       "name": "now",
-      "line": 361,
+      "line": 362,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "name": "start",
-      "line": 441,
+      "line": 442,
       "kind": "indirect"
     },
     {
-      "caller": "firmware/src/core/power.c:366:power_poll",
-      "name": "now",
-      "line": 444,
-      "kind": "indirect"
-    },
-    {
-      "caller": "firmware/src/core/power.c:366:power_poll",
+      "caller": "firmware/src/core/power.c:367:power_poll",
       "name": "now",
       "line": 445,
+      "kind": "indirect"
+    },
+    {
+      "caller": "firmware/src/core/power.c:367:power_poll",
+      "name": "now",
+      "line": 446,
       "kind": "indirect"
     },
     {
@@ -7791,183 +7897,225 @@
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
-      "name": "gpio_pin_set_dt",
-      "line": 133,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
-      "name": "k_busy_wait",
-      "line": 134,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
-      "name": "gpio_pin_set_dt",
-      "line": 135,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:130:board_io_clear_protection",
-      "name": "k_busy_wait",
-      "line": 138,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:156:board_io_read",
-      "name": "ARRAY_SIZE",
-      "line": 166,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:156:board_io_read",
-      "name": "gpio_pin_get_dt",
-      "line": 167,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:156:board_io_read",
-      "name": "BIT",
-      "line": 174,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:35:setup_pin",
-      "name": "gpio_is_ready_dt",
-      "line": 37,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:35:setup_pin",
-      "name": "gpio_pin_configure_dt",
-      "line": 40,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_PLL_GetMainSource",
-      "line": 46,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_HSE_IsReady",
-      "line": 47,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_PLL_GetMainSource",
-      "line": 51,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_HSI_IsReady",
-      "line": 52,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_RCC_GetSysClkSource",
-      "line": 57,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:43:check_clock",
-      "name": "LL_PWR_IsEnabledRange1BoostMode",
-      "line": 58,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
       "name": "LL_APB2_GRP1_EnableClock",
-      "line": 67,
+      "line": 121,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
       "name": "LL_VREFBUF_Disable",
-      "line": 68,
+      "line": 122,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_SetVoltageScaling",
-      "line": 69,
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "name": "LL_VREFBUF_EnableHIZ",
+      "line": 123,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_DisableHIZ",
-      "line": 70,
+      "caller": "firmware/src/platform/board_io.c:112:init_board",
+      "name": "ARRAY_SIZE",
+      "line": 140,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_Enable",
+      "caller": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "name": "gpio_pin_set_dt",
+      "line": 163,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "name": "k_busy_wait",
+      "line": 164,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "name": "gpio_pin_set_dt",
+      "line": 165,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:160:board_io_clear_protection",
+      "name": "k_busy_wait",
+      "line": 168,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:186:board_io_read",
+      "name": "ARRAY_SIZE",
+      "line": 196,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:186:board_io_read",
+      "name": "gpio_pin_get_dt",
+      "line": 197,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:186:board_io_read",
+      "name": "BIT",
+      "line": 204,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "DT_REG_ADDR",
+      "line": 49,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "KSAFE_PORT",
+      "line": 49,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "BIT",
+      "line": 50,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "BIT",
+      "line": 50,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "KSAFE_PIN",
+      "line": 50,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "KSAFE_PIN",
+      "line": 50,
+      "kind": "macro"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:45:board_io_ksafe",
+      "name": "ARG_UNUSED",
+      "line": 53,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:60:setup_pin",
+      "name": "gpio_is_ready_dt",
+      "line": 62,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:60:setup_pin",
+      "name": "gpio_pin_configure_dt",
+      "line": 65,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_RCC_PLL_GetMainSource",
       "line": 71,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "k_uptime_get",
-      "line": 74,
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_RCC_HSE_IsReady",
+      "line": 72,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_IsVREFReady",
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_RCC_PLL_GetMainSource",
       "line": 76,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "k_uptime_get",
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_RCC_HSI_IsReady",
       "line": 77,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_Disable",
-      "line": 78,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "LL_VREFBUF_EnableHIZ",
-      "line": 79,
-      "kind": "external_or_unknown"
-    },
-    {
-      "caller": "firmware/src/platform/board_io.c:65:start_vref",
-      "name": "k_msleep",
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_RCC_GetSysClkSource",
       "line": 82,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "name": "LL_APB2_GRP1_EnableClock",
-      "line": 91,
+      "caller": "firmware/src/platform/board_io.c:68:check_clock",
+      "name": "LL_PWR_IsEnabledRange1BoostMode",
+      "line": 83,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "name": "LL_VREFBUF_Disable",
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_APB2_GRP1_EnableClock",
       "line": 92,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "name": "LL_VREFBUF_EnableHIZ",
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_Disable",
       "line": 93,
       "kind": "external_or_unknown"
     },
     {
-      "caller": "firmware/src/platform/board_io.c:87:init_board",
-      "name": "ARRAY_SIZE",
-      "line": 110,
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_SetVoltageScaling",
+      "line": 94,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_DisableHIZ",
+      "line": 95,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_Enable",
+      "line": 96,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "k_uptime_get",
+      "line": 99,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_IsVREFReady",
+      "line": 101,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "k_uptime_get",
+      "line": 102,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_Disable",
+      "line": 103,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "LL_VREFBUF_EnableHIZ",
+      "line": 104,
+      "kind": "external_or_unknown"
+    },
+    {
+      "caller": "firmware/src/platform/board_io.c:90:start_vref",
+      "name": "k_msleep",
+      "line": 107,
       "kind": "external_or_unknown"
     },
     {

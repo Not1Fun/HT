@@ -25,6 +25,7 @@ struct power_ops {
     int (*level)(void *ctx, uint16_t amplitude);
     int64_t (*now)(void *ctx);
     bool (*cancelled)(void *ctx);
+    uint8_t tap_settle_ms; /* 0 使用原抽头等待 30 ms。 */
 };
 struct power {
     struct power_ops ops;
