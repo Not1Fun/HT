@@ -53,6 +53,7 @@ int gpio_add_callback(const struct device *port, struct gpio_callback *cb)
 int gpio_remove_callback(const struct device *port, struct gpio_callback *cb)
 { (void)port; (void)cb; gpio_registered = 0; return 0; }
 int board_io_read(uint32_t *value) { *value = digital_bits; return io_error; }
+bool board_io_has_supply_contacts(void) { return true; }
 int relay_io_check(void) { return io_error; }
 int relay_io_read_panel(uint8_t *value) { *value = panel_raw; return io_error; }
 int screen_uart_init(enum screen_uart_port port) { (void)port; return 0; }

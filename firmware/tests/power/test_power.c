@@ -560,6 +560,82 @@ static void rms_clipping(void)
 static uint8_t regs[8];
 static int read_reg(void *ctx,uint8_t addr,uint8_t reg,uint8_t *v) {(void)ctx;(void)addr;*v=regs[reg];return 0;}
 static int write_reg(void *ctx,uint8_t addr,uint8_t reg,uint8_t v) {(void)ctx;(void)addr;regs[reg]=v;return 0;}
+static int select_relay(void *ctx,uint8_t output)
+{
+    int rc=tca9539_set_output(ctx,output);
+    return rc ? rc : select_port(NULL,output);
+}
+static struct power relay_power(struct tca9539 *dev)
+{
+    struct power p=initialized();
+    memset(regs,0,sizeof(regs));
+    *dev=(struct tca9539){.addr=0x74,.read_reg=read_reg,.write_reg=write_reg};
+    assert(tca9539_init(dev)==0);
+    p.ops.ctx=dev;p.ops.select=select_relay;
+    return p;
+}
+static void relay_plant_tick(struct power *p,double load,double voltage_gain,bool stuck_low)
+{
+    static const uint8_t taps[]={0x02,0x04,0x08,0x10,0x20,0x40,0x80};
+    static const double rated[]={7070,12250,22360,38730,70700,122500,223600};
+    bool high=(regs[2]&1u) && !stuck_low;
+    double voltage=0;
+    /* 由实际输出寄存器选择信号通路，不用控制器期望挡位生成反馈。 */
+    for(size_t i=0;i<7;++i) if((regs[2]&0xfeu)==taps[i] && high==(i>=4))
+        voltage=hw.sample_amp*2900.0/4095.0/sqrt(2.0)*voltage_gain*rated[i]/14100.0;
+    hw.sample_amp=hw.amp;
+    struct power_reading r={.valid=true,.sequence=p->sequence,
+        .voltage_mv=(uint32_t)lround(hypot(voltage,223)),
+        .current_ma=(uint32_t)lround(hypot(voltage/load,6))};
+    r.apparent_mva=(uint32_t)((uint64_t)r.voltage_mv*r.current_ma/1000);
+    tick(p,50,true,&r);
+}
+static void high_relay_route(void)
+{
+    const double loads[]={100,300,1000},gains[]={15,12};
+    const uint8_t outputs[]={0x21,0x41,0x81};
+    for(int automatic=0;automatic<2;++automatic) for(size_t g=0;g<2;++g) for(size_t i=0;i<3;++i) {
+        struct tca9539 dev;struct power p=relay_power(&dev);
+        assert(power_start(&p,automatic?POWER_RANGE_AUTO:(uint8_t)(i+4),2000,50000,0)==0);
+        for(int n=0;n<450 && p.state!=POWER_FAULT;++n)relay_plant_tick(&p,loads[i],gains[g],false);
+        assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && p.range==i+4);
+        assert(regs[2]==outputs[i] && dev.output==outputs[i] && p.output==outputs[i]);
+        assert(p.last_reading.apparent_mva>(g?34000u:48000u) && p.last_reading.apparent_mva<=51000);
+        assert(hw.frequency==2000);
+        power_stop(&p,hw.now);
+        relay_plant_tick(&p,loads[i],gains[g],false);relay_plant_tick(&p,loads[i],gains[g],false);
+        assert(p.state==POWER_IDLE && !hw.amp && !regs[2]);
+    }
+}
+static void high_relay_no_feedback(void)
+{
+    const double loads[]={100,300,1000};
+    for(int automatic=0;automatic<2;++automatic) for(size_t i=0;i<3;++i) {
+        struct tca9539 dev;struct power p=relay_power(&dev);
+        assert(power_start(&p,automatic?POWER_RANGE_AUTO:(uint8_t)(i+4),2000,50000,0)==0);
+        for(int n=0;n<300 && p.state!=POWER_FAULT;++n)relay_plant_tick(&p,loads[i],15,true);
+        assert(p.state==POWER_FAULT && p.error==POWER_ERROR_FEEDBACK && p.range>=4);
+        assert(p.fault_state==(automatic?POWER_PROBING:POWER_RUNNING));
+        bool high_command=false;
+        for(unsigned int n=0;n<hw.count;++n)if(hw.ports[n]&0xe0u) {
+            assert(hw.ports[n]&1u);high_command=true;
+        }
+        assert(high_command && p.fault_stopped && !hw.amp && !regs[2]);
+        assert(p.last_reading.voltage_mv==223 && p.last_reading.current_ma==6);
+        assert(tca9539_verify_output(&dev)==0);
+    }
+}
+static void transformer_rematch(void)
+{
+    const double loads[]={30,100,30};const uint8_t outputs[]={0x10,0x21,0x10};
+    struct tca9539 dev;struct power p=relay_power(&dev);
+    assert(power_start(&p,POWER_RANGE_AUTO,2000,1000,0)==0);
+    for(size_t i=0;i<3;++i) {
+        for(int n=0;n<240 && p.state!=POWER_FAULT;++n)relay_plant_tick(&p,loads[i],15,false);
+        assert(p.state==POWER_RUNNING && p.error==POWER_ERROR_NONE && regs[2]==outputs[i]);
+        assert(p.rematches==i && p.last_reading.apparent_mva>=970 && p.last_reading.apparent_mva<=1030);
+    }
+}
 static void relay_mutex(void)
 {
     struct tca9539 dev={.addr=0x74,.read_reg=read_reg,.write_reg=write_reg};
@@ -585,6 +661,8 @@ int main(int argc,char **argv)
         {"constant_current",constant_current},{"current_limits",current_limits},
         {"unstable_impedance",unstable_impedance},{"zero_requires_new_window",zero_requires_new_window},
         {"startup_diagnosis",startup_diagnosis},
+        {"high_relay_route",high_relay_route},{"high_relay_no_feedback",high_relay_no_feedback},
+        {"transformer_rematch",transformer_rematch},
         {"auto_nominal",auto_nominal},{"auto_quantized",auto_quantized},{"auto_boundaries",auto_boundaries},{"auto_no_signal",auto_no_signal},
         {"auto_timeout",auto_timeout},{"auto_stop",auto_stop},{"auto_rematch",auto_rematch},{"auto_stale",auto_stale},
         {"auto_settle_protection",auto_settle_protection},{"auto_interlock",auto_interlock},

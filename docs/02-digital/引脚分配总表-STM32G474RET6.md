@@ -12,7 +12,7 @@
 > | `PB15`(37) = thermostat 链监视 | 仍是它，但现在明确 = **`COIL_LOOP` 监视，低 = 安全链通** |
 >
 > 另：`PA2`(14)/`PA3`(17)（DRS MODBus）在 rev23 里**没有接线**，是空脚。
-> MCU 控制 KSAFE 的改线版（2026-11-03）新增 PC4/PC5，不占用上述 USART2 预留脚。见[驱动接线](../00-context/KSAFE互锁链-COIL_LOOP定义与跳闸条件.md)。
+> **V3 最终分配（2026-11-16 固件）：PB10/30=DRS_RX，PB11/33=DRS_TX，PB12/34=RS485_DIR（LPUART1 AF8），PB13/35=KSAFE_A，PB14/36=KSAFE_B。PC4/PC5、PA2/PA3、PB15 不再用于这两项功能。** 见[驱动接线](../00-context/KSAFE互锁链-COIL_LOOP定义与跳闸条件.md)。
 
 
 > 2026-09-12 · 基于网表 rev10 + ADR-015 + 本轮新分配
@@ -115,22 +115,22 @@ ADC1 注入组（慢速，4 个）  :  IN8 = PC2  V_BUS_SENSE
 | 19 | `PA5` | —（ADC2_IN13） | ⚪ 空闲 |
 | 20 | `PA6` | **ADC2 差分 + ← 电流 AMC3301** | ⏳ 待画 |
 | 21 | `PA7` | **ADC2 差分 − ← 电流** | ⏳ 待画 |
-| 22 | `PC4` | KSAFE_A_EN → A 路线圈驱动，高有效 | 新版分配；rev23 无走线 |
-| 23 | `PC5` | KSAFE_B_EN → B 路线圈驱动，高有效 | 新版分配；rev23 无走线 |
+| 22 | `PC4` | V3 未分配 | 原 KSAFE 过渡方案取消 |
+| 23 | `PC5` | V3 未分配 | 原 KSAFE 过渡方案取消 |
 | 24 | `PB0` | `SNS_PRESENT#` ← `CN9`（`R56` 10 kΩ 上拉） | ✅ rev19 已画 |
 | 25 | `PB1` | —（ADC1_IN12）🟡 **待决 #54 若拆开故障线，`OV_FAULT#` 监视用这个脚** | ⚪ 空闲 |
 | 26 | `PB2` | —（ADC2_IN12）⚠️ 标着 `VREFBUF_OUT`，**用 VREFBUF 时建议留空** | ⚪ 空闲 |
 | 27 | VSSA | → `AGND` | ✅ |
 | 28 | VREF+ | 1µF(ESR≤2Ω)+100nF，**0Ω 不装** | ✅ |
 | 29 | VDDA | → `3V3_AVDD` | ✅ |
-| **30** | **`PB10`** | **`TIM2_CH3` → 风扇 PWM（开漏）** | 🆕 待画 |
+| **30** | **`PB10`** | V3 DRS_RX ← THVD1410.1 | LPUART1_RX AF8 |
 | 31 | VSS | | ✅ |
 | 32 | VDD | | ✅ |
-| 33 | `PB11` | `AC_OK` | ✅ |
-| 34 | `PB12` | `DC_OK` ⚠️ EXTI12 已归 PC12，**只能轮询** | ✅ |
-| 35 | `PB13` | `BAT_OK` | ✅ |
-| 36 | `PB14` | `CHARGE_OK` | ✅ |
-| **37** | **`PB15`** | **thermostat 链监视** | 🆕 待画 |
+| 33 | `PB11` | V3 DRS_TX → THVD1410.4 | LPUART1_TX AF8 |
+| 34 | `PB12` | V3 RS485_DIR → THVD1410.2/3 | LPUART1_DE AF8 |
+| 35 | `PB13` | V3 KSAFE_A_EN → R2 → PC817C | 高有效 |
+| 36 | `PB14` | V3 KSAFE_B_EN → R6 → PC817C | 高有效 |
+| **37** | **`PB15`** | V3 未分配 | COIL_LOOP 已取消 |
 | 38 | `PC6` | `TIM3_CH1` ← 编码器 A | ⏳ 待画 |
 | 39 | `PC7` | `TIM3_CH2` ← 编码器 B | ⏳ 待画 |
 | 40 | `PC8` | `I2C3_SCL` | ✅ |

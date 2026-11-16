@@ -20,6 +20,9 @@ int main(void)
 	int relay_rc = relay_io_init();
 
 	if (rc == 0 && relay_rc == 0) {
+#if defined(CONFIG_HT_DRS)
+		LOG_INF("MAIN V3: KSAFE PB13/PB14, DRS LPUART1, door required");
+#endif
 		LOG_INF("Screen bring-up: VREF disabled/high impedance; relay registers off");
 #if defined(CONFIG_HT_SCREEN_BRIDGE)
 		rc = screen_bridge_run();

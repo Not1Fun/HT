@@ -19,7 +19,7 @@ foreach(mode IN ITEMS output output_bench output_legacy)
   endif()
   foreach(case IN ITEMS current_output protection_origin automatic_interlocks automatic_range clear_fault clear_blocked clear_cancel clear_sample clear_io manual_range blocking_reasons startup_latch latch_failure latch_relay_failure stop_priority interlocks stale_ui sample_fault standby_sampling standby_board_fault init_failure
       sample_permission pending_sample_invalid first_window_grace
-      protection_race stop_in_flight relay_fault shutdown_output enclosure_interlocks
+      protection_race stop_in_flight relay_fault shutdown_output enclosure_interlocks door_recovery
       running_oc running_ov running_sensor_loss running_temperature running_ntc_failure
       running_enable_release protection_irq)
     add_test(NAME ${mode}_${case} COMMAND ${mode}_tests ${case})

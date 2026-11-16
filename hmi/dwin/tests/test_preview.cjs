@@ -19,7 +19,7 @@ class Element {
 }
 
 const ids = Object.fromEntries(['screen', 'feedback', 'page-label', 'ccw', 'cw', 'press', 'up', 'left', 'ok',
-  'right', 'down', 'battery-alarm', 'temperature-invalid', 'bench-disabled'].map(id => [id, new Element()]));
+  'right', 'down', 'temperature-invalid', 'bench-disabled'].map(id => [id, new Element()]));
 const scenes = ['idle', 'fault', 'offline'].map(scene => Object.assign(new Element(), {dataset: {scene}}));
 const document = {
   querySelector: selector => selector === '.screen-stage' ? new Element() : ids[selector.slice(1)],

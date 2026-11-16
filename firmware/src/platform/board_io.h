@@ -30,6 +30,9 @@ int board_io_start_reference(void);
 #endif
 /* Each set bit means the corresponding active-low signal is asserted. */
 int board_io_read(uint32_t *state);
+/* 没有这组干接点时，AC/DC/BAT/CHARGE 位没有状态含义。 */
+bool board_io_has_supply_contacts(void);
+bool board_io_has_coil_monitor(void);
 /* 仅在DAC静音且继电器已释放后，由初始化或用户显式清除调用。 */
 int board_io_clear_protection(void);
 

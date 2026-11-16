@@ -39,6 +39,15 @@ static uint32_t stop_epoch, active_epoch;
 static volatile uint32_t protection_epoch;
 static volatile uint32_t protection_reason;
 static bool initialized, shut_down;
+static bool panel_allows_output(void)
+{
+    if (!inputs.okay || !inputs.connected || (inputs.raw & BIT(6))) return false;
+#if !defined(CONFIG_HT_OUTPUT_BENCH) || DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
+    if (inputs.raw & BIT(7)) return false;
+#endif
+    int64_t now = k_uptime_get();
+    return now >= inputs.time && now - inputs.time < 100;
+}
 static int watchdog_channel;
 static struct {
     uint8_t phase;
@@ -62,7 +71,7 @@ static int select_path(uint8_t value, bool connect_load)
     int rc = relay_io_select(value);
     if (rc != 0) { board_io_ksafe(false); return rc; }
     k_spinlock_key_t key = k_spin_lock(&guard);
-    bool tripped = value && (signal_io_failed() || protection_reason);
+    bool tripped = value && (signal_io_failed() || protection_reason || !panel_allows_output());
     if (close)
         board_io_ksafe(!tripped && !shut_down && active_epoch == stop_epoch);
     k_spin_unlock(&guard, key);
@@ -149,7 +158,16 @@ void output_inputs(uint8_t raw, bool connected, bool io_ok)
     inputs.connected = connected;
     inputs.okay = io_ok;
     inputs.time = k_uptime_get();
-    if (!io_ok) { request.pending = false; request.stop = true; ++stop_epoch; }
+    if (!panel_allows_output()) {
+        /* 不等待输出线程：门开/输入失效立即静音并撤销线圈命令。 */
+        bool active = published.active;
+#if defined(CONFIG_HT_OUTPUT_BENCH)
+        active |= published.debug.busy;
+#endif
+        if (active) signal_io_fault();
+        board_io_ksafe(false);
+        request.pending = false;
+    }
     k_spin_unlock(&guard, key);
 }
 
@@ -159,7 +177,7 @@ static int queue_start(uint8_t range, uint32_t frequency, uint32_t target, bool 
         (frequency != 2000 && frequency != 5000 && frequency != 8000 && frequency != 10000)) return -EINVAL;
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
-    if (!published.ready || !published.available || shut_down) rc = -EACCES;
+    if (!published.ready || !published.available || shut_down || !panel_allows_output()) rc = -EACCES;
     else if (published.running || published.switching || published.clearing || request.clear || request.pending || request.stop) rc = -EBUSY;
     else {
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -191,7 +209,7 @@ int output_debug(uint8_t relay, uint32_t frequency, uint16_t millivolts_pp, bool
     k_spinlock_key_t key = k_spin_lock(&guard);
     int rc = 0;
     bool available = relay == 0 && wave ? published.debug.dac_available : published.available;
-    if (!published.ready || !available || shut_down || published.fault) rc = -EACCES;
+    if (!published.ready || !available || shut_down || published.fault || !panel_allows_output()) rc = -EACCES;
     else if (published.active || published.switching || published.clearing || request.clear || request.pending || request.stop) rc = -EBUSY;
     else {
         request.pending = request.debug = true;
@@ -368,7 +386,7 @@ static void run(void *a, void *b, void *c)
         BLOCK_IF(now < inputs.time || now - inputs.time >= 100, OUTPUT_REASON_INPUT_STALE);
         BLOCK_IF(!inputs.connected, OUTPUT_REASON_SCREEN);
         BLOCK_IF(inputs.raw & BIT(6), OUTPUT_REASON_ENABLE);
-#if !defined(CONFIG_HT_OUTPUT_BENCH) && !DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
+#if !defined(CONFIG_HT_OUTPUT_BENCH) || DT_NODE_HAS_PROP(BOARD_NODE, ksafe_gpios)
         BLOCK_IF(inputs.raw & BIT(7), OUTPUT_REASON_DOOR);
 #endif
         bool stop = request.stop;
@@ -391,13 +409,15 @@ static void run(void *a, void *b, void *c)
         k_spin_unlock(&guard, key);
         if (board_rc == 0) {
             BLOCK_IF(!(digital & BIT(BOARD_SENSOR)), OUTPUT_REASON_SENSOR);
-            BLOCK_IF(!(digital & BIT(BOARD_DC)), OUTPUT_REASON_DC);
+            if (board_io_has_supply_contacts()) {
+                BLOCK_IF(!(digital & BIT(BOARD_DC)), OUTPUT_REASON_DC);
+                BLOCK_IF(!(digital & (BIT(BOARD_AC) | BIT(BOARD_BAT))), OUTPUT_REASON_SUPPLY);
+            }
 #if !defined(CONFIG_HT_OUTPUT_BENCH)
-            BLOCK_IF(!(digital & BIT(BOARD_COIL)), OUTPUT_REASON_COIL);
+            BLOCK_IF(board_io_has_coil_monitor() && !(digital & BIT(BOARD_COIL)), OUTPUT_REASON_COIL);
 #endif
             BLOCK_IF(digital & BIT(BOARD_OC), OUTPUT_REASON_OC);
             BLOCK_IF(digital & BIT(BOARD_OV), OUTPUT_REASON_OV);
-            BLOCK_IF(!(digital & (BIT(BOARD_AC) | BIT(BOARD_BAT))), OUTPUT_REASON_SUPPLY);
         }
         if (signal_io_failed()) rc = -EIO;
         BLOCK_IF(rc != 0 && board_rc == 0, OUTPUT_REASON_SAMPLE_IO);
@@ -421,7 +441,11 @@ static void run(void *a, void *b, void *c)
         bool clearing = clear || recovery.phase != 0;
         if (rc != 0 && !clearing) {
             signal.reading.valid = false;
-            enum power_error error = protection_reason ? POWER_ERROR_INTERLOCK : POWER_ERROR_SAMPLE;
+            uint32_t interlock = OUTPUT_REASON_BIT(OUTPUT_REASON_DOOR) |
+                OUTPUT_REASON_BIT(OUTPUT_REASON_ENABLE) | OUTPUT_REASON_BIT(OUTPUT_REASON_SCREEN) |
+                OUTPUT_REASON_BIT(OUTPUT_REASON_INPUT_IO) | OUTPUT_REASON_BIT(OUTPUT_REASON_INPUT_STALE);
+            enum power_error error = protection_reason || (blocked & interlock) ?
+                POWER_ERROR_INTERLOCK : POWER_ERROR_SAMPLE;
 #if defined(CONFIG_HT_OUTPUT_BENCH)
             if (debug.state != BENCH_IDLE) bench_fail(&debug, error);
 #endif

@@ -113,8 +113,9 @@ try {
         $conf += ';output-bench.conf'
     }
     if ($Output -and -not $LegacyInterlock) {
-        $buildDir += '-ksafe'
-        $overlays += 'boards/ht_main_ksafe.overlay'
+        $buildDir += '-v3'
+        $overlays += 'boards/ht_main_v3.overlay'
+        $conf += ';output-v3.conf'
     }
     if ($Bootloader) {
         if (-not (Test-Path -LiteralPath '.tools/bootloader/mcuboot/boot/zephyr/CMakeLists.txt') -or
@@ -140,7 +141,7 @@ try {
     if ($Bootloader) {
         $firmwareDir = (Join-Path $root 'firmware').Replace('\', '/')
         $bootOverlays = @("$firmwareDir/sysbuild/mcuboot.overlay")
-        if ($Output -and -not $LegacyInterlock) { $bootOverlays += "$firmwareDir/boards/ht_main_ksafe.overlay" }
+        if ($Output -and -not $LegacyInterlock) { $bootOverlays += "$firmwareDir/boards/ht_main_v3.overlay" }
         if ($InternalClock) { $bootOverlays += "$firmwareDir/boards/ht_main_hsi.overlay" }
         $buildArgs += @("-DBOARD_ROOT:PATH=$firmwareDir", "-DDTS_ROOT:PATH=$firmwareDir",
             "-Dmcuboot_CONF_FILE:FILEPATH=$firmwareDir/sysbuild/mcuboot.conf",

@@ -1,6 +1,9 @@
 /* @brief 面板导航、温度和日志；正式输出自动匹配，频率和VA由面板提交。 */
 #include "app/screen_panel.h"
 #include "platform/board_io.h"
+#if defined(CONFIG_HT_DRS)
+#include "platform/drs_io.h"
+#endif
 #include "platform/relay_io.h"
 #include "platform/screen_uart.h"
 #if defined(CONFIG_HT_SCREEN_TEMPERATURE)
@@ -249,6 +252,7 @@ static void update_digital(struct service *service, uint32_t state)
 	const enum event_kind inactive[] = {EVENT_BATTERY_ALARM, EVENT_OC_CLEAR, EVENT_OV_CLEAR};
 
 	for (size_t i = 0; i < ARRAY_SIZE(pins); ++i) {
+		if (pins[i] == BOARD_BAT && !board_io_has_supply_contacts()) continue;
 		bool on = (state & BIT(pins[i])) != 0;
 		if ((!service->digital_valid && (i == 0 || on)) ||
 		    (service->digital_valid && ((service->digital ^ state) & BIT(pins[i])))) {
@@ -682,12 +686,19 @@ static void snapshot(const struct service *service, struct view_snapshot *out)
 
 	*out = (struct view_snapshot){
 		.page = panel->page, .state = fault ? VIEW_FAULT : VIEW_STANDBY,
-		.battery = !service->digital_valid ? VIEW_POWER_UNKNOWN :
+		.battery = !service->digital_valid || !board_io_has_supply_contacts() ? VIEW_POWER_UNKNOWN :
 			(service->digital & BIT(BOARD_BAT)) ? VIEW_POWER_NORMAL : VIEW_POWER_ALARM,
 		.selected = panel->field, .mode = panel->mode,
 		.output = VIEW_OUTPUT_DISABLED,
 		.editing = panel_draft_changed(panel), .fresh = true,
 	};
+#if defined(CONFIG_HT_DRS)
+	struct drs_snapshot supply;
+	drs_io_snapshot(&supply);
+	enum drs_battery battery = drs_battery_state(&supply, k_uptime_get());
+	out->battery = battery == DRS_BATTERY_UNKNOWN ? VIEW_POWER_UNKNOWN :
+		battery == DRS_BATTERY_ALARM ? VIEW_POWER_ALARM : VIEW_POWER_NORMAL;
+#endif
 	out->values[VIEW_RANGE_CHOICE] = (struct view_value){
 		panel_range_ohm(panel->field == PANEL_RANGE ? panel->draft_index : panel->range), true};
 	out->values[VIEW_FREQUENCY_CHOICE] = (struct view_value){

@@ -1,0 +1,21 @@
+/* MAIN V3, Gerber 2026-11-04: PB10/11/12 RS485, PB13/14 KSAFE. */
+/ {
+	zephyr,user {
+		/delete-property/ ac-gpios;
+		/delete-property/ dc-gpios;
+		/delete-property/ bat-gpios;
+		/delete-property/ charge-gpios;
+		/delete-property/ coil-gpios;
+		ksafe-gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>, <&gpiob 14 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&lpuart1 {
+	pinctrl-0 = <&lpuart1_rx_pb10 &lpuart1_tx_pb11 &lpuart1_de_pb12>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	de-enable;
+	de-assert-time = <16>;
+	de-deassert-time = <16>;
+	status = "okay";
+};

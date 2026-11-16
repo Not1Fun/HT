@@ -45,12 +45,19 @@ config HT_OUTPUT_BENCH
 	default n
 	depends on HT_OUTPUT
 	help
-	  Allows a bench without the coil supply monitor (BOARD_COIL). On legacy
-	  wiring it also ignores the door input. On MCU-driven KSAFE wiring the
-	  door is unused in both builds; the normal build still checks BOARD_COIL.
+	  On legacy wiring only, ignores the door and coil supply monitor.
+	  V3 has no coil monitor and requires the door closed even in Bench.
 	  Keeps the independent enable, OC/OV, sensor, supply, temperature,
 	  acquisition, watchdog and stop protections active.
 	  Adds a panel debug page for 30-second relay checks and fixed-level
 	  10-second DAC trials, owned by the same output thread.
+
+config HT_DRS
+	bool "Read-only DRS Modbus monitoring on V3 LPUART1"
+	depends on HT_OUTPUT
+	help
+	  Scans only addresses 0x80..0x83 and reads status registers.
+	  Never writes the power supply configuration. Missing or stale
+	  communication is unknown, not a replacement for local protections.
 
 source "Kconfig.zephyr"

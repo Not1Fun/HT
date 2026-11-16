@@ -8,13 +8,13 @@
   const screen = $("#screen");
   const ranges = [1,3,10,30,100,300,1000];
   const frequencies = [2000,5000,8000,10000];
-  const events = {boot:1,online:2,offline:3,range:4,frequency:5,batteryOk:6,batteryAlarm:7,
+  const events = {boot:1,online:2,offline:3,range:4,frequency:5,
     overcurrent:8,overcurrentClear:9,overvoltage:10,overvoltageClear:11,
     temperatureReady:12,temperatureInvalid:13,temperatureUnavailable:14,ioError:15,
     outputStart:16,outputStop:17,outputFault:18,clear:19,clearFailed:20};
   const names = ["状态页","输出设置页","设备日志页","BENCH 调试页","DAC 独立试波页"];
   const state = {page:0,field:0,draft:7,range:0,rangeChoice:7,frequency:0,mode:1,current:0,power:0,scene:"idle",started:0,
-    output:false,matching:false,fault:false,clearing:0,benchDisabled:false,batteryAlarm:false,temperatureInvalid:false,logs:[],logOffset:0};
+    output:false,matching:false,fault:false,clearing:0,benchDisabled:false,temperatureInvalid:false,logs:[],logOffset:0};
   const debug = {field:0,draft:0,choice:[0,0,1,0],coils:0,wave:false,until:0};
   function rangeText(index) { return index===7 ? "AUTO" : String(ranges[index]); }
   const amplitudes=[10,25,50,100,500,1000,1500,2000,2500,2800];
@@ -106,7 +106,7 @@
     screen.setAttribute("aria-label",names[state.page]+"，演示数据，未连接设备");
     image(ui.pages[state.page].image,{x:0,y:0,width:800,height:480});
     const online=state.scene!=="offline";
-    const values={state:state.fault?3:state.matching?2:state.output?1:scenes[state.scene],battery:online?(state.batteryAlarm?1:0):2,
+    const values={state:state.fault?3:state.matching?2:state.output?1:scenes[state.scene],battery:2,
       focus:state.field,edit:dirty()?1:0,output:outputState()};
     values.debug_focus=debug.field;
     values.dac_focus=debug.field-1;
@@ -262,11 +262,6 @@
     if(next==="fault") {state.fault=true;addEvent(events.overcurrent);}
     state.scene=next;announce("已切换演示状态；温度、事件和值均为模拟数据。");render();
   }));
-  $("#battery-alarm").addEventListener("change",event=>{
-    state.batteryAlarm=event.target.checked;
-    addEvent(state.batteryAlarm?events.batteryAlarm:events.batteryOk);
-    announce("已切换电池演示状态，并添加一条模拟日志。");render();
-  });
   $("#temperature-invalid").addEventListener("change",event=>{
     state.temperatureInvalid=event.target.checked;
     if(state.temperatureInvalid) stopDebug();
@@ -284,7 +279,7 @@
   function resize() {screen.style.transform=`scale(${$(".screen-stage").clientWidth/800})`;}
   new ResizeObserver(resize).observe($(".screen-stage"));
   // These seed records demonstrate the page and do not come from connected hardware.
-  addEvent(events.boot);addEvent(events.online);addEvent(events.batteryOk);
+  addEvent(events.boot);addEvent(events.online);
   for(let channel=1;channel<=3;channel++) addEvent(events.temperatureReady,channel);
   render();resize();
   let reasonSlot=-1;

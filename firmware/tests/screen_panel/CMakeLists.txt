@@ -31,7 +31,7 @@ set_target_properties(screen_output_tests PROPERTIES C_STANDARD 11 C_STANDARD_RE
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(screen_output_tests PRIVATE -Wall -Wextra -Werror -pedantic)
 endif()
-foreach(case IN ITEMS current_mode automatic_selection clear_controls manual_selection reasons standby measurement_age output_states)
+foreach(case IN ITEMS current_mode automatic_selection clear_controls manual_selection reasons standby measurement_age output_states battery_source)
   add_test(NAME screen_output_${case} COMMAND screen_output_tests ${case})
 endforeach()
 
@@ -52,3 +52,12 @@ add_test(NAME screen_debug_dac_keys COMMAND screen_debug_tests dac_keys)
 add_test(NAME screen_debug_reasons COMMAND screen_debug_tests reasons)
 
 add_test(NAME screen_debug_manual_selection COMMAND screen_debug_tests manual_selection)
+
+add_executable(screen_drs_tests test_screen_output.c ../../src/core/drs.c
+    ../../src/ui/panel.c ../../src/ui/encoder.c ../../src/ui/dgus.c
+    ../../src/ui/view.c ../../src/core/event_log.c)
+target_include_directories(screen_drs_tests PRIVATE stubs ../../src)
+target_compile_definitions(screen_drs_tests PRIVATE CONFIG_HT_OUTPUT=1 CONFIG_HT_DRS=1)
+set_target_properties(screen_drs_tests PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES)
+target_compile_options(screen_drs_tests PRIVATE -Wall -Wextra -Werror -pedantic)
+add_test(NAME screen_drs_battery COMMAND screen_drs_tests drs_display)

@@ -13,16 +13,22 @@
 #include <zephyr/sys/util.h>
 
 #define BOARD_NODE DT_PATH(zephyr_user)
+#define HAS_SUPPLY_CONTACTS DT_NODE_HAS_PROP(BOARD_NODE, ac_gpios)
+BUILD_ASSERT(HAS_SUPPLY_CONTACTS == DT_NODE_HAS_PROP(BOARD_NODE, dc_gpios) &&
+	     HAS_SUPPLY_CONTACTS == DT_NODE_HAS_PROP(BOARD_NODE, bat_gpios) &&
+	     HAS_SUPPLY_CONTACTS == DT_NODE_HAS_PROP(BOARD_NODE, charge_gpios));
 
-static const struct gpio_dt_spec inputs[] = {
+static const struct gpio_dt_spec inputs[BOARD_INPUT_COUNT] = {
 	[BOARD_OC] = GPIO_DT_SPEC_GET(BOARD_NODE, oc_gpios),
 	[BOARD_OV] = GPIO_DT_SPEC_GET(BOARD_NODE, ov_gpios),
 	[BOARD_SENSOR] = GPIO_DT_SPEC_GET(BOARD_NODE, sensor_gpios),
-	[BOARD_COIL] = GPIO_DT_SPEC_GET(BOARD_NODE, coil_gpios),
+	[BOARD_COIL] = GPIO_DT_SPEC_GET_OR(BOARD_NODE, coil_gpios, {0}),
+#if HAS_SUPPLY_CONTACTS
 	[BOARD_AC] = GPIO_DT_SPEC_GET(BOARD_NODE, ac_gpios),
 	[BOARD_DC] = GPIO_DT_SPEC_GET(BOARD_NODE, dc_gpios),
 	[BOARD_BAT] = GPIO_DT_SPEC_GET(BOARD_NODE, bat_gpios),
 	[BOARD_CHARGE] = GPIO_DT_SPEC_GET(BOARD_NODE, charge_gpios),
+#endif
 };
 static const struct gpio_dt_spec latch = GPIO_DT_SPEC_GET(BOARD_NODE, latch_gpios);
 static const struct gpio_dt_spec buzzer = GPIO_DT_SPEC_GET(BOARD_NODE, buzzer_gpios);
@@ -55,6 +61,14 @@ void board_io_ksafe(bool on)
 }
 
 BUILD_ASSERT(ARRAY_SIZE(inputs) == BOARD_INPUT_COUNT);
+bool board_io_has_coil_monitor(void)
+{
+	return inputs[BOARD_COIL].port != NULL;
+}
+bool board_io_has_supply_contacts(void)
+{
+	return HAS_SUPPLY_CONTACTS;
+}
 BUILD_ASSERT(HT_VREF_MV == 2900U, "VREFBUF SCALE2 requires the 2.9 V configuration");
 
 static int setup_pin(const struct gpio_dt_spec *pin, gpio_flags_t flags)
@@ -138,6 +152,7 @@ static int init_board(bool enable_vref)
 		return rc;
 	}
 	for (size_t i = 0; i < ARRAY_SIZE(inputs); ++i) {
+		if (inputs[i].port == NULL) continue;
 		rc = setup_pin(&inputs[i], GPIO_INPUT);
 		if (rc != 0) {
 			return rc;
@@ -194,6 +209,7 @@ int board_io_read(uint32_t *state)
 	uint32_t next = 0;
 
 	for (size_t i = 0; i < ARRAY_SIZE(inputs); ++i) {
+		if (inputs[i].port == NULL) continue;
 		int value = gpio_pin_get_dt(&inputs[i]);
 
 		if (value < 0) {

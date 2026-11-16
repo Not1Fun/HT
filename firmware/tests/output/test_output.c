@@ -2,7 +2,8 @@
 #include "mock.h"
 #include "../../src/app/output.c"
 #include <string.h>
-static uint32_t digital = BIT(BOARD_SENSOR)|BIT(BOARD_COIL)|BIT(BOARD_DC)|BIT(BOARD_AC);
+static uint32_t digital = BIT(BOARD_SENSOR)|BIT(BOARD_COIL)|
+    (HT_TEST_KSAFE ? 0 : BIT(BOARD_DC)|BIT(BOARD_AC));
 static struct signal_snapshot measured;
 static bool signal_failed, signal_active, sampling, relay_failure, fault_during_select, cancelled_select;
 static bool sample_invalid;
@@ -36,6 +37,8 @@ int board_io_clear_protection(void) {
     return 0;
 }
 int board_io_read(uint32_t *value) {if(board_error)return -EIO;*value=digital;return 0;}
+bool board_io_has_supply_contacts(void) { return !HT_TEST_KSAFE; }
+bool board_io_has_coil_monitor(void) { return !HT_TEST_KSAFE; }
 int signal_io_init(void) {sampling=true;return 0;}
 int signal_io_stop(void) {signal_active=false;sampling=!signal_failed;amplitude=0;return 0;}
 void signal_io_fault(void) {signal_failed=true;(void)signal_io_stop();}
@@ -78,7 +81,9 @@ static void advance(int ms) {steps=ms;if(setjmp(done)==0)run(NULL,NULL,NULL);}
 static void setup(void) {
 #if defined(CONFIG_HT_OUTPUT_BENCH)
     digital &= ~BIT(BOARD_COIL);
+#if !HT_TEST_KSAFE
     panel_raw |= BIT(7);
+#endif
 #endif
     assert(output_init()==0);heartbeat();between_steps=heartbeat;advance(1);
     assert(published.available && !published.running);
@@ -91,22 +96,25 @@ static void stop_priority(void) {
     start_output();output_stop();advance(100);assert(!published.running && relay_value==0);
 }
 static void interlocks(void) {
-    setup();const uint32_t required[]={BIT(BOARD_SENSOR),BIT(BOARD_DC)
-#if !defined(CONFIG_HT_OUTPUT_BENCH)
+    setup();const uint32_t required[]={BIT(BOARD_SENSOR)
+#if !HT_TEST_KSAFE
+        ,BIT(BOARD_DC)
+#endif
+#if !defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
         ,BIT(BOARD_COIL)
 #endif
     };
     for(size_t i=0;i<sizeof(required)/sizeof(required[0]);i++) {digital^=required[i];advance(1);assert(!published.available);digital^=required[i];}
     const uint32_t faults[]={BIT(BOARD_OC),BIT(BOARD_OV)};
     for(size_t i=0;i<2;i++) {digital|=faults[i];advance(1);assert(!published.available);digital&=~faults[i];}
-    digital &= ~BIT(BOARD_AC);advance(1);assert(!published.available);
+    digital &= ~BIT(BOARD_AC);advance(1);assert(published.available==!!HT_TEST_KSAFE);
     digital |= BIT(BOARD_BAT);advance(1);assert(published.available);
     for(int i=0;i<3;i++) {measured.temperature.samples[i].status=NTC_SATURATED;advance(1);assert(!published.available);measured.temperature.samples[i].status=NTC_OK;}
     measured.temperature.samples[0].decicelsius=800;advance(1);assert(!published.available);
     measured.temperature.samples[0].decicelsius=799;advance(1);assert(published.available);
     output_inputs(0x7f,true,true);advance(1);assert(!published.available);
     output_inputs(0xbf,true,true);advance(1);
-#if defined(CONFIG_HT_OUTPUT_BENCH) || HT_TEST_KSAFE
+#if defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
     assert(published.available);
 #else
     assert(!published.available);
@@ -199,13 +207,30 @@ static void shutdown_output(void) {
 static void enclosure_interlocks(void) {
     setup();start_output();
     digital &= ~BIT(BOARD_COIL);panel_raw |= BIT(7);heartbeat();advance(1);
-#if defined(CONFIG_HT_OUTPUT_BENCH)
+#if defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
     assert(published.running && !published.fault && signal_active);
     output_stop();advance(200);assert(!published.running && !signal_active && relay_value==0);
     advance(200);assert(!published.running);
 #else
     assert(published.fault && !signal_active && relay_value==0);
 #endif
+}
+static void door_recovery(void) {
+    setup();start_output();
+    unsigned int before=(unsigned int)starts;
+    panel_raw|=BIT(7);heartbeat();
+    assert(!signal_active && !ksafe);
+    advance(1);
+    assert(published.fault && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_DOOR)));
+    assert(published.error==POWER_ERROR_INTERLOCK && !relay_value);
+    assert(output_clear()==0);advance(1100);
+    assert(published.fault && published.clear_result==-EACCES);
+    panel_raw&=~BIT(7);heartbeat();advance(500);
+    assert(published.fault && !signal_active && starts==(int)before);
+    assert(output_clear()==0);advance(300);
+    assert(!published.fault && published.available && !signal_active && !ksafe);
+    advance(2000);assert(starts==(int)before);
+    start_output();assert(published.running);
 }
 static void assert_tripped(void) {
     advance(1);
@@ -325,7 +350,7 @@ static void blocking_reasons(void) {
     sample_invalid = true; advance(1);
     assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_SAMPLE_STALE));
     sample_invalid = false; digital &= ~BIT(BOARD_DC); advance(1);
-    assert(published.blocked == OUTPUT_REASON_BIT(OUTPUT_REASON_DC));
+    assert(published.blocked == (HT_TEST_KSAFE ? 0 : OUTPUT_REASON_BIT(OUTPUT_REASON_DC)));
     digital |= BIT(BOARD_DC); advance(1); assert(published.blocked == 0);
     assert(clears == 1 && starts == 0 && relay_value == 0);
 #if defined(CONFIG_HT_OUTPUT_BENCH)
@@ -376,14 +401,14 @@ static void automatic_range(void) {
 static void automatic_interlocks(void) {
     setup();uint8_t saved=panel_raw;
     panel_raw|=BIT(7);heartbeat();advance(1);
-#if !defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
+#if !defined(CONFIG_HT_OUTPUT_BENCH) || HT_TEST_KSAFE
     assert(!published.available && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_DOOR)));
     assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EACCES);
 #else
     assert(published.available);
 #endif
     panel_raw=saved;digital&=~BIT(BOARD_COIL);heartbeat();advance(1);
-#if !defined(CONFIG_HT_OUTPUT_BENCH)
+#if !defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
     assert(!published.available && (published.blocked & OUTPUT_REASON_BIT(OUTPUT_REASON_COIL)));
     assert(output_start(POWER_RANGE_AUTO,2000,1000)==-EACCES);
 #else
@@ -393,7 +418,7 @@ static void automatic_interlocks(void) {
     assert(output_start(POWER_RANGE_AUTO,2000,1000)==0);advance(8000);
     assert(published.running && control.automatic);
     panel_raw|=BIT(7);heartbeat();advance(1);
-#if !defined(CONFIG_HT_OUTPUT_BENCH) && !HT_TEST_KSAFE
+#if !defined(CONFIG_HT_OUTPUT_BENCH) || HT_TEST_KSAFE
     assert(published.fault && published.error==POWER_ERROR_INTERLOCK && !signal_active && !relay_value);
 #else
     assert(published.running && !published.fault);
@@ -482,6 +507,7 @@ int main(int argc,char **argv) {
     RUN(sample_permission) RUN(pending_sample_invalid) RUN(first_window_grace)
     RUN(protection_race) RUN(stop_in_flight) RUN(relay_fault) RUN(shutdown_output)
     RUN(enclosure_interlocks) RUN(running_oc) RUN(running_ov) RUN(running_sensor_loss)
+    RUN(door_recovery)
     RUN(running_temperature) RUN(running_ntc_failure) RUN(running_enable_release) RUN(protection_irq)
     return 1;
 }

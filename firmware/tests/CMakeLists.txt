@@ -22,6 +22,7 @@ add_subdirectory(power)
 add_subdirectory(bench)
 add_subdirectory(output)
 add_subdirectory(bootloader)
+add_subdirectory(drs)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(NAME code_graph_unit COMMAND ${Python3_EXECUTABLE} -m unittest discover

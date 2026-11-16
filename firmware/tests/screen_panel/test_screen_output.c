@@ -8,6 +8,11 @@ const struct device mock_gpio = {0};
 static int64_t clock_ms = 1000;
 static struct output_snapshot measured;
 static unsigned int starts, stops;
+static bool supply_contacts;
+#if defined(CONFIG_HT_DRS)
+static struct drs_snapshot supply;
+void drs_io_snapshot(struct drs_snapshot *value) { *value=supply; }
+#endif
 static unsigned int clear_requests;
 int output_clear(void) { ++clear_requests; return 0; }
 static uint8_t requested_range;
@@ -42,6 +47,7 @@ int gpio_add_callback(const struct device *port, struct gpio_callback *cb)
 int gpio_remove_callback(const struct device *port, struct gpio_callback *cb)
 { (void)port; (void)cb; return 0; }
 int board_io_read(uint32_t *value) { *value = BIT(BOARD_BAT); return 0; }
+bool board_io_has_supply_contacts(void) { return supply_contacts; }
 int relay_io_check(void) { return 0; }
 int relay_io_read_panel(uint8_t *value) { *value = 0x3f; return 0; }
 int screen_uart_init(enum screen_uart_port port) { (void)port; return 0; }
@@ -115,6 +121,39 @@ static void standby(void)
     measured.signal.reading.voltage_mv = 0;
     (void)render(&s, "0.000", "0.000");
 }
+
+static void battery_source(void)
+{
+    for(int legacy=0;legacy<=1;++legacy) {
+        supply_contacts=legacy;
+        struct service s=setup();s.digital_valid=false;
+        update_digital(&s,0);
+        struct view_snapshot v=render(&s,"1.250","12.340");
+        assert(v.battery==(legacy?VIEW_POWER_ALARM:VIEW_POWER_UNKNOWN));
+        assert(s.log.count==(size_t)legacy);
+        update_digital(&s,BIT(BOARD_BAT));
+        v=render(&s,"1.250","12.340");
+        assert(v.battery==(legacy?VIEW_POWER_NORMAL:VIEW_POWER_UNKNOWN));
+        assert(s.log.count==(size_t)(legacy*2));
+        update_digital(&s,BIT(BOARD_OC)|BIT(BOARD_BAT));
+        assert(s.log.count==(size_t)(legacy*2+1));
+    }
+}
+#if defined(CONFIG_HT_DRS)
+static void drs_display(void)
+{
+    struct service s=setup();
+    supply=(struct drs_snapshot){.valid=true,.time_ms=clock_ms,.system=32};
+    assert(render(&s,"1.250","12.340").battery==VIEW_POWER_NORMAL);
+    supply.charge=1u<<11;
+    assert(render(&s,"1.250","12.340").battery==VIEW_POWER_ALARM);
+    supply.valid=false;
+    assert(render(&s,"1.250","12.340").battery==VIEW_POWER_UNKNOWN);
+    supply.valid=true;supply.time_ms=clock_ms-2000;
+    assert(render(&s,"1.250","12.340").battery==VIEW_POWER_UNKNOWN);
+    assert(!starts);
+}
+#endif
 
 static void measurement_age(void)
 {
@@ -323,6 +362,10 @@ static void current_mode(void)
 int main(int argc, char **argv)
 {
     assert(argc == 2);
+#if defined(CONFIG_HT_DRS)
+    if (!strcmp(argv[1], "drs_display")) { drs_display(); return 0; }
+#endif
+    if (!strcmp(argv[1], "battery_source")) { battery_source(); return 0; }
     if (!strcmp(argv[1], "current_mode")) { current_mode(); return 0; }
     if (!strcmp(argv[1], "automatic_selection")) { automatic_selection(); return 0; }
     if (!strcmp(argv[1], "clear_controls")) { clear_controls(); return 0; }

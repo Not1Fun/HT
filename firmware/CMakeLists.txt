@@ -38,3 +38,4 @@ target_sources_ifdef(CONFIG_HT_OUTPUT app PRIVATE
   src/platform/signal_io.c src/app/output.c)
 
 target_sources_ifdef(CONFIG_HT_OUTPUT_BENCH app PRIVATE src/core/bench.c)
+target_sources_ifdef(CONFIG_HT_DRS app PRIVATE src/core/drs.c src/platform/drs_io.c)
